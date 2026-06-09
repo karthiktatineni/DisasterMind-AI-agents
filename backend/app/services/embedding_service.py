@@ -1,4 +1,4 @@
-"""OpenAI embedding service for query and document vectors."""
+"""NVIDIA Build/NIM embedding service for query and document vectors."""
 
 from __future__ import annotations
 
@@ -6,8 +6,9 @@ from openai import AsyncOpenAI
 
 from backend.app.config import Settings, get_settings
 
-EMBEDDING_MODEL = "text-embedding-3-small"
-EMBEDDING_DIM = 1536
+EMBEDDING_DIM = 4096
+INPUT_TYPE_QUERY = "query"
+INPUT_TYPE_PASSAGE = "passage"
 
 
 class EmbeddingConfigError(RuntimeError):
@@ -17,15 +18,40 @@ class EmbeddingConfigError(RuntimeError):
 class EmbeddingService:
     def __init__(self, settings: Settings | None = None, client: AsyncOpenAI | None = None):
         self.settings = settings or get_settings()
+        if self.settings.nvidia_embedding_dimension != EMBEDDING_DIM:
+            raise EmbeddingConfigError(
+                f"NVIDIA_EMBEDDING_DIMENSION must be {EMBEDDING_DIM} for nv-embed-v1."
+            )
         if client is not None:
             self._client = client
             return
-        if not self.settings.openai_api_key:
-            raise EmbeddingConfigError("OPENAI_API_KEY is missing.")
-        self._client = AsyncOpenAI(api_key=self.settings.openai_api_key)
+        if not self.settings.nvidia_api_key:
+            raise EmbeddingConfigError("NVIDIA_API_KEY is missing.")
+        self._client = AsyncOpenAI(
+            api_key=self.settings.nvidia_api_key,
+            base_url=self.settings.nvidia_base_url,
+            timeout=120,
+            max_retries=2,
+        )
 
-    async def embed_text(self, text: str) -> list[float]:
-        response = await self._client.embeddings.create(model=EMBEDDING_MODEL, input=text)
+    @property
+    def provider(self) -> str:
+        return "nvidia-build"
+
+    @property
+    def model(self) -> str:
+        return self.settings.nvidia_embedding_model
+
+    async def embed_text(self, text: str, *, input_type: str = INPUT_TYPE_QUERY) -> list[float]:
+        response = await self._client.embeddings.create(
+            model=self.model,
+            input=text,
+            extra_body={
+                "input_type": input_type,
+                "encoding_format": "float",
+                "truncate": "END",
+            },
+        )
         vector = response.data[0].embedding
         if len(vector) != EMBEDDING_DIM:
             raise ValueError(f"Expected embedding dim {EMBEDDING_DIM}, got {len(vector)}")

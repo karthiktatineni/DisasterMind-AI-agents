@@ -15,6 +15,24 @@ AgentStatus = Literal[
     "passed_with_warnings",
 ]
 
+STRICT_REALTIME_PROMPT = """STRICT REAL-TIME DATA ONLY AI PROMPT
+You are an AI assistant that MUST use only real-time, up-to-date information from live sources.
+Rules you must follow without exception:
+Do NOT use training data, memory, assumptions, or general knowledge.
+Do NOT guess or estimate any values.
+If real-time data is not available, clearly say: "Real-time data not available for this query."
+Always prioritize the latest available information from verified live sources.
+If multiple sources conflict, prefer the most recent timestamp.
+Always include timestamps or "last updated" info when available.
+Never fabricate numbers, statistics, prices, news, or events.
+If asked for current events, always verify using live search before responding.
+If the system cannot access live data, refuse to answer rather than guessing.
+Output format rules:
+Provide only factual, current data.
+No opinions unless explicitly requested.
+No placeholders or generic responses.
+Keep answers concise and data-focused.
+You MUST output valid JSON only."""
 
 def timestamp() -> str:
     return datetime.now(UTC).isoformat()
@@ -28,7 +46,6 @@ def evidence(source: str, title: str, detail: str, record_id: str | None = None)
 
 
 def compute_confidence(
-    *,
     has_retrieval: bool,
     match_count: int,
     top_similarity: float,
@@ -42,21 +59,21 @@ def compute_confidence(
 
 
 class AgentContext:
-    def __init__(self, scenario: DisasterScenario):
+    def __init__(self, scenario: DisasterScenario, generation_client=None):
         self.scenario = scenario
         self.outputs: dict[str, dict[str, Any]] = {}
         self.retrieval: dict[str, Any] = {}
         self.similarity: dict[str, Any] = {}
         self.rag: dict[str, Any] = {}
+        self.generation_client = generation_client
 
     def store(self, agent_name: str, output: dict[str, Any]) -> None:
         self.outputs[agent_name] = output
 
-
 class AgentRunner:
     agent_name: str = "base"
 
-    def run(self, ctx: AgentContext) -> AgentResult:
+    async def run(self, ctx: AgentContext) -> AgentResult:
         raise NotImplementedError
 
     def _result(

@@ -18,7 +18,7 @@ def _metadata_boost(scenario: DisasterScenario, match: dict) -> float:
 class SimilarityAgent(AgentRunner):
     agent_name = "similarity"
 
-    def run(self, ctx: AgentContext) -> AgentResult:
+    async def run(self, ctx: AgentContext) -> AgentResult:
         similarity = ctx.similarity
         if similarity.get("status") != "ok":
             return self._result(

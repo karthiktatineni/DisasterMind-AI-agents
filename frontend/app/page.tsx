@@ -25,8 +25,6 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -62,14 +60,16 @@ const initialScenario: Scenario = {
 
 const agents: Agent[] = [
   { name: "Coordinator", icon: ClipboardList },
-  { name: "Intelligence", icon: DatabaseZap },
+  { name: "Knowledge", icon: DatabaseZap },
+  { name: "Similarity", icon: MapPinned },
   { name: "Risk", icon: Gauge },
   { name: "Prediction", icon: Activity },
+  { name: "Explainability", icon: BadgeCheck },
   { name: "Logistics", icon: Warehouse },
   { name: "Evacuation", icon: Route },
   { name: "Simulation", icon: Layers },
   { name: "Validation", icon: ShieldCheck },
-  { name: "Planner", icon: BadgeCheck },
+  { name: "Planner", icon: ClipboardList },
   { name: "Decision", icon: Siren },
   { name: "Reporting", icon: FileText },
 ];
@@ -123,13 +123,10 @@ function asNumber(value: unknown, fallback = 0) {
   return typeof value === "number" && Number.isFinite(value) ? value : fallback;
 }
 
-function buildRiskTrend(riskScore: number, damageScore: number) {
-  const baseRisk = Math.max(8, riskScore * 100 - 28);
-  const baseImpact = Math.max(5, damageScore * 100 - 24);
-  return ["0h", "6h", "12h", "18h", "24h", "36h", "48h"].map((hour, index) => ({
-    hour,
-    risk: Math.min(99, Math.round(baseRisk + index * 5.6)),
-    impact: Math.min(99, Math.round(baseImpact + index * 4.9)),
+function buildContributorChart(contributors: Record<string, unknown>) {
+  return Object.entries(contributors).map(([name, value]) => ({
+    name: name.replaceAll("_", " "),
+    value: asNumber(value),
   }));
 }
 
@@ -152,6 +149,13 @@ function buildIntake(scenario: Scenario) {
     severity: scenario.severity,
     notes: scenario.notes,
   };
+}
+
+function scenarioSources(orchestration: OrchestrationResponse | null) {
+  const logistics = asRecord(
+    orchestration?.agent_results.find((r) => r.agent_name === "logistics")?.output,
+  );
+  return asArray(asRecord(logistics.source_scenario).data_sources);
 }
 
 export default function Home() {
@@ -191,28 +195,25 @@ export default function Home() {
   const simulationOutput = asRecord(simulationAgent?.output);
 
   const riskScore = asNumber(riskOutput.risk_score);
-  const damageScore = asNumber(predictionOutput.damage_score);
+  const riskContributors = asRecord(riskOutput.contributors);
+  const contributorChart = buildContributorChart(riskContributors);
   const affectedPopulation = asNumber(riskOutput.affected_population);
-  const evacuationNeed = asNumber(predictionOutput.evacuation_need);
-  const casualtyEstimate = asNumber(predictionOutput.casualty_estimate);
+  const evacuationNeed = asNumber(predictionOutput.predicted_affected, asNumber(predictionOutput.evacuation_need));
+  const casualtyEstimate = asNumber(predictionOutput.predicted_deaths, asNumber(predictionOutput.casualty_estimate));
   const shelterGap = asNumber(evacuationOutput.shelter_gap);
-  const riskTrend = buildRiskTrend(riskScore, damageScore);
+  const retrievedDisasters = orchestration?.retrieved_disasters ?? [];
+  const evidenceUsed = orchestration?.evidence_used ?? [];
 
   const resourcePlan = asRecord(logisticsOutput.resource_plan);
   const availableResources = asRecord(logisticsOutput.available_resources);
   const resourceChart = Object.entries(resourcePlan).map(([name, required]) => ({
     name: name.replaceAll("_", " "),
     required: asNumber(required),
-    available: asNumber(availableResources[name], asNumber(required) * 0.8),
+    available: asNumber(availableResources[name], asNumber(required)),
   }));
 
   const simulationRows = asArray(simulationOutput.scenario_results);
-  const intelligenceOutput = asRecord(getAgent(orchestration, "intelligence")?.output);
-  const groundedContext = asRecord(intelligenceOutput.grounded_context);
-  const sourceRows = asArray(intelligenceOutput.data_sources);
-  const weatherEvidence = getAgent(orchestration, "intelligence")?.evidence.find(
-    (item) => String(item.title).toLowerCase().includes("weather"),
-  );
+  const sourceRows = scenarioSources(orchestration);
   const sourceScenario = asRecord(logisticsOutput.source_scenario);
   const hasResults = Boolean(orchestration);
 
@@ -251,8 +252,15 @@ export default function Home() {
         ...intake,
       });
       setOrchestration(response);
-      setReport(response.final_report);
-      setServiceState(response.provider === "nvidia-build" ? "live" : "offline");
+      if (response.insufficient_data) {
+        setReport(
+          `Insufficient data: ${response.insufficient_data.reason ?? "Configure Supabase pgvector and embeddings."}`,
+        );
+        setServiceState("offline");
+      } else {
+        setReport(response.final_report);
+        setServiceState(response.provider === "nvidia-build" ? "live" : "offline");
+      }
       setActiveNav("Dashboard");
       setTimeout(() => scrollToSection("dashboard"), 100);
     } catch {
@@ -488,7 +496,7 @@ export default function Home() {
               <div className="metric">
                 <p className="text-sm font-bold text-[var(--muted)]">Risk score</p>
                 <p className="mt-4 text-3xl font-bold">
-                  {hasResults ? Math.round(riskScore * 100) : "--"}
+                  {hasResults ? Math.round(riskScore) : "--"}
                 </p>
                 <p className="mt-2 text-sm text-[var(--muted)]">
                   {hasResults ? String(riskOutput.risk_level) : "Waiting for Risk Agent"}
@@ -556,19 +564,18 @@ export default function Home() {
             <section className="data-grid" id="risk">
               <div className="panel">
                 <div className="panel-header">
-                  <h3 className="font-bold">Risk forecast</h3>
+                  <h3 className="font-bold">Risk contributors</h3>
                 </div>
                 <div className="panel-body h-[260px]">
-                  {chartsReady && hasResults && (
+                  {chartsReady && hasResults && contributorChart.length > 0 && (
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={riskTrend}>
+                      <BarChart data={contributorChart}>
                         <CartesianGrid stroke="#dfe5df" strokeDasharray="3 3" />
-                        <XAxis dataKey="hour" stroke="#65736b" />
+                        <XAxis dataKey="name" stroke="#65736b" />
                         <YAxis stroke="#65736b" />
                         <Tooltip />
-                        <Line dataKey="risk" stroke="#b42318" strokeWidth={3} type="monotone" />
-                        <Line dataKey="impact" stroke="#245ba7" strokeWidth={3} type="monotone" />
-                      </LineChart>
+                        <Bar dataKey="value" fill="#b42318" radius={[4, 4, 0, 0]} />
+                      </BarChart>
                     </ResponsiveContainer>
                   )}
                 </div>
@@ -576,32 +583,35 @@ export default function Home() {
 
               <div className="panel">
                 <div className="panel-header">
-                  <h3 className="font-bold">Risk map</h3>
-                  <span className="status-pill warning">
-                    <MapPinned size={14} aria-hidden="true" />
-                    Generated
+                  <h3 className="font-bold">Retrieved historical disasters</h3>
+                  <span className="status-pill">
+                    <DatabaseZap size={14} aria-hidden="true" />
+                    Supabase pgvector
                   </span>
                 </div>
                 <div className="panel-body">
-                  <div className="map-canvas" aria-label="Generated operational risk map">
-                    <div className="map-zone zone-critical" />
-                    <div className="map-zone zone-warning" />
-                    <div className="road road-a" />
-                    <div className="road road-b" />
-                    <div className="road road-c" />
-                    <div className="map-pin pin-shelter">
-                      <Warehouse size={15} aria-hidden="true" />
-                      Shelter
-                    </div>
-                    <div className="map-pin pin-hospital">
-                      <Hospital size={15} aria-hidden="true" />
-                      Hospital
-                    </div>
-                    <div className="map-pin pin-staging">
-                      <Ambulance size={15} aria-hidden="true" />
-                      Staging
-                    </div>
-                  </div>
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th>Event</th>
+                        <th>Year</th>
+                        <th>Country</th>
+                        <th>Similarity</th>
+                        <th>ID</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {retrievedDisasters.map((row) => (
+                        <tr key={String(row.id)}>
+                          <td>{String(row.event_name ?? row.id)}</td>
+                          <td>{String(row.start_year ?? "-")}</td>
+                          <td>{String(row.country ?? "-")}</td>
+                          <td>{Math.round(asNumber(row.similarity) * 100)}%</td>
+                          <td>{String(row.id)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </section>
@@ -718,10 +728,75 @@ export default function Home() {
 
             <section className="mt-4 panel">
               <div className="panel-header">
-                <h3 className="font-bold">Public data sources</h3>
+                <h3 className="font-bold">Evidence used</h3>
                 <span className="text-sm text-[var(--muted)]">
-                  {String(groundedContext.resolved_location ?? scenario.region)}
+                  {evidenceUsed.length} source records
                 </span>
+              </div>
+              <div className="panel-body">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Event</th>
+                      <th>Similarity</th>
+                      <th>Country</th>
+                      <th>Year</th>
+                      <th>Record ID</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {evidenceUsed.map((item) => (
+                      <tr key={String(item.id)}>
+                        <td>{String(item.event_name ?? item.id)}</td>
+                        <td>{Math.round(asNumber(item.similarity) * 100)}%</td>
+                        <td>{String(item.country ?? "-")}</td>
+                        <td>{String(item.year ?? "-")}</td>
+                        <td>{String(item.id)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <section className="mt-4 panel">
+              <div className="panel-header">
+                <h3 className="font-bold">Agent evidence view</h3>
+              </div>
+              <div className="panel-body grid gap-3">
+                {(orchestration?.agent_results ?? []).map((result) => (
+                  <details
+                    className="rounded-lg border border-[var(--line)] bg-white p-3"
+                    key={`evidence-${result.agent_name}`}
+                  >
+                    <summary className="cursor-pointer font-bold capitalize">
+                      {result.agent_name} — {Math.round(result.confidence * 100)}% confidence —{" "}
+                      {asNumber(result.output.execution_time_ms)}ms
+                    </summary>
+                    <p className="mt-2 text-sm font-bold">Inputs</p>
+                    <p className="text-sm text-[var(--muted)]">{result.reasoning_summary}</p>
+                    <p className="mt-2 text-sm font-bold">Sources</p>
+                    <ul className="text-sm text-[var(--muted)]">
+                      {result.evidence.map((item, index) => (
+                        <li key={`${result.agent_name}-ev-${index}`}>
+                          {String(item.title)} ({String(item.source)})
+                          {item.record_id ? ` — ID ${String(item.record_id)}` : ""}
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="mt-2 text-sm font-bold">Output</p>
+                    <pre className="mt-1 max-h-48 overflow-auto rounded-lg bg-[var(--panel-muted)] p-3 text-xs">
+                      {JSON.stringify(result.output, null, 2)}
+                    </pre>
+                  </details>
+                ))}
+              </div>
+            </section>
+
+            <section className="mt-4 panel">
+              <div className="panel-header">
+                <h3 className="font-bold">Public data sources</h3>
+                <span className="text-sm text-[var(--muted)]">{scenario.region}</span>
               </div>
               <div className="panel-body">
                 <table className="table">
@@ -740,13 +815,6 @@ export default function Home() {
                         <td>{String(source.detail)}</td>
                       </tr>
                     ))}
-                    {weatherEvidence && (
-                      <tr>
-                        <td>{String(weatherEvidence.source)}</td>
-                        <td>used</td>
-                        <td>{String(weatherEvidence.detail)}</td>
-                      </tr>
-                    )}
                   </tbody>
                 </table>
               </div>

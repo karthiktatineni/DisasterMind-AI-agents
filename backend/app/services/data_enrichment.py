@@ -36,14 +36,13 @@ async def enrich_scenario(intake: ScenarioIntakeRequest) -> DisasterScenario:
     country: str | None = None
     resolved_location: str | None = None
     population: int | None = None
-    temperature = 25.0
-    humidity = 50.0
+    temperature = 0.0
+    humidity = 0.0
     wind_speed = 0.0
     rainfall = 0.0
     elevation = 0.0
-    hospital_count = 0
-    clinic_count = 0
-    shelter_count = 0
+    hospital_capacity = 0
+    shelter_capacity = 0
 
     async with httpx.AsyncClient(
         timeout=httpx.Timeout(10.0),
@@ -126,39 +125,27 @@ async def enrich_scenario(intake: ScenarioIntakeRequest) -> DisasterScenario:
                 elements: list[dict[str, Any]] = osm.json().get("elements", [])
                 for element in elements:
                     tags = element.get("tags", {})
-                    if tags.get("amenity") == "hospital":
-                        hospital_count += 1
-                    if tags.get("amenity") == "clinic":
-                        clinic_count += 1
+                    
+                    # Attempt to get real capacity if listed, otherwise default 0
+                    try:
+                        cap = int(tags.get("capacity", 0))
+                    except ValueError:
+                        cap = 0
+
+                    if tags.get("amenity") in ("hospital", "clinic"):
+                        hospital_capacity += cap
                     if tags.get("social_facility") == "shelter" or tags.get("emergency") == "assembly_point":
-                        shelter_count += 1
+                        shelter_capacity += cap
                 sources.append(_source("OpenStreetMap Overpass", "live", "Fetched nearby hospitals, clinics, and shelters."))
             except Exception:
                 sources.append(_source("OpenStreetMap Overpass", "fallback", "Facility lookup unavailable."))
 
     severity_scale = SEVERITY_SCALE[intake.severity]
     disaster = intake.disaster_type.lower()
-    population = population or _fallback_population(intake.region, intake.severity)
+    population = population or 0
 
-    hazard_wind = 75 + severity_scale * 70 if "cyclone" in disaster else 18 + severity_scale * 18
-    hazard_rain = 120 + severity_scale * 180 if "flood" in disaster else 80 + severity_scale * 140 if "cyclone" in disaster else 25 + severity_scale * 35
-    wind_speed = max(wind_speed, hazard_wind)
-    rainfall = max(rainfall, hazard_rain)
-    if elevation == 0 and ("flood" in disaster or "cyclone" in disaster):
-        elevation = 8
-
-    hospital_capacity = max(
-        250,
-        hospital_count * 180 + clinic_count * 25,
-        round(population * 0.026),
-    )
-    shelter_capacity = max(
-        500,
-        shelter_count * 750,
-        round(population * (0.46 if "earthquake" in disaster else 0.58)),
-    )
-    density = round(population / 42) if population else 1500
-    historical_damage = min(0.92, round(0.22 + severity_scale * 0.28, 2))
+    density = 0.0
+    historical_damage = 0.0
 
     scenario = DisasterScenario(
         disaster_type=intake.disaster_type,
