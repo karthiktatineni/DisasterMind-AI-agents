@@ -590,24 +590,26 @@ export default function Home() {
                   </span>
                 </div>
                 <div className="panel-body">
-                  <table className="table">
+                  <table className="table text-sm">
                     <thead>
                       <tr>
-                        <th>Event</th>
-                        <th>Year</th>
+                        <th>Date</th>
+                        <th>Place</th>
                         <th>Country</th>
-                        <th>Similarity</th>
-                        <th>ID</th>
+                        <th>Affected</th>
+                        <th>Damage</th>
+                        <th>Incident</th>
                       </tr>
                     </thead>
                     <tbody>
                       {retrievedDisasters.map((row) => (
                         <tr key={String(row.id)}>
-                          <td>{String(row.event_name ?? row.id)}</td>
                           <td>{String(row.start_year ?? "-")}</td>
+                          <td>{String(row.location ?? row.region ?? "-")}</td>
                           <td>{String(row.country ?? "-")}</td>
-                          <td>{Math.round(asNumber(row.similarity) * 100)}%</td>
-                          <td>{String(row.id)}</td>
+                          <td>{row.total_affected ? numberFormat(asNumber(row.total_affected)) : "-"}</td>
+                          <td>{row.total_damage ? `$${numberFormat(asNumber(row.total_damage))}k` : "-"}</td>
+                          <td>{String(row.disaster_type ?? "-")}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -734,24 +736,26 @@ export default function Home() {
                 </span>
               </div>
               <div className="panel-body">
-                <table className="table">
+                <table className="table text-sm">
                   <thead>
                     <tr>
-                      <th>Event</th>
-                      <th>Similarity</th>
+                      <th>Date</th>
+                      <th>Place</th>
                       <th>Country</th>
-                      <th>Year</th>
-                      <th>Record ID</th>
+                      <th>Affected</th>
+                      <th>Damage</th>
+                      <th>Incident</th>
                     </tr>
                   </thead>
                   <tbody>
                     {evidenceUsed.map((item) => (
                       <tr key={String(item.id)}>
-                        <td>{String(item.event_name ?? item.id)}</td>
-                        <td>{Math.round(asNumber(item.similarity) * 100)}%</td>
+                        <td>{String(item.start_year ?? item.year ?? "-")}</td>
+                        <td>{String(item.location ?? item.region ?? "-")}</td>
                         <td>{String(item.country ?? "-")}</td>
-                        <td>{String(item.year ?? "-")}</td>
-                        <td>{String(item.id)}</td>
+                        <td>{item.total_affected ? numberFormat(asNumber(item.total_affected)) : "-"}</td>
+                        <td>{item.total_damage ? `$${numberFormat(asNumber(item.total_damage))}k` : "-"}</td>
+                        <td>{String(item.disaster_type ?? "-")}</td>
                       </tr>
                     ))}
                   </tbody>

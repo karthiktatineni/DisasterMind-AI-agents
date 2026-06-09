@@ -35,17 +35,32 @@ export type AgentResult = {
 export type RetrievedDisaster = {
   id?: string;
   event_name?: string;
+  disaster_type?: string;
+  disaster_subtype?: string;
   country?: string;
+  region?: string;
+  location?: string;
   start_year?: number;
+  total_deaths?: number;
+  total_affected?: number;
+  total_damage?: number;
   similarity?: number;
 };
 
 export type EvidenceItem = {
   id?: string;
   event_name?: string;
-  similarity?: number;
+  disaster_type?: string;
+  disaster_subtype?: string;
   country?: string;
+  region?: string;
+  location?: string;
+  start_year?: number;
   year?: number;
+  total_deaths?: number;
+  total_affected?: number;
+  total_damage?: number;
+  similarity?: number;
 };
 
 export type OrchestrationResponse = {

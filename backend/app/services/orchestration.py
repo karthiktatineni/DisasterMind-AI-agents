@@ -46,7 +46,13 @@ class DisasterMindOrchestrator:
         similarity_service: SimilarityService | None = None,
         rag_service: RAGService | None = None,
     ):
-        self.generation_client = generation_client
+        if generation_client is not None:
+            self.generation_client = generation_client
+        else:
+            try:
+                self.generation_client = NvidiaBuildGenerationClient()
+            except NvidiaGenerationConfigError:
+                self.generation_client = None
         self.similarity_service = similarity_service or SimilarityService()
         self.rag_service = rag_service or RAGService()
 
