@@ -5,16 +5,18 @@ This folder contains the canonical agent descriptions for the DisasterMind AI mu
 ## Execution Order
 
 1. Coordinator
-2. Intelligence
-3. Risk
-4. Prediction
-5. Logistics
-6. Evacuation
-7. Simulation
-8. Validation
-9. Planner
-10. Decision
-11. Reporting
+2. Knowledge (Supabase pgvector retrieval)
+3. Similarity (ranked vector matches)
+4. Risk (transparent contributors)
+5. Prediction (XGBoost models)
+6. Explainability
+7. Logistics
+8. Evacuation
+9. Simulation
+10. Validation
+11. Planner
+12. Decision
+13. Reporting
 
 ## Folder Layout
 

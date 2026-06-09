@@ -1,13 +1,42 @@
 from __future__ import annotations
 
+from typing import Any
+
 from backend.app.agents.base import AgentContext, AgentRunner, compute_confidence, evidence
 from backend.app.schemas import AgentResult
 
+SEVERITY_WEIGHT = {"Low": 0.15, "Moderate": 0.35, "High": 0.65, "Critical": 0.9}
+
+
+def _clean_number(value: Any) -> float | None:
+    if not isinstance(value, (int, float)) or value != value:
+        return None
+    return float(value)
+
+
+def _weighted_mean(rows: list[dict[str, Any]], field: str) -> float | None:
+    weighted_total = 0.0
+    total_weight = 0.0
+    for row in rows:
+        value = _clean_number(row.get(field))
+        if value is None:
+            continue
+        weight = max(0.01, float(row.get("similarity", 0) or 0))
+        weighted_total += value * weight
+        total_weight += weight
+    if total_weight == 0:
+        return None
+    return weighted_total / total_weight
+
+
+import json
+from backend.app.schemas import GenerationMessage
+from backend.app.agents.base import STRICT_REALTIME_PROMPT
 
 class RiskAgent(AgentRunner):
     agent_name = "risk"
 
-    def run(self, ctx: AgentContext) -> AgentResult:
+    async def run(self, ctx: AgentContext) -> AgentResult:
         scenario = ctx.scenario
         rag = ctx.rag
         if rag.get("status") != "ok":
@@ -23,80 +52,62 @@ class RiskAgent(AgentRunner):
                 execution_time_ms=0,
             )
 
-        retrieved = rag.get("retrieved_disasters", [])
-        hist_deaths = [
-            float(r["total_deaths"])
-            for r in retrieved
-            if isinstance(r.get("total_deaths"), (int, float)) and r["total_deaths"] == r["total_deaths"]
-        ]
-        hist_affected = [
-            float(r["total_affected"])
-            for r in retrieved
-            if isinstance(r.get("total_affected"), (int, float)) and r["total_affected"] == r["total_affected"]
-        ]
-        hist_severity = 0.0
-        if hist_deaths or hist_affected:
-            death_norm = min(1.0, (sum(hist_deaths) / len(hist_deaths)) / 5000) if hist_deaths else 0
-            affected_norm = min(1.0, (sum(hist_affected) / len(hist_affected)) / 5_000_000) if hist_affected else 0
-            hist_severity = round((death_norm * 0.55 + affected_norm * 0.45), 3)
-
-        wind_contrib = round(min(30, scenario.wind_speed / 250 * 30), 1)
-        rain_contrib = round(min(25, scenario.rainfall / 500 * 25), 1)
-        density_contrib = round(min(20, scenario.population_density / 20000 * 20), 1)
-        elevation_contrib = round(min(15, max(0, (50 - scenario.elevation) / 50 * 15)), 1)
-        humidity_contrib = round(min(10, scenario.humidity / 100 * 10), 1)
-        historical_contrib = round(hist_severity * 20, 1)
-
-        contributors = {
-            "wind": wind_contrib,
-            "rainfall": rain_contrib,
-            "population_density": density_contrib,
-            "elevation": elevation_contrib,
-            "humidity": humidity_contrib,
-            "historical_severity": historical_contrib,
-        }
-        risk_score = round(min(99, sum(contributors.values())), 1)
-
-        risk_level = (
-            "critical" if risk_score >= 75
-            else "high" if risk_score >= 55
-            else "medium" if risk_score >= 35
-            else "low"
+        prompt = (
+            f"Scenario: {scenario.disaster_type} in {scenario.region}. Severity: {scenario.severity}.\n\n"
+            f"RAG Context:\n{rag.get('context', '')}\n\n"
+            "Analyze the risk using only the retrieved evidence. Output valid JSON exactly matching this structure:\n"
+            "{\n"
+            '  "risk_score": <int 0-100>,\n'
+            '  "risk_level": "<low|medium|high|critical>",\n'
+            '  "contributors": {"factor_name": <score>},\n'
+            '  "affected_population_estimate": <int>,\n'
+            '  "critical_zones": [{"zone": "<name>", "reason": "<reason>", "priority": <int>}]\n'
+            "}"
         )
-        affected_population = round(scenario.population * min(0.9, risk_score / 100 * 0.85))
 
+        try:
+            generated = await ctx.generation_client.generate(
+                messages=[
+                    GenerationMessage(role="system", content=f"{STRICT_REALTIME_PROMPT}\nYou are a strict JSON-only AI risk analyst."),
+                    GenerationMessage(role="user", content=prompt),
+                ],
+                max_tokens=800,
+                temperature=0.1,
+            )
+            data = json.loads(generated.content)
+            risk_score = data.get("risk_score", 0)
+        except Exception as exc:
+            return self._result(
+                scenario,
+                confidence=0.0,
+                reasoning_summary=f"LLM generation failed: {exc}",
+                evidence_items=[],
+                recommendations=[],
+                next_actions=[],
+                status="failed",
+                output={"status": "failed", "error": str(exc)},
+                execution_time_ms=0,
+            )
+
+        retrieved = rag.get("retrieved_disasters", [])
         top_sim = float(retrieved[0].get("similarity", 0)) if retrieved else 0.0
         confidence = compute_confidence(True, len(retrieved), top_sim, [])
 
         return self._result(
             scenario,
             confidence=confidence,
-            reasoning_summary=(
-                "Transparent risk score from weather, exposure, elevation, humidity, "
-                f"and historical severity derived from {len(retrieved)} retrieved disasters."
-            ),
+            reasoning_summary="Dynamic risk score derived from LLM analysis of retrieved historical matches.",
             evidence_items=[
-                evidence("scenario_input", "Weather and exposure", f"wind={scenario.wind_speed}, rain={scenario.rainfall}"),
                 evidence(
                     "supabase_pgvector",
-                    "Historical severity anchor",
+                    "Top Match Anchor",
                     f"Top match {retrieved[0].get('event_name')} similarity {retrieved[0].get('similarity')}",
                     record_id=str(retrieved[0].get("id")),
-                ),
+                ) if retrieved else evidence("none", "none", "none"),
             ],
-            recommendations=[f"Treat scenario as {risk_level} risk ({risk_score}/100)."],
+            recommendations=[f"Treat scenario as {data.get('risk_level', 'unknown')} risk ({risk_score}/100)."],
             next_actions=["Send risk profile to Prediction agent."],
             status="completed",
-            output={
-                "risk_score": risk_score,
-                "risk_level": risk_level,
-                "contributors": contributors,
-                "affected_population": affected_population,
-                "historical_severity": hist_severity,
-                "critical_zones": [
-                    {"zone": "coastal_low_elevation", "reason": f"elevation={scenario.elevation}m", "priority": 1},
-                    {"zone": "high_density_corridor", "reason": f"density={scenario.population_density}", "priority": 2},
-                ],
-            },
+            output=data,
             execution_time_ms=0,
         )

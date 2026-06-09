@@ -28,7 +28,7 @@ def _feature_vector(scenario, risk_output: dict[str, Any]) -> np.ndarray:
         scenario.population_density,
         scenario.elevation,
         scenario.humidity,
-        risk_output.get("historical_severity", 0),
+        risk_output.get("risk_score", 0),
         scenario.population,
         scenario.hospital_capacity,
         scenario.shelter_capacity,
@@ -38,7 +38,7 @@ def _feature_vector(scenario, risk_output: dict[str, Any]) -> np.ndarray:
 class PredictionAgent(AgentRunner):
     agent_name = "prediction"
 
-    def run(self, ctx: AgentContext) -> AgentResult:
+    async def run(self, ctx: AgentContext) -> AgentResult:
         scenario = ctx.scenario
         risk = ctx.outputs.get("risk", {})
         rag = ctx.rag

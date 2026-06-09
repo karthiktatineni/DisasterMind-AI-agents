@@ -1,0 +1,35 @@
+{
+  "affected_population": {
+    "wind_proxy": 0.0423,
+    "rain_proxy": 0.011,
+    "population_density_proxy": 0.328,
+    "elevation_proxy": 0.0104,
+    "humidity_proxy": 0.0,
+    "historical_severity_proxy": 0.0731,
+    "population_proxy": 0.1089,
+    "hospital_proxy": 0.2875,
+    "shelter_proxy": 0.1388
+  },
+  "fatality": {
+    "wind_proxy": 0.1449,
+    "rain_proxy": 0.0522,
+    "population_density_proxy": 0.1136,
+    "elevation_proxy": 0.1531,
+    "humidity_proxy": 0.0,
+    "historical_severity_proxy": 0.0817,
+    "population_proxy": 0.0133,
+    "hospital_proxy": 0.1816,
+    "shelter_proxy": 0.2595
+  },
+  "economic_damage": {
+    "wind_proxy": 0.135,
+    "rain_proxy": 0.0364,
+    "population_density_proxy": 0.1138,
+    "elevation_proxy": 0.3815,
+    "humidity_proxy": 0.0,
+    "historical_severity_proxy": 0.1273,
+    "population_proxy": 0.0242,
+    "hospital_proxy": 0.1202,
+    "shelter_proxy": 0.0616
+  }
+}

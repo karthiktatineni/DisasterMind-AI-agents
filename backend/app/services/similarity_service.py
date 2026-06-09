@@ -63,8 +63,14 @@ class SimilarityService:
                 "id": row.get("id"),
                 "event_name": row.get("event_name") or row.get("id"),
                 "disaster_type": row.get("disaster_type"),
+                "disaster_subtype": row.get("disaster_subtype"),
                 "country": row.get("country"),
+                "region": row.get("region"),
+                "location": row.get("location"),
                 "start_year": row.get("start_year"),
+                "total_deaths": row.get("total_deaths"),
+                "total_affected": row.get("total_affected"),
+                "total_damage": row.get("total_damage"),
                 "similarity": round(float(row.get("similarity", 0)), 4),
             }
             for row in rows
@@ -101,7 +107,15 @@ class SimilarityService:
                 {
                     "id": row.get("id"),
                     "event_name": row.get("event_name") or row.get("id"),
+                    "disaster_type": row.get("disaster_type"),
+                    "disaster_subtype": row.get("disaster_subtype"),
                     "country": row.get("country"),
+                    "region": row.get("region"),
+                    "location": row.get("location"),
+                    "start_year": row.get("start_year"),
+                    "total_deaths": row.get("total_deaths"),
+                    "total_affected": row.get("total_affected"),
+                    "total_damage": row.get("total_damage"),
                     "similarity": round(float(row.get("similarity", 0)), 4),
                 }
                 for row in rows

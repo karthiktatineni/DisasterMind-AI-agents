@@ -16,7 +16,7 @@ def _safe_mean(values: list[float]) -> float | None:
 class KnowledgeAgent(AgentRunner):
     agent_name = "knowledge"
 
-    def run(self, ctx: AgentContext) -> AgentResult:
+    async def run(self, ctx: AgentContext) -> AgentResult:
         rag = ctx.rag
         if rag.get("status") != "ok":
             return self._result(

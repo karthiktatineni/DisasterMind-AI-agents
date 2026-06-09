@@ -1,0 +1,17 @@
+{
+  "affected_population": {
+    "r2_test": 0.5846,
+    "train_rows": 10060,
+    "test_rows": 2516
+  },
+  "fatality": {
+    "r2_test": 0.2635,
+    "train_rows": 10845,
+    "test_rows": 2712
+  },
+  "economic_damage": {
+    "r2_test": -1.3817,
+    "train_rows": 2661,
+    "test_rows": 666
+  }
+}

@@ -53,12 +53,14 @@ class SupabaseVectorClient:
         self,
         query_embedding: list[float],
         match_count: int = 10,
+        match_threshold: float | None = None,
         filter_disaster_type: str | None = None,
         filter_country: str | None = None,
     ) -> list[dict[str, Any]]:
         payload = {
             "query_embedding": query_embedding,
             "match_count": match_count,
+            "match_threshold": self.settings.similarity_threshold if match_threshold is None else match_threshold,
             "filter_disaster_type": filter_disaster_type,
             "filter_country": filter_country,
         }

@@ -32,6 +32,22 @@ export type AgentResult = {
   output: Record<string, unknown>;
 };
 
+export type RetrievedDisaster = {
+  id?: string;
+  event_name?: string;
+  country?: string;
+  start_year?: number;
+  similarity?: number;
+};
+
+export type EvidenceItem = {
+  id?: string;
+  event_name?: string;
+  similarity?: number;
+  country?: string;
+  year?: number;
+};
+
 export type OrchestrationResponse = {
   request_id: string;
   status: "completed" | "completed_with_warnings" | "failed";
@@ -43,6 +59,9 @@ export type OrchestrationResponse = {
   provider: string;
   model?: string | null;
   warnings: string[];
+  retrieved_disasters?: RetrievedDisaster[];
+  evidence_used?: EvidenceItem[];
+  insufficient_data?: { status: string; reason?: string };
 };
 
 export type AgentQuestionResponse = {
@@ -60,7 +79,8 @@ const API_BASE_URL =
 export async function generatePlan(
   messages: GenerationMessage[],
 ): Promise<GenerationResponse> {
-  const response = await fetch(`${API_BASE_URL}/generate`, {
+  const endpoint = API_BASE_URL ? `${API_BASE_URL}/generate` : "/api/generate";
+  const response = await fetch(endpoint, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

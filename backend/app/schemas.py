@@ -106,6 +106,9 @@ class OrchestrationResponse(BaseModel):
     provider: str
     model: str | None = None
     warnings: list[str]
+    retrieved_disasters: list[dict[str, Any]] = Field(default_factory=list)
+    evidence_used: list[dict[str, Any]] = Field(default_factory=list)
+    insufficient_data: dict[str, Any] | None = None
 
 
 class AgentQuestionRequest(BaseModel):
