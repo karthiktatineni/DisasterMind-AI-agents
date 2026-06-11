@@ -4,6 +4,12 @@ from __future__ import annotations
 
 import json
 from backend.app.agents.base import AgentContext, AgentRunner, compute_confidence, evidence, STRICT_REALTIME_PROMPT
+from backend.app.agents.fallbacks import (
+    build_evacuation_strategy,
+    build_logistics_plan,
+    build_simulation_results,
+    parse_json_object,
+)
 from backend.app.schemas import AgentResult, GenerationMessage
 
 AGENT_SEQUENCE = [
@@ -26,6 +32,9 @@ class CoordinatorAgent(AgentRunner):
     agent_name = "coordinator"
 
     async def run(self, ctx: AgentContext) -> AgentResult:
+        return await self._timed_run_async(ctx, self._run_impl)
+
+    async def _run_impl(self, ctx: AgentContext) -> AgentResult:
         confidence = 0.9 if ctx.rag.get("status") == "ok" else 0.2
         return self._result(
             ctx.scenario,
@@ -44,6 +53,9 @@ class LogisticsAgent(AgentRunner):
     agent_name = "logistics"
 
     async def run(self, ctx: AgentContext) -> AgentResult:
+        return await self._timed_run_async(ctx, self._run_impl)
+
+    async def _run_impl(self, ctx: AgentContext) -> AgentResult:
         prediction = ctx.outputs.get("prediction", {})
         risk = ctx.outputs.get("risk", {})
         rag = ctx.rag
@@ -75,6 +87,8 @@ class LogisticsAgent(AgentRunner):
         )
 
         try:
+            if ctx.generation_client is None:
+                raise RuntimeError("NVIDIA generation client is not configured.")
             generated = await ctx.generation_client.generate(
                 messages=[
                     GenerationMessage(role="system", content=f"{STRICT_REALTIME_PROMPT}\nYou are a strict JSON-only AI disaster logistics planner."),
@@ -83,19 +97,10 @@ class LogisticsAgent(AgentRunner):
                 max_tokens=600,
                 temperature=0.1,
             )
-            data = json.loads(generated.content)
+            data = parse_json_object(generated.content)
         except Exception as exc:
-            return self._result(
-                ctx.scenario,
-                confidence=0.0,
-                reasoning_summary=f"LLM generation failed: {exc}",
-                evidence_items=[],
-                recommendations=[],
-                next_actions=[],
-                status="failed",
-                output={"status": "failed", "error": str(exc)},
-                execution_time_ms=0,
-            )
+            data = build_logistics_plan(ctx.scenario, prediction, risk)
+            data["fallback_reason"] = str(exc)
 
         retrieved = rag.get("retrieved_disasters", [])
         top_sim = float(retrieved[0].get("similarity", 0)) if retrieved else 0.0
@@ -117,6 +122,8 @@ class LogisticsAgent(AgentRunner):
                 "resource_shortfalls": data.get("resource_shortfalls", []),
                 "source_scenario": ctx.scenario.model_dump(),
                 "risk_score": risk.get("risk_score"),
+                "generation_mode": data.get("generation_mode", "nvidia-build"),
+                "fallback_reason": data.get("fallback_reason"),
             },
             execution_time_ms=0,
         )
@@ -126,6 +133,9 @@ class EvacuationAgent(AgentRunner):
     agent_name = "evacuation"
 
     async def run(self, ctx: AgentContext) -> AgentResult:
+        return await self._timed_run_async(ctx, self._run_impl)
+
+    async def _run_impl(self, ctx: AgentContext) -> AgentResult:
         prediction = ctx.outputs.get("prediction", {})
         risk = ctx.outputs.get("risk", {})
         rag = ctx.rag
@@ -160,6 +170,8 @@ class EvacuationAgent(AgentRunner):
         )
 
         try:
+            if ctx.generation_client is None:
+                raise RuntimeError("NVIDIA generation client is not configured.")
             generated = await ctx.generation_client.generate(
                 messages=[
                     GenerationMessage(role="system", content=f"{STRICT_REALTIME_PROMPT}\nYou are a strict JSON-only AI evacuation planner."),
@@ -168,19 +180,10 @@ class EvacuationAgent(AgentRunner):
                 max_tokens=600,
                 temperature=0.1,
             )
-            data = json.loads(generated.content)
+            data = parse_json_object(generated.content)
         except Exception as exc:
-            return self._result(
-                ctx.scenario,
-                confidence=0.0,
-                reasoning_summary=f"LLM generation failed: {exc}",
-                evidence_items=[],
-                recommendations=[],
-                next_actions=[],
-                status="failed",
-                output={"status": "failed", "error": str(exc)},
-                execution_time_ms=0,
-            )
+            data = build_evacuation_strategy(ctx.scenario, prediction, risk, rag)
+            data["fallback_reason"] = str(exc)
 
         historical = rag.get("retrieved_disasters", [])[:2]
         citations = [f"{h.get('event_name')} ({h.get('start_year')})" for h in historical]
@@ -203,6 +206,8 @@ class EvacuationAgent(AgentRunner):
                 "route_conflicts": data.get("route_conflicts", []),
                 "historical_precedents": citations,
                 "risk_level": risk.get("risk_level"),
+                "generation_mode": data.get("generation_mode", "nvidia-build"),
+                "fallback_reason": data.get("fallback_reason"),
             },
             execution_time_ms=0,
         )
@@ -212,6 +217,9 @@ class SimulationAgent(AgentRunner):
     agent_name = "simulation"
 
     async def run(self, ctx: AgentContext) -> AgentResult:
+        return await self._timed_run_async(ctx, self._run_impl)
+
+    async def _run_impl(self, ctx: AgentContext) -> AgentResult:
         evacuation = ctx.outputs.get("evacuation", {})
         logistics = ctx.outputs.get("logistics", {})
         rag = ctx.rag
@@ -243,6 +251,8 @@ class SimulationAgent(AgentRunner):
         )
 
         try:
+            if ctx.generation_client is None:
+                raise RuntimeError("NVIDIA generation client is not configured.")
             generated = await ctx.generation_client.generate(
                 messages=[
                     GenerationMessage(role="system", content=f"{STRICT_REALTIME_PROMPT}\nYou are a strict JSON-only AI disaster simulator."),
@@ -251,20 +261,12 @@ class SimulationAgent(AgentRunner):
                 max_tokens=600,
                 temperature=0.1,
             )
-            data = json.loads(generated.content)
+            data = parse_json_object(generated.content)
             scenario_results = data.get("scenario_results", [])
         except Exception as exc:
-            return self._result(
-                ctx.scenario,
-                confidence=0.0,
-                reasoning_summary=f"LLM generation failed: {exc}",
-                evidence_items=[],
-                recommendations=[],
-                next_actions=[],
-                status="failed",
-                output={"status": "failed", "error": str(exc)},
-                execution_time_ms=0,
-            )
+            data = build_simulation_results(ctx.scenario, evacuation, logistics)
+            data["fallback_reason"] = str(exc)
+            scenario_results = data.get("scenario_results", [])
 
         return self._result(
             ctx.scenario,
@@ -282,6 +284,8 @@ class SimulationAgent(AgentRunner):
                 "scenario_results": scenario_results,
                 "resilience_gaps": data.get("resilience_gaps", []),
                 "logistics_plan": logistics.get("resource_plan", {}),
+                "generation_mode": data.get("generation_mode", "nvidia-build"),
+                "fallback_reason": data.get("fallback_reason"),
             },
             execution_time_ms=0,
         )

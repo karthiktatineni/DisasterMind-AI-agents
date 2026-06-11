@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 import joblib
 import numpy as np
@@ -18,7 +21,11 @@ def _load_model(name: str):
     path = MODELS_DIR / f"{name}.joblib"
     if not path.exists():
         return None
-    return joblib.load(path)
+    try:
+        return joblib.load(path)
+    except Exception as e:
+        logger.error("Failed to load model %s: %s", name, str(e))
+        return None
 
 
 def _feature_vector(scenario, risk_output: dict[str, Any]) -> np.ndarray:
@@ -39,6 +46,9 @@ class PredictionAgent(AgentRunner):
     agent_name = "prediction"
 
     async def run(self, ctx: AgentContext) -> AgentResult:
+        return await self._timed_run_async(ctx, self._run_impl)
+
+    async def _run_impl(self, ctx: AgentContext) -> AgentResult:
         scenario = ctx.scenario
         risk = ctx.outputs.get("risk", {})
         rag = ctx.rag

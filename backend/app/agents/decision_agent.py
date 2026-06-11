@@ -1,11 +1,15 @@
 import json
 from backend.app.agents.base import AgentContext, AgentRunner, compute_confidence, evidence, STRICT_REALTIME_PROMPT
+from backend.app.agents.fallbacks import build_decision_output, parse_json_object
 from backend.app.schemas import AgentResult, GenerationMessage
 
 class DecisionAgent(AgentRunner):
     agent_name = "decision"
 
     async def run(self, ctx: AgentContext) -> AgentResult:
+        return await self._timed_run_async(ctx, self._run_impl)
+
+    async def _run_impl(self, ctx: AgentContext) -> AgentResult:
         validation = ctx.outputs.get("validation", {})
         planner = ctx.outputs.get("planner", {})
         prediction = ctx.outputs.get("prediction", {})
@@ -42,6 +46,8 @@ class DecisionAgent(AgentRunner):
         )
 
         try:
+            if ctx.generation_client is None:
+                raise RuntimeError("NVIDIA generation client is not configured.")
             generated = await ctx.generation_client.generate(
                 messages=[
                     GenerationMessage(role="system", content=f"{STRICT_REALTIME_PROMPT}\nYou are a strict JSON-only AI disaster executive decision maker."),
@@ -50,19 +56,10 @@ class DecisionAgent(AgentRunner):
                 max_tokens=800,
                 temperature=0.1,
             )
-            data = json.loads(generated.content)
+            data = parse_json_object(generated.content)
         except Exception as exc:
-            return self._result(
-                ctx.scenario,
-                confidence=0.0,
-                reasoning_summary=f"LLM generation failed: {exc}",
-                evidence_items=[],
-                recommendations=[],
-                next_actions=[],
-                status="failed",
-                output={"status": "failed", "error": str(exc)},
-                execution_time_ms=0,
-            )
+            data = build_decision_output(ctx.scenario, validation, planner, prediction, rag)
+            data["fallback_reason"] = str(exc)
 
         retrieved = rag.get("retrieved_disasters", [])
         citations = [
@@ -95,6 +92,8 @@ class DecisionAgent(AgentRunner):
                 "model_outputs": prediction,
                 "validation_results": validation,
                 "unresolved_risks": data.get("unresolved_risks", []),
+                "generation_mode": data.get("generation_mode", "nvidia-build"),
+                "fallback_reason": data.get("fallback_reason"),
             },
             execution_time_ms=0,
         )

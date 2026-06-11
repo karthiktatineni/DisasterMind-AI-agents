@@ -19,7 +19,44 @@ from backend.app.security import (
     SecurityHeadersMiddleware,
     require_api_key,
 )
+from backend.app.services.keepalive import KeepAliveService
 from backend.app.services.orchestration import DisasterMindOrchestrator
+from backend.app.schemas import AgentResult
+
+def _normalize_agent_results(results: list[AgentResult]) -> None:
+    for res in results:
+        if res.agent_name == "validation":
+            res.output.setdefault("issues", [])
+            res.output.setdefault("warnings", [])
+            res.output.setdefault("validation_status", "failed")
+        elif res.agent_name == "planner":
+            res.output.setdefault("phases", [])
+            res.output.setdefault("evacuation_strategy", "Unknown")
+            res.output.setdefault("resource_estimates", {})
+            res.output.setdefault("shelter_assignments", {})
+        elif res.agent_name == "logistics":
+            res.output.setdefault("resource_plan", {})
+            res.output.setdefault("resource_shortfalls", [])
+        elif res.agent_name == "evacuation":
+            res.output.setdefault("evacuation_zones", [])
+            res.output.setdefault("shelter_gap", 0)
+            res.output.setdefault("route_conflicts", [])
+        elif res.agent_name == "simulation":
+            res.output.setdefault("scenario_results", [])
+            res.output.setdefault("resilience_gaps", [])
+        elif res.agent_name == "decision":
+            res.output.setdefault("executive_recommendation", "Awaiting decision.")
+            res.output.setdefault("prioritized_actions", [])
+            res.output.setdefault("unresolved_risks", [])
+        elif res.agent_name == "explainability":
+            res.output.setdefault("explanations", {})
+        elif res.agent_name == "knowledge":
+            res.output.setdefault("historical_events", [])
+            res.output.setdefault("damage_patterns", {})
+        elif res.agent_name == "reporting":
+            res.output.setdefault("sections", [])
+            res.output.setdefault("report_text", "")
+            res.output.setdefault("evidence_used", [])
 from backend.app.services.nvidia_generation import (
     NvidiaBuildGenerationClient,
     NvidiaGenerationConfigError,
@@ -27,6 +64,7 @@ from backend.app.services.nvidia_generation import (
 )
 
 settings = get_settings()
+keepalive_service = KeepAliveService(settings)
 app = FastAPI(
     title="DisasterMind AI Backend",
     description="Multi-agent disaster orchestration backed by NVIDIA Build / NIM generation.",
@@ -52,14 +90,34 @@ app.add_middleware(RequestSizeLimitMiddleware, max_bytes=settings.max_request_by
 app.add_middleware(SecurityHeadersMiddleware, settings=settings)
 
 
+@app.on_event("startup")
+async def start_keepalive() -> None:
+    await keepalive_service.start()
+
+
+@app.on_event("shutdown")
+async def stop_keepalive() -> None:
+    await keepalive_service.stop()
+
+
 @app.get("/health")
-async def health() -> dict[str, str | bool]:
+async def health() -> dict[str, str | bool | int]:
     return {
         "status": "ok",
         "nvidia_configured": bool(settings.nvidia_api_key),
         "nvidia_model": settings.nvidia_model,
         "api_key_required": settings.api_key_required,
         "environment": settings.app_env,
+        "backend_keepalive_configured": keepalive_service.backend_enabled,
+        "supabase_keepalive_configured": keepalive_service.supabase_enabled,
+    }
+
+
+@app.get("/keepalive")
+async def keepalive() -> dict:
+    return {
+        "status": "ok",
+        **keepalive_service.status(),
     }
 
 
@@ -93,7 +151,9 @@ async def generate(request: GenerationRequest) -> GenerationResponse:
 )
 async def orchestrate(request: DisasterScenario) -> OrchestrationResponse:
     orchestrator = DisasterMindOrchestrator()
-    return await orchestrator.run(request)
+    response = await orchestrator.run(request)
+    _normalize_agent_results(response.agent_results)
+    return response
 
 
 @app.post(
@@ -103,7 +163,9 @@ async def orchestrate(request: DisasterScenario) -> OrchestrationResponse:
 )
 async def orchestrate_intake(request: ScenarioIntakeRequest) -> OrchestrationResponse:
     orchestrator = DisasterMindOrchestrator()
-    return await orchestrator.run_from_intake(request)
+    response = await orchestrator.run_from_intake(request)
+    _normalize_agent_results(response.agent_results)
+    return response
 
 
 @app.post(

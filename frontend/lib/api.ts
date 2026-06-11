@@ -156,3 +156,13 @@ export async function askAgents(
 
   return response.json();
 }
+
+export async function pingBackendHealth(): Promise<void> {
+  const response = await fetch("/api/health", {
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Backend health ping failed with status ${response.status}`);
+  }
+}
