@@ -104,6 +104,7 @@ STATEMENTS = [
     )
     LANGUAGE sql
     STABLE
+    SET statement_timeout = '60s'
     AS $$
         WITH ranked AS (
             SELECT

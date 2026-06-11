@@ -17,6 +17,9 @@ class KnowledgeAgent(AgentRunner):
     agent_name = "knowledge"
 
     async def run(self, ctx: AgentContext) -> AgentResult:
+        return await self._timed_run_async(ctx, self._run_impl)
+
+    async def _run_impl(self, ctx: AgentContext) -> AgentResult:
         rag = ctx.rag
         if rag.get("status") != "ok":
             return self._result(

@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 from backend.app.agents.base import AgentContext, AgentRunner, compute_confidence, evidence, STRICT_REALTIME_PROMPT
+from backend.app.agents.fallbacks import build_explanations, parse_json_object
 from backend.app.schemas import AgentResult, GenerationMessage
 
 MODELS_DIR = Path(__file__).resolve().parents[3] / "models" / "xgboost"
@@ -9,6 +10,9 @@ class ExplainabilityAgent(AgentRunner):
     agent_name = "explainability"
 
     async def run(self, ctx: AgentContext) -> AgentResult:
+        return await self._timed_run_async(ctx, self._run_impl)
+
+    async def _run_impl(self, ctx: AgentContext) -> AgentResult:
         prediction = ctx.outputs.get("prediction", {})
         rag = ctx.rag
         risk = ctx.outputs.get("risk", {})
@@ -49,6 +53,8 @@ class ExplainabilityAgent(AgentRunner):
         )
 
         try:
+            if ctx.generation_client is None:
+                raise RuntimeError("NVIDIA generation client is not configured.")
             generated = await ctx.generation_client.generate(
                 messages=[
                     GenerationMessage(role="system", content=f"{STRICT_REALTIME_PROMPT}\nYou are a strict JSON-only AI explainability analyst."),
@@ -57,20 +63,12 @@ class ExplainabilityAgent(AgentRunner):
                 max_tokens=800,
                 temperature=0.1,
             )
-            data = json.loads(generated.content)
+            data = parse_json_object(generated.content)
             explanations = data.get("explanations", {})
         except Exception as exc:
-            return self._result(
-                ctx.scenario,
-                confidence=0.0,
-                reasoning_summary=f"LLM generation failed: {exc}",
-                evidence_items=[],
-                recommendations=[],
-                next_actions=[],
-                status="failed",
-                output={"status": "failed", "error": str(exc)},
-                execution_time_ms=0,
-            )
+            data = build_explanations(prediction, feature_importance, rag, risk)
+            data["fallback_reason"] = str(exc)
+            explanations = data.get("explanations", {})
 
         retrieved = rag.get("retrieved_disasters", [])
         top = retrieved[0] if retrieved else {}
@@ -93,6 +91,11 @@ class ExplainabilityAgent(AgentRunner):
             recommendations=["Present explanation chains in the executive report."],
             next_actions=["Continue to logistics and planning agents."],
             status="completed",
-            output={"explanations": explanations, "feature_importance": feature_importance},
+            output={
+                "explanations": explanations,
+                "feature_importance": feature_importance,
+                "generation_mode": data.get("generation_mode", "nvidia-build"),
+                "fallback_reason": data.get("fallback_reason"),
+            },
             execution_time_ms=0,
         )

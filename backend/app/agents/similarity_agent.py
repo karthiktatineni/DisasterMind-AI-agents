@@ -19,6 +19,9 @@ class SimilarityAgent(AgentRunner):
     agent_name = "similarity"
 
     async def run(self, ctx: AgentContext) -> AgentResult:
+        return await self._timed_run_async(ctx, self._run_impl)
+
+    async def _run_impl(self, ctx: AgentContext) -> AgentResult:
         similarity = ctx.similarity
         if similarity.get("status") != "ok":
             return self._result(

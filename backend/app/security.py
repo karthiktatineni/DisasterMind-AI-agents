@@ -12,7 +12,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from backend.app.config import Settings, get_settings
 
 
-PUBLIC_PATHS = {"/health", "/docs", "/openapi.json", "/redoc"}
+PUBLIC_PATHS = {"/health", "/keepalive", "/docs", "/openapi.json", "/redoc"}
 
 
 class RequestSizeLimitMiddleware(BaseHTTPMiddleware):

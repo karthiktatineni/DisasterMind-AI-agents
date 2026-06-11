@@ -31,7 +31,7 @@ import {
   YAxis,
 } from "recharts";
 
-import { askAgents, orchestrateScenario } from "@/lib/api";
+import { askAgents, orchestrateScenario, pingBackendHealth } from "@/lib/api";
 import type { AgentResult, OrchestrationResponse } from "@/lib/api";
 
 type Severity = "Low" | "Moderate" | "High" | "Critical";
@@ -174,6 +174,21 @@ export default function Home() {
 
   useEffect(() => {
     setChartsReady(true);
+  }, []);
+
+  useEffect(() => {
+    const ping = () => {
+      void pingBackendHealth()
+        .then(() => {
+          setServiceState((current) => (current === "offline" ? "ready" : current));
+        })
+        .catch(() => {
+          setServiceState("offline");
+        });
+    };
+    ping();
+    const interval = window.setInterval(ping, 5 * 60 * 1000);
+    return () => window.clearInterval(interval);
   }, []);
 
   const canRun = Boolean(
@@ -568,7 +583,7 @@ export default function Home() {
                 </div>
                 <div className="panel-body h-[260px]">
                   {chartsReady && hasResults && contributorChart.length > 0 && (
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" minHeight={260}>
                       <BarChart data={contributorChart}>
                         <CartesianGrid stroke="#dfe5df" strokeDasharray="3 3" />
                         <XAxis dataKey="name" stroke="#65736b" />
@@ -625,7 +640,7 @@ export default function Home() {
                 </div>
                 <div className="panel-body h-[280px]">
                   {chartsReady && hasResults && (
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" minHeight={280}>
                       <BarChart data={resourceChart}>
                         <CartesianGrid stroke="#dfe5df" strokeDasharray="3 3" />
                         <XAxis dataKey="name" stroke="#65736b" />

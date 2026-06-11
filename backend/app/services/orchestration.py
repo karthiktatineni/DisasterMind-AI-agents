@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from backend.app.agents.decision_agent import DecisionAgent
@@ -38,6 +39,7 @@ from backend.app.services.similarity_service import SimilarityService
 
 __all__ = ["AGENT_SEQUENCE", "DisasterMindOrchestrator"]
 
+logger = logging.getLogger(__name__)
 
 class DisasterMindOrchestrator:
     def __init__(
@@ -63,28 +65,53 @@ class DisasterMindOrchestrator:
         ctx.rag = await self.rag_service.retrieve(scenario, top_k=10)
 
         if ctx.rag.get("status") != "ok":
+            logger.warning("RAG retrieval failed: %s", ctx.rag.get("reason", "Unknown"))
             return self._insufficient_data_response(scenario, ctx.rag.get("reason", "Retrieval failed"))
+            
+        if ctx.similarity.get("status") == "insufficient_data":
+            logger.warning("Similarity search returned insufficient data: %s", ctx.similarity.get("reason", "Unknown"))
+            return self._insufficient_data_response(scenario, ctx.similarity.get("reason", "Insufficient historical similarity data"))
 
-        runners = [
-            CoordinatorAgent(),
-            KnowledgeAgent(),
-            SimilarityAgent(),
-            RiskAgent(),
-            PredictionAgent(),
-            ExplainabilityAgent(),
-            LogisticsAgent(),
-            EvacuationAgent(),
-            SimulationAgent(),
-            ValidationAgent(),
-            PlanningAgent(),
-            DecisionAgent(),
+        logger.info("Starting orchestration pipeline for scenario %s in %s", scenario.disaster_type, scenario.region)
+
+        import asyncio
+
+        stages = [
+            [CoordinatorAgent(), KnowledgeAgent(), SimilarityAgent(), RiskAgent()],
+            [PredictionAgent()],
+            [ExplainabilityAgent(), LogisticsAgent(), EvacuationAgent()],
+            [SimulationAgent(), ValidationAgent(), PlanningAgent()],
+            [DecisionAgent()],
         ]
 
         results: list[AgentResult] = []
-        for runner in runners:
-            result = await runner.run(ctx)
-            ctx.store(runner.agent_name, result.output)
-            results.append(result)
+
+        async def _run_safe(runner) -> AgentResult:
+            try:
+                logger.info("Executing agent: %s", runner.agent_name)
+                return await runner.run(ctx)
+            except Exception as e:
+                logger.exception("Agent %s failed unexpectedly: %s", runner.agent_name, str(e))
+                return AgentResult(
+                    request_id=scenario.request_id,
+                    agent_name=runner.agent_name,
+                    timestamp="now",
+                    confidence=0.0,
+                    reasoning_summary="Agent crashed during execution.",
+                    evidence=[],
+                    recommendations=[],
+                    next_actions=["Review logs"],
+                    status="failed",
+                    output={"error": str(e), "execution_time_ms": 0}
+                )
+
+        for stage in stages:
+            stage_results = await asyncio.gather(*(_run_safe(r) for r in stage))
+            for res in stage_results:
+                ctx.store(res.agent_name, res.output)
+                results.append(res)
+
+        logger.info("All core agents completed.")
 
         validation = results[9]
         decision = results[11]
@@ -103,6 +130,8 @@ class DisasterMindOrchestrator:
             else "completed"
         )
         confidence = round(sum(r.confidence for r in results) / len(results), 3) if results else 0.0
+
+        logger.info("Orchestration complete with status: %s (confidence: %.2f)", status, confidence)
 
         return OrchestrationResponse(
             request_id=scenario.request_id,

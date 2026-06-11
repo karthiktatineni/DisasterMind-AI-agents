@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from math import ceil
-
 from backend.app.agents.base import AgentContext, AgentRunner, compute_confidence, evidence
 from backend.app.schemas import AgentResult
 
@@ -9,14 +7,20 @@ from backend.app.schemas import AgentResult
 import json
 from backend.app.schemas import GenerationMessage
 from backend.app.agents.base import STRICT_REALTIME_PROMPT
+from backend.app.agents.fallbacks import build_planning_output, parse_json_object
 
 class PlanningAgent(AgentRunner):
     agent_name = "planner"
 
     async def run(self, ctx: AgentContext) -> AgentResult:
+        return await self._timed_run_async(ctx, self._run_impl)
+
+    async def _run_impl(self, ctx: AgentContext) -> AgentResult:
         scenario = ctx.scenario
         risk = ctx.outputs.get("risk", {})
         prediction = ctx.outputs.get("prediction", {})
+        logistics = ctx.outputs.get("logistics", {})
+        evacuation = ctx.outputs.get("evacuation", {})
         rag = ctx.rag
 
         if rag.get("status") != "ok":
@@ -48,6 +52,8 @@ class PlanningAgent(AgentRunner):
         )
 
         try:
+            if ctx.generation_client is None:
+                raise RuntimeError("NVIDIA generation client is not configured.")
             generated = await ctx.generation_client.generate(
                 messages=[
                     GenerationMessage(role="system", content=f"{STRICT_REALTIME_PROMPT}\nYou are a JSON-only disaster planning AI."),
@@ -56,19 +62,10 @@ class PlanningAgent(AgentRunner):
                 max_tokens=1000,
                 temperature=0.1,
             )
-            data = json.loads(generated.content)
+            data = parse_json_object(generated.content)
         except Exception as exc:
-            return self._result(
-                scenario,
-                confidence=0.0,
-                reasoning_summary=f"LLM generation failed: {exc}",
-                evidence_items=[],
-                recommendations=[],
-                next_actions=[],
-                status="failed",
-                output={"status": "failed", "error": str(exc)},
-                execution_time_ms=0,
-            )
+            data = build_planning_output(scenario, risk, prediction, logistics, evacuation, rag)
+            data["fallback_reason"] = str(exc)
 
         retrieved = rag.get("retrieved_disasters", [])
         top_sim = float(retrieved[0].get("similarity", 0)) if retrieved else 0.0

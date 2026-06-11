@@ -35,6 +35,11 @@ class Settings:
     rate_limit_requests: int = 60
     rate_limit_window_seconds: int = 60
     max_request_bytes: int = 65536
+    enable_backend_keepalive: bool = True
+    backend_keepalive_url: str = ""
+    backend_keepalive_interval_seconds: int = 300
+    enable_supabase_keepalive: bool = True
+    supabase_keepalive_interval_seconds: int = 86400
 
     @property
     def production(self) -> bool:
@@ -59,6 +64,13 @@ def _get_float(name: str, default: float) -> float:
     return float(raw_value)
 
 
+def _get_bool(name: str, default: bool) -> bool:
+    raw_value = os.getenv(name)
+    if raw_value is None or raw_value.strip() == "":
+        return default
+    return raw_value.strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _get_origins() -> tuple[str, ...]:
     raw_value = os.getenv("ALLOWED_ORIGINS", "")
     if not raw_value.strip():
@@ -72,6 +84,11 @@ def _get_origins() -> tuple[str, ...]:
 
 
 def get_settings() -> Settings:
+    backend_keepalive_url = (
+        os.getenv("BACKEND_KEEPALIVE_URL")
+        or os.getenv("RENDER_EXTERNAL_URL")
+        or ""
+    ).strip()
     return Settings(
         nvidia_api_key=os.getenv("NVIDIA_API_KEY", "").strip(),
         nvidia_embedding_model=os.getenv("NVIDIA_EMBEDDING_MODEL", "nvidia/nv-embed-v1").strip(),
@@ -94,4 +111,9 @@ def get_settings() -> Settings:
         rate_limit_requests=_get_int("RATE_LIMIT_REQUESTS", 60),
         rate_limit_window_seconds=_get_int("RATE_LIMIT_WINDOW_SECONDS", 60),
         max_request_bytes=_get_int("MAX_REQUEST_BYTES", 65536),
+        enable_backend_keepalive=_get_bool("ENABLE_BACKEND_KEEPALIVE", True),
+        backend_keepalive_url=backend_keepalive_url.rstrip("/"),
+        backend_keepalive_interval_seconds=_get_int("BACKEND_KEEPALIVE_INTERVAL_SECONDS", 300),
+        enable_supabase_keepalive=_get_bool("ENABLE_SUPABASE_KEEPALIVE", True),
+        supabase_keepalive_interval_seconds=_get_int("SUPABASE_KEEPALIVE_INTERVAL_SECONDS", 86400),
     )

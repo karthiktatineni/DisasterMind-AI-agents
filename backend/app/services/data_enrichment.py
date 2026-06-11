@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from math import cos, radians
 from typing import Any
 
 import httpx
@@ -29,6 +30,48 @@ def _fallback_population(region: str, severity: str) -> int:
     return round((65000 + max(1, len(region)) * 2200) * SEVERITY_SCALE[severity])
 
 
+def _safe_float(value: Any, default: float = 0.0) -> float:
+    try:
+        result = float(value)
+    except (TypeError, ValueError):
+        return default
+    return result if result == result else default
+
+
+def _safe_int(value: Any, default: int = 0) -> int:
+    return int(max(0, round(_safe_float(value, float(default)))))
+
+
+def _latest_world_bank_value(payload: Any) -> float | None:
+    if not isinstance(payload, list) or len(payload) < 2 or not isinstance(payload[1], list):
+        return None
+    for row in payload[1]:
+        if isinstance(row, dict) and row.get("value") is not None:
+            return _safe_float(row["value"])
+    return None
+
+
+def _bbox_area_km2(bounding_box: list[str] | None) -> float:
+    if not bounding_box or len(bounding_box) != 4:
+        return 0.0
+    south, north, west, east = [_safe_float(value) for value in bounding_box]
+    height = abs(north - south) * 111.32
+    mean_lat = radians((north + south) / 2)
+    width = abs(east - west) * 111.32 * max(0.1, cos(mean_lat))
+    return max(0.0, height * width)
+
+
+def _tag_capacity(tags: dict[str, Any]) -> int:
+    for key in ("capacity:beds", "beds", "capacity"):
+        value = tags.get(key)
+        if value is None:
+            continue
+        text = str(value).replace(",", "").strip()
+        if text.isdigit():
+            return int(text)
+    return 0
+
+
 async def enrich_scenario(intake: ScenarioIntakeRequest) -> DisasterScenario:
     sources: list[dict[str, str]] = []
     latitude: float | None = None
@@ -36,6 +79,12 @@ async def enrich_scenario(intake: ScenarioIntakeRequest) -> DisasterScenario:
     country: str | None = None
     resolved_location: str | None = None
     population: int | None = None
+    population_area_km2 = 0.0
+    country_code: str | None = None
+    country_iso3: str | None = None
+    country_population: int | None = None
+    country_area_km2 = 0.0
+    beds_per_1000: float | None = None
     temperature = 0.0
     humidity = 0.0
     wind_speed = 0.0
@@ -58,6 +107,7 @@ async def enrich_scenario(intake: ScenarioIntakeRequest) -> DisasterScenario:
             latitude = float(result["latitude"])
             longitude = float(result["longitude"])
             country = result.get("country")
+            country_code = result.get("country_code")
             resolved_location = ", ".join(
                 part for part in [result.get("name"), result.get("admin1"), country] if part
             )
@@ -68,6 +118,28 @@ async def enrich_scenario(intake: ScenarioIntakeRequest) -> DisasterScenario:
             sources.append(_source("Open-Meteo Geocoding", "fallback", "Could not resolve region live."))
 
         if latitude is not None and longitude is not None:
+            try:
+                nominatim = await client.get(
+                    "https://nominatim.openstreetmap.org/search",
+                    params={
+                        "q": intake.region,
+                        "format": "jsonv2",
+                        "limit": 1,
+                        "addressdetails": 1,
+                        "extratags": 1,
+                    },
+                )
+                nominatim.raise_for_status()
+                place = (nominatim.json() or [])[0]
+                tags = place.get("extratags", {})
+                osm_population = _safe_int(tags.get("population"))
+                if osm_population and not population:
+                    population = osm_population
+                population_area_km2 = _bbox_area_km2(place.get("boundingbox"))
+                sources.append(_source("Nominatim", "live", "Fetched OSM place metadata and bounding box."))
+            except Exception:
+                sources.append(_source("Nominatim", "fallback", "OSM place metadata unavailable."))
+
             try:
                 forecast = await client.get(
                     "https://api.open-meteo.com/v1/forecast",
@@ -123,29 +195,93 @@ async def enrich_scenario(intake: ScenarioIntakeRequest) -> DisasterScenario:
                 )
                 osm.raise_for_status()
                 elements: list[dict[str, Any]] = osm.json().get("elements", [])
+                hospital_facilities = 0
+                shelter_facilities = 0
                 for element in elements:
                     tags = element.get("tags", {})
-                    
-                    # Attempt to get real capacity if listed, otherwise default 0
-                    try:
-                        cap = int(tags.get("capacity", 0))
-                    except ValueError:
-                        cap = 0
+                    cap = _tag_capacity(tags)
 
                     if tags.get("amenity") in ("hospital", "clinic"):
+                        hospital_facilities += 1
+                        if not cap:
+                            cap = 150 if tags.get("amenity") == "hospital" else 25
                         hospital_capacity += cap
                     if tags.get("social_facility") == "shelter" or tags.get("emergency") == "assembly_point":
+                        shelter_facilities += 1
+                        if not cap:
+                            cap = 300 if tags.get("social_facility") == "shelter" else 500
                         shelter_capacity += cap
-                sources.append(_source("OpenStreetMap Overpass", "live", "Fetched nearby hospitals, clinics, and shelters."))
+                sources.append(
+                    _source(
+                        "OpenStreetMap Overpass",
+                        "live",
+                        (
+                            f"Fetched {hospital_facilities} medical facilities and "
+                            f"{shelter_facilities} shelter or assembly sites nearby."
+                        ),
+                    )
+                )
             except Exception:
                 sources.append(_source("OpenStreetMap Overpass", "fallback", "Facility lookup unavailable."))
 
-    severity_scale = SEVERITY_SCALE[intake.severity]
-    disaster = intake.disaster_type.lower()
-    population = population or 0
+        if country_code:
+            try:
+                country_response = await client.get(
+                    f"https://restcountries.com/v3.1/alpha/{country_code}",
+                    params={"fields": "population,area,cca3,name"},
+                )
+                country_response.raise_for_status()
+                country_data = country_response.json()
+                if isinstance(country_data, list):
+                    country_data = country_data[0]
+                country_population = _safe_int(country_data.get("population"))
+                country_area_km2 = _safe_float(country_data.get("area"))
+                country_iso3 = country_data.get("cca3")
+                sources.append(_source("REST Countries", "live", "Fetched country population and area."))
+            except Exception:
+                sources.append(_source("REST Countries", "fallback", "Country population API unavailable."))
 
-    density = 0.0
-    historical_damage = 0.0
+        if country_iso3:
+            try:
+                beds_response = await client.get(
+                    f"https://api.worldbank.org/v2/country/{country_iso3}/indicator/SH.MED.BEDS.ZS",
+                    params={"format": "json", "per_page": 10},
+                )
+                beds_response.raise_for_status()
+                beds_per_1000 = _latest_world_bank_value(beds_response.json())
+                if beds_per_1000 is not None:
+                    sources.append(_source("World Bank", "latest", "Fetched latest hospital beds per 1,000 people."))
+            except Exception:
+                sources.append(_source("World Bank", "fallback", "Hospital bed density API unavailable."))
+
+    population = population or country_population or _fallback_population(intake.region, intake.severity)
+    if not any(source["name"] in {"Open-Meteo Geocoding", "Nominatim", "REST Countries"} and source["status"] in {"live", "latest"} for source in sources):
+        sources.append(_source("Population estimate", "fallback", "Estimated population from scenario region text."))
+
+    area_km2 = population_area_km2 or country_area_km2
+    density = round(population / area_km2, 2) if area_km2 else round(population / 300, 2)
+    if area_km2:
+        sources.append(_source("Population density", "derived", "Computed from live population and area APIs."))
+    else:
+        sources.append(_source("Population density", "derived", "Estimated because no live area was available."))
+
+    if hospital_capacity == 0 and population:
+        bed_ratio = beds_per_1000 if beds_per_1000 is not None else 2.5
+        hospital_capacity = max(1, round(population * bed_ratio / 1000))
+        sources.append(_source("Hospital capacity", "derived", "Estimated from latest country hospital-bed density."))
+
+    if shelter_capacity == 0 and population:
+        shelter_fraction = {
+            "Low": 0.04,
+            "Moderate": 0.08,
+            "High": 0.14,
+            "Critical": 0.2,
+        }[intake.severity]
+        shelter_capacity = max(1, round(population * shelter_fraction))
+        sources.append(_source("Shelter capacity", "derived", "Estimated from population and scenario severity."))
+
+    base_damage = {"Low": 0.2, "Moderate": 0.4, "High": 0.7, "Critical": 0.95}
+    historical_damage = base_damage.get(intake.severity, 0.5)
 
     scenario = DisasterScenario(
         disaster_type=intake.disaster_type,

@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import logging
 import time
 from datetime import UTC, datetime
-from typing import Any, Literal
+from typing import Any, Callable, Coroutine, Literal
 
 from backend.app.schemas import AgentResult, DisasterScenario
+
+logger = logging.getLogger(__name__)
 
 AgentStatus = Literal[
     "completed",
@@ -109,3 +112,32 @@ class AgentRunner:
         elapsed = (time.perf_counter() - started) * 1000
         result.output["execution_time_ms"] = round(elapsed, 2)
         return result
+
+    async def _timed_run_async(self, ctx: AgentContext, fn: Callable[[AgentContext], Coroutine[Any, Any, AgentResult]]) -> AgentResult:
+        logger.info("Starting agent %s", self.agent_name)
+        started = time.perf_counter()
+        try:
+            result = await fn(ctx)
+            elapsed = (time.perf_counter() - started) * 1000
+            result.output["execution_time_ms"] = round(elapsed, 2)
+            logger.info("Agent %s finished in %.2fms with status %s", self.agent_name, elapsed, result.status)
+            return result
+        except Exception as e:
+            elapsed = (time.perf_counter() - started) * 1000
+            logger.exception("Agent %s failed after %.2fms: %s", self.agent_name, elapsed, str(e))
+            raise
+
+
+class DataIntegrityGate:
+    @staticmethod
+    def validate_scenario(scenario: DisasterScenario) -> list[str]:
+        warnings = []
+        if not scenario.disaster_type:
+            warnings.append("Missing disaster type")
+        if not scenario.region:
+            warnings.append("Missing region")
+        if not scenario.severity:
+            warnings.append("Missing severity")
+        if warnings:
+            logger.warning("DataIntegrityGate found warnings: %s", warnings)
+        return warnings

@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from backend.app.agents.base import AgentContext, AgentRunner, compute_confidence, evidence
+from backend.app.agents.fallbacks import build_risk_profile, parse_json_object
 from backend.app.schemas import AgentResult
 
 SEVERITY_WEIGHT = {"Low": 0.15, "Moderate": 0.35, "High": 0.65, "Critical": 0.9}
@@ -29,7 +30,6 @@ def _weighted_mean(rows: list[dict[str, Any]], field: str) -> float | None:
     return weighted_total / total_weight
 
 
-import json
 from backend.app.schemas import GenerationMessage
 from backend.app.agents.base import STRICT_REALTIME_PROMPT
 
@@ -37,6 +37,9 @@ class RiskAgent(AgentRunner):
     agent_name = "risk"
 
     async def run(self, ctx: AgentContext) -> AgentResult:
+        return await self._timed_run_async(ctx, self._run_impl)
+
+    async def _run_impl(self, ctx: AgentContext) -> AgentResult:
         scenario = ctx.scenario
         rag = ctx.rag
         if rag.get("status") != "ok":
@@ -66,6 +69,8 @@ class RiskAgent(AgentRunner):
         )
 
         try:
+            if ctx.generation_client is None:
+                raise RuntimeError("NVIDIA generation client is not configured.")
             generated = await ctx.generation_client.generate(
                 messages=[
                     GenerationMessage(role="system", content=f"{STRICT_REALTIME_PROMPT}\nYou are a strict JSON-only AI risk analyst."),
@@ -74,37 +79,31 @@ class RiskAgent(AgentRunner):
                 max_tokens=800,
                 temperature=0.1,
             )
-            data = json.loads(generated.content)
+            data = parse_json_object(generated.content)
             risk_score = data.get("risk_score", 0)
         except Exception as exc:
-            return self._result(
-                scenario,
-                confidence=0.0,
-                reasoning_summary=f"LLM generation failed: {exc}",
-                evidence_items=[],
-                recommendations=[],
-                next_actions=[],
-                status="failed",
-                output={"status": "failed", "error": str(exc)},
-                execution_time_ms=0,
-            )
+            data = build_risk_profile(scenario, rag)
+            data["fallback_reason"] = str(exc)
+            risk_score = data.get("risk_score", 0)
 
         retrieved = rag.get("retrieved_disasters", [])
         top_sim = float(retrieved[0].get("similarity", 0)) if retrieved else 0.0
         confidence = compute_confidence(True, len(retrieved), top_sim, [])
 
+        evidence_items = []
+        if retrieved:
+            evidence_items.append(evidence(
+                "supabase_pgvector",
+                "Top Match Anchor",
+                f"Top match {retrieved[0].get('event_name')} similarity {retrieved[0].get('similarity')}",
+                record_id=str(retrieved[0].get("id")),
+            ))
+            
         return self._result(
             scenario,
             confidence=confidence,
             reasoning_summary="Dynamic risk score derived from LLM analysis of retrieved historical matches.",
-            evidence_items=[
-                evidence(
-                    "supabase_pgvector",
-                    "Top Match Anchor",
-                    f"Top match {retrieved[0].get('event_name')} similarity {retrieved[0].get('similarity')}",
-                    record_id=str(retrieved[0].get("id")),
-                ) if retrieved else evidence("none", "none", "none"),
-            ],
+            evidence_items=evidence_items,
             recommendations=[f"Treat scenario as {data.get('risk_level', 'unknown')} risk ({risk_score}/100)."],
             next_actions=["Send risk profile to Prediction agent."],
             status="completed",

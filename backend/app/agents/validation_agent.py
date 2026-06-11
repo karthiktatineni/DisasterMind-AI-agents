@@ -8,6 +8,9 @@ class ValidationAgent(AgentRunner):
     agent_name = "validation"
 
     async def run(self, ctx: AgentContext) -> AgentResult:
+        return await self._timed_run_async(ctx, self._run_impl)
+
+    async def _run_impl(self, ctx: AgentContext) -> AgentResult:
         scenario = ctx.scenario
         prediction = ctx.outputs.get("prediction", {})
         risk = ctx.outputs.get("risk", {})
