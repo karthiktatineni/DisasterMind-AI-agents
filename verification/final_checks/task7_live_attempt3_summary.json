@@ -1,0 +1,72 @@
+{
+  "attempt": "task7-live-direct-03",
+  "commit": "69b6d27",
+  "request_id": "task7-orchestrate-real-001",
+  "http_status": 200,
+  "response_request_id": "task7-orchestrate-real-001",
+  "elapsed_ms": 113871.188,
+  "briefing_status": "insufficient_data",
+  "llm_calls_reported": 5,
+  "provider_http_responses": [
+    {
+      "status": 200,
+      "agent": "coordinator",
+      "timestamp": "2026-11-10T21:08:11.520804+05:30",
+      "retry_after": null,
+      "request_id": "task7-orchestrate-real-001"
+    },
+    {
+      "status": 200,
+      "agent": "coordinator",
+      "timestamp": "2026-11-10T21:08:48.063585+05:30",
+      "retry_after": null,
+      "request_id": "task7-orchestrate-real-001"
+    },
+    {
+      "status": 429,
+      "agent": "risk",
+      "timestamp": "2026-11-10T21:08:48.094396+05:30",
+      "retry_after": null,
+      "request_id": "task7-orchestrate-real-001"
+    },
+    {
+      "status": 200,
+      "agent": "logistics",
+      "timestamp": "2026-11-10T21:09:11.437805+05:30",
+      "retry_after": null,
+      "request_id": "task7-orchestrate-real-001"
+    },
+    {
+      "status": 200,
+      "agent": "logistics",
+      "timestamp": "2026-11-10T21:09:51.845227+05:30",
+      "retry_after": null,
+      "request_id": "task7-orchestrate-real-001"
+    },
+    {
+      "status": 200,
+      "agent": "coordinator",
+      "timestamp": "2026-11-10T21:09:59.773787+05:30",
+      "retry_after": null,
+      "request_id": "task7-orchestrate-real-001"
+    },
+    {
+      "status": 429,
+      "agent": "coordinator",
+      "timestamp": "2026-11-10T21:09:59.806157+05:30",
+      "retry_after": null,
+      "request_id": "task7-orchestrate-real-001"
+    }
+  ],
+  "pinecone_and_weather": [
+    {
+      "host": "geocoding-api.open-meteo.com",
+      "path": "/v1/search",
+      "status": 200,
+      "timestamp": "2026-11-10T21:08:12.17255+05:30"
+    }
+  ],
+  "stack_trace_leaked": false,
+  "stream_check": "NOT_RUN_AFTER_NIM_429",
+  "verdict": "PARTIAL_NO_PASS"
+}
