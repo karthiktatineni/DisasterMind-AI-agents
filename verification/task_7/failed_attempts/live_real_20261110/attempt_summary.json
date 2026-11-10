@@ -1,0 +1,51 @@
+{
+  "attempt": "2026-11-10-live-direct-01",
+  "server_started": "2026-11-10T20:48:01.9786433+05:30",
+  "code_commit": "54d3bcc4e6ebf4a6d2aad5f13e8556f2882319c5",
+  "client_request_id": "task7-orchestrate-real-001",
+  "client_received_response": false,
+  "client_process_interrupted": true,
+  "backend_log_rate_limit_retry": "Retrying LLM request (nvidia/nemotron-3-ultra-550b-a55b) in 3.49s after RateLimitError",
+  "later_backend_log": "Retrying LLM request (nvidia/nemotron-3-ultra-550b-a55b) in 4.22s after TimeoutError",
+  "upstream_NIM_wire_records": 0,
+  "captured_pinecone_records": [
+    {
+      "kind": "http_request",
+      "path": "/embed",
+      "count": 1,
+      "statuses": ""
+    },
+    {
+      "kind": "http_request",
+      "path": "/indexes/disastermind",
+      "count": 1,
+      "statuses": ""
+    },
+    {
+      "kind": "http_request",
+      "path": "/query",
+      "count": 1,
+      "statuses": ""
+    },
+    {
+      "kind": "http_response",
+      "path": "/embed",
+      "count": 1,
+      "statuses": "200"
+    },
+    {
+      "kind": "http_response",
+      "path": "/indexes/disastermind",
+      "count": 1,
+      "statuses": "200"
+    },
+    {
+      "kind": "http_response",
+      "path": "/query",
+      "count": 1,
+      "statuses": "200"
+    }
+  ],
+  "result": "INCOMPLETE_FAILED_ATTEMPT",
+  "limitation": "No client HTTP response; SDK rate-limit log exists, but NIM status, body and Retry-After header were not present in capture."
+}

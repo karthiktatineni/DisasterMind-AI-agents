@@ -26,3 +26,11 @@ verification\task_7\gates_output.txt     2026-11-10T20:30:09.0343444+05:30   979
 verification\task_7\live_run_current.txt 2026-11-10T20:30:34.1587543+05:30    192
 
 
+
+## Attempt 4 — local real HTTP request with initial wire-capture instrumentation
+- Recorded: 2026-11-10 20:48–20:50 Asia/Calcutta; code at commit `9ea31c9`.
+- Started the real FastAPI server with the opt-in capture path; `/health` returned 200 and reported NVIDIA and Pinecone configured.
+- Sent one real `POST /orchestrate` request with request ID `task7-orchestrate-real-001`. The backend logger reported an NVIDIA `RateLimitError` retry (3.49s); a later retry logged `TimeoutError` (4.22s). The client run was interrupted before it received a response. No SSE request was made.
+- Pinecone index description, embedding, and query requests were captured; all recorded responses were 200. The initial capture hook missed NVIDIA's shared client's default transport, so this attempt does not establish the NVIDIA HTTP status/body/Retry-After header or a complete request trace.
+- Raw captured traffic and server log are preserved under `verification/task_7/failed_attempts/live_real_20261110/`. This is failed, incomplete evidence only.
+- Root cause in capture instrumentation was patched in commit `54d3bcc`; default-client transport construction was locally verified to instantiate `WireSpyAsyncHTTPTransport`. No subsequent live retry has been run yet.
