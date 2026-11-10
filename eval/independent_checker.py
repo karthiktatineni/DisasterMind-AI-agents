@@ -40,7 +40,8 @@ def check_briefing(value: Any) -> list[str]:
         ids = [item.get("record_id") for item in citations if isinstance(item, dict)]
         if len(ids) != len(citations) or any(not isinstance(item, str) or not item.strip() for item in ids):
             errors.append("each citation must have a record_id")
-        if len(set(ids)) != len(ids):
+        valid_ids = [item for item in ids if isinstance(item, str)]
+        if len(set(valid_ids)) != len(valid_ids):
             errors.append("citation record_ids must be unique")
     for field in ("data_gaps", "disclaimers", "action_plan"):
         if not isinstance(value.get(field), list) or any(not isinstance(item, str) for item in value[field]):
@@ -72,6 +73,7 @@ def self_test() -> None:
         ("review false", lambda x: x["human_review"].__setitem__("required", False)),
         ("citation without id", lambda x: x.__setitem__("citations", [{}])),
         ("duplicate citation", lambda x: x["citations"].append({"record_id": "EMDAT-1"})),
+        ("unhashable citation id", lambda x: x["citations"].__setitem__(0, {"record_id": ["bad"]})),
         ("invalid gaps", lambda x: x.__setitem__("data_gaps", "none")),
         ("invalid premise completed", lambda x: x["risk"].__setitem__("premise_valid", False)),
         ("insufficient with citation", lambda x: x.__setitem__("status", "insufficient_data")),
