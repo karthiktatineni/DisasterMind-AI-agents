@@ -182,6 +182,11 @@ class NativeToolLLMClient:
                 last_exc = exc
                 if status == 429:
                     retry_after_s = retry_after_seconds(exc.response.headers)
+                    if retry_after_s is None:
+                        raise LLMClientError(
+                            f"NVIDIA LLM returned HTTP 429 without Retry-After; automatic retry stopped for model '{target_model}'.",
+                            status_code=429,
+                        ) from exc
                 if status in (401, 403, 404, 410, 422):
                     raise LLMClientError(
                         f"NVIDIA LLM non-retryable HTTP {status} for model '{target_model}': {exc}",

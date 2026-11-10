@@ -27,7 +27,7 @@ from backend.app.security import (
     extract_client_ip,
 )
 from backend.app.services.data_enrichment import enrich_scenario
-from backend.app.services.llm_client import LLMToolResponse, NativeToolLLMClient, ToolCallRequest
+from backend.app.services.llm_client import LLMClientError, LLMToolResponse, NativeToolLLMClient, ToolCallRequest
 from backend.app.services.retry_policy import retry_after_seconds
 from backend.app.tools.domain_tools import build_domain_tools
 from backend.app.tools.registry import ToolRegistry
@@ -48,6 +48,26 @@ def test_retry_after_seconds_parses_seconds_milliseconds_http_date_and_invalid()
     parsed = retry_after_seconds({"Retry-After": date})
     assert parsed is not None and 0 <= parsed <= 5
     assert retry_after_seconds({"Retry-After": "not-a-date"}) is None
+
+
+@pytest.mark.asyncio
+async def test_nim_429_without_retry_after_fails_fast_without_repeating_request():
+    class RateLimitedClient:
+        def __init__(self) -> None:
+            self.calls = 0
+            self.chat = self
+            self.completions = self
+
+        async def create(self, **_kwargs):
+            self.calls += 1
+            raise _fake_openai_err(RateLimitError, "429", 429)
+
+    upstream = RateLimitedClient()
+    client = NativeToolLLMClient(settings=Settings(nvidia_api_key="dummy"), openai_client=upstream)
+    with pytest.raises(LLMClientError, match="without Retry-After") as error:
+        await client.chat_with_tools(messages=[{"role": "user", "content": "probe"}], tools=[{"type": "function"}])
+    assert error.value.status_code == 429
+    assert upstream.calls == 1
 
 
 def _fake_openai_err(cls, msg: str, status_code: int = 500):
