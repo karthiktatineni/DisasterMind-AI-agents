@@ -1,0 +1,3 @@
+Commits scanned: 37
+Known synthetic negative-control token references (hash allowlisted): 56
+HISTORY_SECRET_SCAN_PASS
