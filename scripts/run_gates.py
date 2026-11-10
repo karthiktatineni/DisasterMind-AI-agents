@@ -86,11 +86,10 @@ def step_grep_gates() -> bool:
 def step_secret_scan() -> bool:
     print("=== 3. SECRET SCAN WITH ALLOWLIST ===", flush=True)
     allow_data = json.loads(ALLOWLIST_PATH.read_text(encoding="utf-8"))["allowed_hits"]
-    allowed = {(item["path"], int(item["line"])): item["literal"] for item in allow_data}
+    allowed = {(item["path"], int(item["line"])): item["token_sha256"] for item in allow_data}
+    pattern = r"nvapi-[A-Za-z0-9_-]{10,}|pcsk_[A-Za-z0-9_-]{10,}|sb_secret_[A-Za-z0-9_-]{10,}"
 
-    proc = _run(
-        ["git", "grep", "-n", "-E", r"nvapi-[A-Za-z0-9_-]{10,}|pcsk_[A-Za-z0-9_-]{10,}|sb_secret_[A-Za-z0-9_-]{10,}"]
-    )
+    proc = _run(["git", "grep", "-n", "-E", pattern])
     if proc.returncode > 1:
         print(f"[FAIL] secret grep error: {proc.stderr.strip()}")
         return False
@@ -104,8 +103,9 @@ def step_secret_scan() -> bool:
             continue
         rel_path, line_str, content = parts[0], parts[1], parts[2]
         line_no = int(line_str)
-        lit = allowed.get((rel_path, line_no))
-        if lit and lit in content:
+        expected_sha = allowed.get((rel_path, line_no))
+        tokens = [m.group(0) for m in re.finditer(pattern, content)]
+        if expected_sha and tokens and all(hashlib.sha256(tok.encode("utf-8")).hexdigest() == expected_sha for tok in tokens):
             allowlisted.append(raw)
         else:
             unexpected.append(raw)
