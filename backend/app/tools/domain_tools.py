@@ -137,7 +137,7 @@ def build_domain_tools(
                 "total_damage_usd_thousands": m.total_damage,
                 "similarity": m.similarity,
             }
-            for m in res.matches
+            for m in res.matches[: args["top_k"]]
         ]
         return (
             "ok",
