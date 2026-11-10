@@ -38,6 +38,11 @@ class Settings:
     rate_limit_requests: int = 60
     rate_limit_window_seconds: int = 60
     max_request_bytes: int = 65536
+    trusted_proxies: tuple[str, ...] = ()
+    # Sized from measured NIM ~25-40 RPM ceiling / ~10 LLM calls per run -> 2 concurrent runs
+    max_concurrent_orchestrations: int = 2
+    orchestration_wall_clock_cap_s: float = 450.0
+    http_timeout_s: float = 90.0
     enable_backend_keepalive: bool = True
     backend_keepalive_url: str = ""
     backend_keepalive_interval_seconds: int = 300
@@ -84,6 +89,11 @@ def _get_origins() -> tuple[str, ...]:
     return tuple(origin.strip() for origin in raw_value.split(",") if origin.strip())
 
 
+def _get_csv_tuple(name: str) -> tuple[str, ...]:
+    raw_value = os.getenv(name, "")
+    return tuple(part.strip() for part in raw_value.split(",") if part.strip())
+
+
 def get_settings() -> Settings:
     backend_keepalive_url = (
         os.getenv("BACKEND_KEEPALIVE_URL")
@@ -115,6 +125,10 @@ def get_settings() -> Settings:
         rate_limit_requests=_get_int("RATE_LIMIT_REQUESTS", 60),
         rate_limit_window_seconds=_get_int("RATE_LIMIT_WINDOW_SECONDS", 60),
         max_request_bytes=_get_int("MAX_REQUEST_BYTES", 65536),
+        trusted_proxies=_get_csv_tuple("TRUSTED_PROXIES"),
+        max_concurrent_orchestrations=max(1, _get_int("MAX_CONCURRENT_ORCHESTRATIONS", 2)),
+        orchestration_wall_clock_cap_s=max(1.0, _get_float("ORCHESTRATION_WALL_CLOCK_CAP_S", 450.0)),
+        http_timeout_s=max(5.0, _get_float("HTTP_TIMEOUT_S", 90.0)),
         enable_backend_keepalive=_get_bool("ENABLE_BACKEND_KEEPALIVE", True),
         backend_keepalive_url=backend_keepalive_url.rstrip("/"),
         backend_keepalive_interval_seconds=_get_int("BACKEND_KEEPALIVE_INTERVAL_SECONDS", 300),

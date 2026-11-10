@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from openai import APIConnectionError, APIError, APITimeoutError, AsyncOpenAI
+import asyncio
+import random
+
+from openai import APIConnectionError, APIError, APIStatusError, APITimeoutError, AsyncOpenAI
 
 from backend.app.config import Settings, get_settings
 from backend.app.schemas import GenerationMessage, GenerationResponse
@@ -40,21 +43,33 @@ class NvidiaBuildGenerationClient:
         temperature: float | None = None,
         top_p: float | None = None,
     ) -> GenerationResponse:
-        try:
-            completion = await self._client.chat.completions.create(
-                model=self.settings.nvidia_model,
-                messages=[message.model_dump() for message in messages],
-                max_tokens=max_tokens or self.settings.nvidia_max_tokens,
-                temperature=(
-                    self.settings.nvidia_temperature
-                    if temperature is None
-                    else temperature
-                ),
-                top_p=self.settings.nvidia_top_p if top_p is None else top_p,
-                stream=False,
-            )
-        except (APIConnectionError, APITimeoutError, APIError) as exc:
-            raise NvidiaGenerationError(f"NVIDIA generation failed: {exc}") from exc
+        last_exc: Exception | None = None
+        for attempt in range(3):
+            try:
+                completion = await self._client.chat.completions.create(
+                    model=self.settings.nvidia_model,
+                    messages=[message.model_dump() for message in messages],
+                    max_tokens=max_tokens or self.settings.nvidia_max_tokens,
+                    temperature=(
+                        self.settings.nvidia_temperature
+                        if temperature is None
+                        else temperature
+                    ),
+                    top_p=self.settings.nvidia_top_p if top_p is None else top_p,
+                    stream=False,
+                )
+                break
+            except APIStatusError as exc:
+                last_exc = exc
+                if exc.status_code not in (429, 500, 502, 503, 504) or attempt == 2:
+                    raise NvidiaGenerationError(f"NVIDIA generation failed: {exc}") from exc
+            except (APIConnectionError, APITimeoutError, APIError) as exc:
+                last_exc = exc
+                if attempt == 2:
+                    raise NvidiaGenerationError(f"NVIDIA generation failed: {exc}") from exc
+            await asyncio.sleep(0.2 * (2**attempt) + random.uniform(0.0, 0.2))
+        else:
+            raise NvidiaGenerationError(f"NVIDIA generation failed: {last_exc}")
 
         message = completion.choices[0].message
         reasoning_content = getattr(message, "reasoning_content", None)

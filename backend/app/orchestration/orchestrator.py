@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import time
 from typing import Any, Callable
 from uuid import uuid4
@@ -181,10 +182,10 @@ class DisasterMindOrchestrator:
         self.verifier = verifier or InAppVerifier()
         self.agent_specs = dict(agent_specs or AGENT_SPECS)
 
-    def _get_historical_stats_service(self) -> HistoricalStatsService | None:
+    async def _get_historical_stats_service(self) -> HistoricalStatsService | None:
         if self._historical_stats_service is None:
             try:
-                self._historical_stats_service = HistoricalStatsService()
+                self._historical_stats_service = await asyncio.to_thread(HistoricalStatsService)
             except FileNotFoundError:
                 return None
         return self._historical_stats_service
@@ -229,7 +230,7 @@ class DisasterMindOrchestrator:
             if on_event is not None:
                 on_event(ev)
 
-        stats_svc = self._get_historical_stats_service()
+        stats_svc = await self._get_historical_stats_service()
         dataset_version = (
             stats_svc.dataset_version if stats_svc is not None else "unknown"
         )
@@ -294,7 +295,7 @@ class DisasterMindOrchestrator:
                 http_client=http_client,
             )
 
-            run_deadline = started + 450.0
+            run_deadline = started + float(getattr(self.settings, "orchestration_wall_clock_cap_s", 450.0))
             run_max_tokens = 120000
 
             # Seed resolved_geography immediately if user already supplied coordinates
@@ -432,17 +433,25 @@ class DisasterMindOrchestrator:
             ]
             registry = ToolRegistry(domain_specs + delegation_specs)
 
-            coord_trace = await run_agent_loop(
-                spec=self.agent_specs["coordinator"],
-                user_payload={"scenario": user_payload},
-                state=state,
-                llm_client=llm_client,
-                registry=registry,
-                verifier=self.verifier,
-                emit=emit,
-                run_deadline=run_deadline,
-                run_max_tokens=run_max_tokens,
-            )
+            try:
+                coord_trace = await run_agent_loop(
+                    spec=self.agent_specs["coordinator"],
+                    user_payload={"scenario": user_payload},
+                    state=state,
+                    llm_client=llm_client,
+                    registry=registry,
+                    verifier=self.verifier,
+                    emit=emit,
+                    run_deadline=run_deadline,
+                    run_max_tokens=run_max_tokens,
+                )
+            except Exception as exc:
+                from backend.app.orchestration.models import AbstentionItem
+
+                state.abstained_agents.add("coordinator")
+                state.abstentions.append(AbstentionItem(agent="coordinator", reason=f"Orchestration loop error: {exc}"))
+                emit(SSEEventRecord(event="run_failed", run_id=rid, data={"error": str(exc), "request_id": rid}))
+                coord_trace = AgentTraceRecord(agent="coordinator", status="failed")
 
             ordered_traces: list[AgentTraceRecord] = [coord_trace]
             for name in ("risk", "logistics", "evacuation"):

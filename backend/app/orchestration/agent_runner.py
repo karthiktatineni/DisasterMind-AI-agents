@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import lru_cache
 import json
 import time
 from dataclasses import dataclass
@@ -34,6 +35,11 @@ from backend.app.tools.registry import (
 PROMPTS_DIR = Path(__file__).resolve().parents[1] / "prompts"
 
 
+@lru_cache(maxsize=16)
+def _cached_prompt_text(prompt_path: str) -> str:
+    return Path(prompt_path).read_text(encoding="utf-8").strip()
+
+
 @dataclass(frozen=True)
 class AgentSpec:
     name: AgentName
@@ -51,7 +57,7 @@ class AgentSpec:
     force_submit_on_required_ok: bool = True
 
     def load_system_prompt(self) -> str:
-        return (PROMPTS_DIR / self.prompt_file).read_text(encoding="utf-8").strip()
+        return _cached_prompt_text(str(PROMPTS_DIR / self.prompt_file))
 
     def submission_spec(self) -> SubmissionToolSpec:
         return SubmissionToolSpec(

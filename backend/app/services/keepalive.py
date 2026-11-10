@@ -13,8 +13,9 @@ logger = logging.getLogger(__name__)
 
 
 class KeepAliveService:
-    def __init__(self, settings: Settings) -> None:
+    def __init__(self, settings: Settings, http_client: httpx.AsyncClient | None = None) -> None:
         self.settings = settings
+        self._http_client = http_client
         self._tasks: list[asyncio.Task[None]] = []
 
     @property
@@ -46,6 +47,10 @@ class KeepAliveService:
 
     async def ping_backend(self) -> dict[str, Any]:
         url = self._backend_health_url()
+        if self._http_client is not None:
+            response = await self._http_client.get(url, timeout=10.0, follow_redirects=True)
+            response.raise_for_status()
+            return {"status": "ok", "url": url, "http_status": response.status_code}
         async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
             response = await client.get(url)
             response.raise_for_status()

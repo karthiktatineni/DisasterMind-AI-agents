@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from functools import lru_cache
 import json
 import math
 import re
@@ -80,12 +82,17 @@ class VerificationResult:
     validated_model: BaseModel | None = None
 
 
+@lru_cache(maxsize=8)
+def _read_standards_json(target_str: str) -> str:
+    return Path(target_str).read_text(encoding="utf-8")
+
+
 def load_standard_numbers(path: Path | None = None) -> set[float]:
     """Load strictly verified numeric planning constants from config/planning_standards.json."""
     target = path or STANDARDS_PATH
     if not target.exists():
         return {15.0}
-    doc = json.loads(target.read_text(encoding="utf-8"))
+    doc = json.loads(_read_standards_json(str(target)))
     nums: set[float] = set()
     for entry in (doc.get("standards") or {}).values():
         if isinstance(entry, dict) and isinstance(entry.get("value"), (int, float)) and not isinstance(entry.get("value"), bool):

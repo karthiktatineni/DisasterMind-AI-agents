@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import copy
+from functools import lru_cache
 import json
 import time
 from dataclasses import dataclass
@@ -121,6 +122,11 @@ def decode_tool_arguments(raw_arguments: str | dict[str, Any]) -> dict[str, Any]
     return parsed
 
 
+@lru_cache(maxsize=64)
+def _cached_inlined_schema(model_cls: type[BaseModel]) -> dict[str, Any]:
+    return inline_json_schema_refs(model_cls.model_json_schema())
+
+
 @dataclass(frozen=True)
 class ToolSpec:
     name: str
@@ -135,7 +141,7 @@ class ToolSpec:
             "function": {
                 "name": self.name,
                 "description": self.description,
-                "parameters": inline_json_schema_refs(self.args_model.model_json_schema()),
+                "parameters": copy.deepcopy(_cached_inlined_schema(self.args_model)),
             },
         }
 
@@ -154,7 +160,7 @@ class SubmissionToolSpec:
             "function": {
                 "name": self.name,
                 "description": self.description,
-                "parameters": inline_json_schema_refs(self.output_model.model_json_schema()),
+                "parameters": copy.deepcopy(_cached_inlined_schema(self.output_model)),
             },
         }
 

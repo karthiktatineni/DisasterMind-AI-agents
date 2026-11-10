@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from math import cos, radians
 from typing import Any
@@ -60,7 +61,12 @@ def _tag_capacity(tags: dict[str, Any]) -> int:
     return 0
 
 
-async def enrich_scenario(intake: ScenarioIntakeRequest) -> DisasterScenario:
+async def enrich_scenario(
+    intake: ScenarioIntakeRequest,
+    *,
+    http_client: httpx.AsyncClient | None = None,
+) -> DisasterScenario:
+    """Concurrently enrich an intake scenario via asyncio.gather without blocking or inventing capacity."""
     sources: list[dict[str, str]] = []
     latitude: float | None = None
     longitude: float | None = None
@@ -72,7 +78,6 @@ async def enrich_scenario(intake: ScenarioIntakeRequest) -> DisasterScenario:
     country_iso3: str | None = None
     country_population: int | None = None
     country_area_km2 = 0.0
-    beds_per_1000: float | None = None
     temperature: float | None = None
     humidity: float | None = None
     wind_speed: float | None = None
@@ -81,10 +86,12 @@ async def enrich_scenario(intake: ScenarioIntakeRequest) -> DisasterScenario:
     hospital_capacity: int | None = None
     shelter_capacity: int | None = None
 
-    async with httpx.AsyncClient(
+    owns_client = http_client is None
+    client = http_client or httpx.AsyncClient(
         timeout=httpx.Timeout(10.0),
-        headers={"User-Agent": "DisasterMindAI/0.1 data-enrichment"},
-    ) as client:
+        headers={"User-Agent": "DisasterMindAI/0.2 data-enrichment"},
+    )
+    try:
         try:
             geo = await client.get(
                 "https://geocoding-api.open-meteo.com/v1/search",
@@ -99,13 +106,14 @@ async def enrich_scenario(intake: ScenarioIntakeRequest) -> DisasterScenario:
             resolved_location = ", ".join(
                 part for part in [result.get("name"), result.get("admin1"), country] if part
             )
-            population = result.get("population")
-            population = int(population) if population else None
+            pop_val = result.get("population")
+            population = int(pop_val) if pop_val else None
             sources.append(_source("Open-Meteo Geocoding", "live", "Resolved region globally."))
         except Exception:
             sources.append(_source("Open-Meteo Geocoding", "unavailable", "Could not resolve region live."))
 
-        if latitude is not None and longitude is not None:
+        async def _fetch_nominatim() -> None:
+            nonlocal population, population_area_km2
             try:
                 nominatim = await client.get(
                     "https://nominatim.openstreetmap.org/search",
@@ -128,6 +136,8 @@ async def enrich_scenario(intake: ScenarioIntakeRequest) -> DisasterScenario:
             except Exception:
                 sources.append(_source("Nominatim", "unavailable", "OSM place metadata unavailable."))
 
+        async def _fetch_weather() -> None:
+            nonlocal temperature, humidity, wind_speed, rainfall
             try:
                 forecast = await client.get(
                     "https://api.open-meteo.com/v1/forecast",
@@ -153,6 +163,8 @@ async def enrich_scenario(intake: ScenarioIntakeRequest) -> DisasterScenario:
             except Exception:
                 sources.append(_source("Open-Meteo Forecast", "unavailable", "Weather service unavailable."))
 
+        async def _fetch_elevation() -> None:
+            nonlocal elevation
             try:
                 elev = await client.get(
                     "https://api.open-meteo.com/v1/elevation",
@@ -166,6 +178,8 @@ async def enrich_scenario(intake: ScenarioIntakeRequest) -> DisasterScenario:
             except Exception:
                 sources.append(_source("Open-Meteo Elevation", "unavailable", "Elevation service unavailable."))
 
+        async def _fetch_overpass() -> None:
+            nonlocal hospital_capacity, shelter_capacity
             try:
                 overpass_query = f"""
                 [out:json][timeout:8];
@@ -209,16 +223,14 @@ async def enrich_scenario(intake: ScenarioIntakeRequest) -> DisasterScenario:
                     _source(
                         "OpenStreetMap Overpass",
                         "live",
-                        (
-                            f"Fetched {hospital_facilities} medical facilities and "
-                            f"{shelter_facilities} shelter or assembly sites nearby."
-                        ),
+                        f"Fetched {hospital_facilities} medical facilities and {shelter_facilities} shelter or assembly sites nearby.",
                     )
                 )
             except Exception:
                 sources.append(_source("OpenStreetMap Overpass", "unavailable", "Facility lookup unavailable."))
 
-        if country_code:
+        async def _fetch_rest_countries() -> None:
+            nonlocal country_population, country_area_km2, country_iso3
             try:
                 country_response = await client.get(
                     f"https://restcountries.com/v3.1/alpha/{country_code}",
@@ -235,6 +247,14 @@ async def enrich_scenario(intake: ScenarioIntakeRequest) -> DisasterScenario:
             except Exception:
                 sources.append(_source("REST Countries", "unavailable", "Country population API unavailable."))
 
+        concurrent_tasks = []
+        if latitude is not None and longitude is not None:
+            concurrent_tasks.extend([_fetch_nominatim(), _fetch_weather(), _fetch_elevation(), _fetch_overpass()])
+        if country_code:
+            concurrent_tasks.append(_fetch_rest_countries())
+        if concurrent_tasks:
+            await asyncio.gather(*concurrent_tasks, return_exceptions=True)
+
         if country_iso3:
             try:
                 beds_response = await client.get(
@@ -247,6 +267,9 @@ async def enrich_scenario(intake: ScenarioIntakeRequest) -> DisasterScenario:
                     sources.append(_source("World Bank", "latest", "Fetched latest hospital beds per 1,000 people."))
             except Exception:
                 sources.append(_source("World Bank", "unavailable", "Hospital bed density API unavailable."))
+    finally:
+        if owns_client:
+            await client.aclose()
 
     population = population or country_population
     area_km2 = population_area_km2 or country_area_km2

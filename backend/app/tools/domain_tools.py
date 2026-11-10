@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+from functools import lru_cache
 import json
 from pathlib import Path
 from typing import Any
@@ -54,9 +56,14 @@ class DelegateFocusArgs(StrictArgsBase):
     focus_question: str = Field(min_length=3, max_length=500)
 
 
+@lru_cache(maxsize=8)
+def _read_standards_cached(target_str: str) -> str:
+    return Path(target_str).read_text(encoding="utf-8")
+
+
 def load_planning_standards(path: Path | None = None) -> dict[str, Any]:
     target = path or STANDARDS_PATH
-    return json.loads(target.read_text(encoding="utf-8"))
+    return json.loads(_read_standards_cached(str(target)))
 
 
 def parse_region_query(region: str) -> tuple[str, str | None]:
@@ -149,7 +156,8 @@ def build_domain_tools(
     async def handle_get_historical_stats(args: dict[str, Any], call_id: str) -> tuple[str, dict[str, Any], str | None]:
         if historical_stats_service is None:
             return "error", {}, "HistoricalStatsService unavailable (canonical snapshot not loaded)."
-        stats = historical_stats_service.query_stats(
+        stats = await asyncio.to_thread(
+            historical_stats_service.query_stats,
             disaster_type=args.get("disaster_type"),
             country=args.get("country"),
             start_year=args.get("year_min"),
