@@ -1,0 +1,28 @@
+[
+  {
+    "probe": "tiny_chat",
+    "timestamp": "2026-11-10T20:37:58.663792+05:30",
+    "status": 200,
+    "headers": {
+      "date": "Tue, 10 Nov 2026 15:08:04 GMT",
+      "content-type": "application/json",
+      "x-request-id": "e2470f05-70f4-4296-9575-563e261539fe"
+    },
+    "body": "{\"id\":\"chatcmpl-aae4e70e-7f39-4724-afb1-f18af455cb23\",\"choices\":[{\"index\":0,\"message\":{\"content\":null,\"role\":\"assistant\",\"reasoning_content\":\"The user wants me\"},\"finish_reason\":\"length\",\"logprobs\":null}],\"created\":1794323284,\"model\":\"nvidia/nemotron-3-ultra-550b-a55b\",\"service_tier\":null,\"system_fingerprint\":null,\"object\":\"chat.completion\",\"usage\":{\"prompt_tokens\":20,\"completion_tokens\":4,\"total_tokens\":24,\"prompt_tokens_details\":{\"audio_tokens\":null,\"cached_tokens\":0},\"completion_tokens_details\":{\"accepted_prediction_tokens\":null,\"audio_tokens\":null,\"reasoning_tokens\":4,\"rejected_prediction_tokens\":null}}}",
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "base_host": "integrate.api.nvidia.com"
+  },
+  {
+    "probe": "forced_tool",
+    "timestamp": "2026-11-10T20:37:59.506266+05:30",
+    "status": 200,
+    "headers": {
+      "date": "Tue, 10 Nov 2026 15:08:06 GMT",
+      "content-type": "application/json",
+      "x-request-id": "30f4a683-b327-45c8-ba28-b9b68b145fe9"
+    },
+    "body": "{\"id\":\"chatcmpl-a4342ba8-2273-4b9a-a809-5e7ad27a8c4f\",\"choices\":[{\"index\":0,\"message\":{\"content\":null,\"role\":\"assistant\",\"reasoning_content\":\"The user is asking me to call the\"},\"finish_reason\":\"length\",\"logprobs\":null}],\"created\":1794323285,\"model\":\"nvidia/nemotron-3-ultra-550b-a55b\",\"service_tier\":null,\"system_fingerprint\":null,\"object\":\"chat.completion\",\"usage\":{\"prompt_tokens\":276,\"completion_tokens\":8,\"total_tokens\":284,\"prompt_tokens_details\":{\"audio_tokens\":null,\"cached_tokens\":0},\"completion_tokens_details\":{\"accepted_prediction_tokens\":null,\"audio_tokens\":null,\"reasoning_tokens\":8,\"rejected_prediction_tokens\":null}}}",
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "base_host": "integrate.api.nvidia.com"
+  }
+]

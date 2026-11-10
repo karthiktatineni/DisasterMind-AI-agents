@@ -1,0 +1,36 @@
+[
+  {
+    "probe": "tiny_chat",
+    "timestamp": "2026-11-10T20:38:47.157536+05:30",
+    "status": 200,
+    "headers": {
+      "date": "Tue, 10 Nov 2026 15:08:54 GMT",
+      "content-type": "application/json",
+      "x-request-id": "821c0f84-8e13-4b91-9809-32073c681420"
+    },
+    "body": "{\"id\":\"chatcmpl-81267329-6fa3-4f31-8601-66a9a12d3d6d\",\"choices\":[{\"index\":0,\"message\":{\"content\":\"OK\",\"role\":\"assistant\",\"reasoning_content\":\"The user wants me to reply with \\\"OK\\\".\"},\"finish_reason\":\"stop\",\"logprobs\":null}],\"created\":1794323332,\"model\":\"nvidia/nemotron-3-ultra-550b-a55b\",\"service_tier\":null,\"system_fingerprint\":null,\"object\":\"chat.completion\",\"usage\":{\"prompt_tokens\":20,\"completion_tokens\":13,\"total_tokens\":33,\"prompt_tokens_details\":{\"audio_tokens\":null,\"cached_tokens\":0},\"completion_tokens_details\":{\"accepted_prediction_tokens\":null,\"audio_tokens\":null,\"reasoning_tokens\":10,\"rejected_prediction_tokens\":null}}}",
+    "finish_reason": "stop",
+    "tool_call_observed": null,
+    "tool_call_names": [],
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "base_host": "integrate.api.nvidia.com"
+  },
+  {
+    "probe": "forced_tool",
+    "timestamp": "2026-11-10T20:38:49.596734+05:30",
+    "status": 200,
+    "headers": {
+      "date": "Tue, 10 Nov 2026 15:09:10 GMT",
+      "content-type": "application/json",
+      "x-request-id": "9f487b74-4a64-42d5-8efc-572640e1d5c1"
+    },
+    "body": "{\"id\":\"chatcmpl-cccb4620-7970-40bf-8f5b-08934a9cec08\",\"choices\":[{\"index\":0,\"message\":{\"content\":null,\"tool_calls\":[{\"id\":\"call-6ed2f33b-04a3-4ac8-8f48-203ffb36da49\",\"type\":\"function\",\"function\":{\"name\":\"probe\",\"arguments\":\"{\\\"ok\\\": true}\"}}],\"role\":\"assistant\",\"reasoning_content\":\"The user is asking me to call the probe function with ok=true. I need to use the function calling mechanism. Let me do that.\"},\"finish_reason\":\"tool_calls\",\"logprobs\":null}],\"created\":1794323335,\"model\":\"nvidia/nemotron-3-ultra-550b-a55b\",\"service_tier\":null,\"system_fingerprint\":null,\"object\":\"chat.completion\",\"usage\":{\"prompt_tokens\":289,\"completion_tokens\":46,\"total_tokens\":335,\"prompt_tokens_details\":{\"audio_tokens\":null,\"cached_tokens\":0},\"completion_tokens_details\":{\"accepted_prediction_tokens\":null,\"audio_tokens\":null,\"reasoning_tokens\":28,\"rejected_prediction_tokens\":null}}}",
+    "finish_reason": "tool_calls",
+    "tool_call_observed": true,
+    "tool_call_names": [
+      "probe"
+    ],
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "base_host": "integrate.api.nvidia.com"
+  }
+]

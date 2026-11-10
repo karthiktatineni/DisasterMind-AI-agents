@@ -38,3 +38,13 @@ Tracks external/non-code items surfaced during Tasks 0–2P that do not halt loc
   - User inspected the live Pinecone dashboard on `2026-11-10`: `disastermind` index is on a monthly **1 GB egress limit** (`read access paused until December 1st, 2026 UTC` if exceeded), with the egress bar already past halfway (> ~55% consumed, driven by prior Task 2P D1-D5 full-namespace reads).
 - **Quota Conservation Action in Force:** Keep retrieval at small `top_k` (`<= 5`), avoid redundant full-namespace fetches/re-embeds, and use a **stratified 2,000-record sample** (not full 16,833 re-embed) for the Task 12 clean-clone namespace check per R12 unless billing upgrade / quota increase is explicitly confirmed.
 
+---
+
+## 4. NVIDIA API Catalog Trial Terms — owner/legal review
+
+- **Checked:** 2026-11-10.
+- **Source:** [NVIDIA API Trial Terms of Service](https://assets.ngc.nvidia.com/products/api-catalog/legal/NVIDIA%20API%20Trial%20Terms%20of%20Service.pdf), Section 1.4, page 1.
+- **Relevant clause:** “you may only use the API Service for internal testing and evaluation purposes, not in production.”
+- **Status:** OPEN. This records the source language only; no legal conclusion is made here. Confirm the applicable subscription and permitted deployment use with NVIDIA and the project owner before production use.
+- **Rate limits:** Do not distribute requests among accounts to avoid trial quotas. The NVIDIA Developer Terms of Use, Sections 5(i) and 5(n), prohibit circumvention and using the service to avoid quotas: [NVIDIA Terms of Use](https://developer.nvidia.com/legal/terms).
+
