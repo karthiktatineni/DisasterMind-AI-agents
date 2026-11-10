@@ -15,3 +15,8 @@
   - Shared `run_budget` + no re-delegation to abstained/out-of-budget agents (only 1 retry allowed, only if budget remains and only on verifier rejection).
   - `"place, country"` parsing & country filtering in `geocode_region` + coordinate-skip rule when lat/lon supplied.
 
+## Attempt 2 (`task-1363`, committed code `b1bc1b5`, interrupted by server restart)
+- **Outcome:** `scripts/run_gates.py` passed (`35 passed, FINAL_EXIT=0`) and `capture_scripted_gates()` completed cleanly, then the live suite started `[LIVE RUN START] flood_strong_precedent_run1 ...` and had not emitted an output line before the host server restarted (`[Notice] All your subagents and background tasks have been stopped due to server restart`). Zero completed scenario summaries existed on disk under `verification/task_4/raw_traces/`.
+- **Fix Before Retry:** Added live timestamped `on_event` progress logging + per-scenario `--only` / incremental checkpoint saving in `scripts/verify_task4_live.py` with explicit `240s` per-scenario timeout.
+
+

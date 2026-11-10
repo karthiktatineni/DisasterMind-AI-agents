@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import argparse
 import asyncio
 import json
 import subprocess
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
@@ -14,7 +16,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from backend.app.config import get_settings
-from backend.app.orchestration.models import OrchestrationRunResult
+from backend.app.orchestration.models import OrchestrationRunResult, SSEEventRecord
 from backend.app.orchestration.orchestrator import AGENT_SPECS, DisasterMindOrchestrator
 from backend.app.schemas import DisasterScenario, ScenarioIntakeRequest
 from backend.app.services.llm_client import LLMToolResponse, ToolCallRequest
@@ -196,92 +198,97 @@ async def capture_scripted_gates() -> dict[str, Any]:
     }
 
 
-async def run_live_suite(commit_hash: str) -> dict[str, Any]:
-    """Run all 6 requested Task 4 live scenarios sequentially with shared RPM-bounded client."""
-    scenarios: list[tuple[str, DisasterScenario | ScenarioIntakeRequest]] = [
-        (
-            "flood_strong_precedent_run1",
-            ScenarioIntakeRequest(
-                disaster_type="Flood",
-                region="Bangladesh",
-                severity="High",
-                time_horizon="48 hours",
-                notes="Severe monsoon riverine flood along Brahmaputra basin. User assumption: 150000 exposed people. Shelter and water inventory not provided.",
-            ),
+SCENARIOS: list[tuple[str, DisasterScenario | ScenarioIntakeRequest]] = [
+    (
+        "flood_strong_precedent_run1",
+        ScenarioIntakeRequest(
+            disaster_type="Flood",
+            region="Bangladesh",
+            severity="High",
+            time_horizon="48 hours",
+            notes="Severe monsoon riverine flood along Brahmaputra basin. User assumption: 150000 exposed people. Shelter and water inventory not provided.",
         ),
-        (
-            "flood_strong_precedent_run2",
-            ScenarioIntakeRequest(
-                disaster_type="Flood",
-                region="Bangladesh",
-                severity="High",
-                time_horizon="48 hours",
-                notes="Severe monsoon riverine flood along Brahmaputra basin. User assumption: 150000 exposed people. Shelter and water inventory not provided.",
-            ),
+    ),
+    (
+        "flood_strong_precedent_run2",
+        ScenarioIntakeRequest(
+            disaster_type="Flood",
+            region="Bangladesh",
+            severity="High",
+            time_horizon="48 hours",
+            notes="Severe monsoon riverine flood along Brahmaputra basin. User assumption: 150000 exposed people. Shelter and water inventory not provided.",
         ),
-        (
-            "flood_strong_precedent_run3",
-            ScenarioIntakeRequest(
-                disaster_type="Flood",
-                region="Bangladesh",
-                severity="High",
-                time_horizon="48 hours",
-                notes="Severe monsoon riverine flood along Brahmaputra basin. User assumption: 150000 exposed people. Shelter and water inventory not provided.",
-            ),
+    ),
+    (
+        "flood_strong_precedent_run3",
+        ScenarioIntakeRequest(
+            disaster_type="Flood",
+            region="Bangladesh",
+            severity="High",
+            time_horizon="48 hours",
+            notes="Severe monsoon riverine flood along Brahmaputra basin. User assumption: 150000 exposed people. Shelter and water inventory not provided.",
         ),
-        (
-            "storm_with_coordinates",
-            DisasterScenario(
-                disaster_type="Storm",
-                region="Visakhapatnam, India",
-                country="India",
-                latitude=17.6868,
-                longitude=83.2185,
-                severity="High",
-                time_horizon="48 hours",
-                population=120000,
-                shelter_capacity=30000,
-                notes="Severe cyclonic storm approaching Visakhapatnam coast. User-supplied population 120000 and shelter capacity 30000 people; potable water inventory not provided.",
-            ),
+    ),
+    (
+        "storm_with_coordinates",
+        DisasterScenario(
+            disaster_type="Storm",
+            region="Visakhapatnam, India",
+            country="India",
+            latitude=17.6868,
+            longitude=83.2185,
+            severity="High",
+            time_horizon="48 hours",
+            population=120000,
+            shelter_capacity=30000,
+            notes="Severe cyclonic storm approaching Visakhapatnam coast. User-supplied population 120000 and shelter capacity 30000 people; potable water inventory not provided.",
         ),
-        (
-            "no_precedent_scenario",
-            ScenarioIntakeRequest(
-                disaster_type="Meteorite Impact",
-                region="Antarctica",
-                severity="Critical",
-                time_horizon="12 hours",
-                notes="Hypothetical bolide impact across interior East Antarctic plateau. No historical disaster analog supplied.",
-            ),
+    ),
+    (
+        "no_precedent_scenario",
+        ScenarioIntakeRequest(
+            disaster_type="Meteorite Impact",
+            region="Antarctica",
+            severity="Critical",
+            time_horizon="12 hours",
+            notes="Hypothetical bolide impact across interior East Antarctic plateau. No historical disaster analog supplied.",
         ),
-        (
-            "impossible_scenario",
-            DisasterScenario(
-                disaster_type="Earthquake",
-                region="Tokyo, Japan",
-                country="Japan",
-                latitude=35.6762,
-                longitude=139.6503,
-                severity="Critical",
-                time_horizon="24 hours",
-                notes="Physically impossible scenario test: simultaneous Category 6 cyclone (420 km/h) and Moment Magnitude 11.5 earthquake.",
-            ),
+    ),
+    (
+        "impossible_scenario",
+        DisasterScenario(
+            disaster_type="Earthquake",
+            region="Tokyo, Japan",
+            country="Japan",
+            latitude=35.6762,
+            longitude=139.6503,
+            severity="Critical",
+            time_horizon="24 hours",
+            notes="Physically impossible scenario test: simultaneous Category 6 cyclone (420 km/h) and Moment Magnitude 11.5 earthquake.",
         ),
-    ]
+    ),
+]
 
+
+async def run_live_suite(commit_hash: str, *, only_tag: str | None = None, per_scenario_timeout_s: float = 240.0) -> dict[str, Any]:
+    """Run Task 4 live scenarios cleanly with timestamped real-time event logging."""
     orch = DisasterMindOrchestrator(settings=get_settings())
-    runs_summary: list[dict[str, Any]] = []
     RAW_DIR.mkdir(parents=True, exist_ok=True)
+    selected = [(t, s) for (t, s) in SCENARIOS if (only_tag is None or t == only_tag)]
+    if only_tag is not None and not selected:
+        raise ValueError(f"Unknown scenario tag '{only_tag}'.")
 
-    for tag, scen in scenarios:
-        print(f"[LIVE RUN START] {tag} ...", flush=True)
-        res = await asyncio.wait_for(orch.run(scen, run_id=f"task4-{tag}"), timeout=320.0)
-        RAW_DIR.joinpath(f"{tag}.json").write_text(
-            json.dumps(res.model_dump(), indent=2),
-            encoding="utf-8",
-        )
+    for tag, scen in selected:
+        t0 = time.monotonic()
+        print(f"[LIVE RUN START] {tag} (timeout={per_scenario_timeout_s}s)...", flush=True)
+
+        def _on_ev(ev: SSEEventRecord, _tag: str = tag, _t0: float = t0) -> None:
+            dt = round(time.monotonic() - _t0, 1)
+            print(f"  [+{dt:5.1f}s] [{_tag}] {ev.event} agent={ev.agent} data={json.dumps(ev.data)[:160]}", flush=True)
+
+        res = await asyncio.wait_for(orch.run(scen, run_id=f"task4-{tag}", on_event=_on_ev), timeout=per_scenario_timeout_s)
+        RAW_DIR.joinpath(f"{tag}.json").write_text(json.dumps(res.model_dump(), indent=2), encoding="utf-8")
         b = res.briefing
-        geocode_called = any(tc.tool_name == "geocode_region" for tc in [e for e in []])
         geocode_used = any(
             r.get("tool_name") == "geocode_region"
             for tr in res.agent_traces
@@ -289,6 +296,7 @@ async def run_live_suite(commit_hash: str) -> dict[str, Any]:
             for r in st.tool_results
         )
         summary_entry = {
+            "git_commit": commit_hash,
             "scenario_tag": tag,
             "run_id": b.run_id,
             "status": b.status,
@@ -300,7 +308,7 @@ async def run_live_suite(commit_hash: str) -> dict[str, Any]:
             "ordered_trace": _redacted_ordered_trace(res),
             "briefing": b.model_dump(),
         }
-        runs_summary.append(summary_entry)
+        RAW_DIR.joinpath(f"{tag}_summary.json").write_text(json.dumps(summary_entry, indent=2), encoding="utf-8")
         print(
             f"[LIVE RUN DONE] {tag}: status={b.status} risk={b.risk.level} premise_valid={b.risk.premise_valid} "
             f"evac={b.evacuation_recommendation.recommendation} llm={res.total_llm_calls} "
@@ -309,18 +317,29 @@ async def run_live_suite(commit_hash: str) -> dict[str, Any]:
             flush=True,
         )
 
-    flood_runs = runs_summary[:3]
+    return assemble_live_report(commit_hash)
+
+
+def assemble_live_report(commit_hash: str) -> dict[str, Any]:
+    runs_summary: list[dict[str, Any]] = []
+    for tag, _ in SCENARIOS:
+        p = RAW_DIR / f"{tag}_summary.json"
+        if p.exists():
+            runs_summary.append(json.loads(p.read_text(encoding="utf-8")))
+
+    flood_runs = [r for r in runs_summary if r["scenario_tag"].startswith("flood_strong_precedent_")]
     flood_agreement = {
+        "count": len(flood_runs),
         "statuses": [r["briefing"]["status"] for r in flood_runs],
         "risk_levels": [r["briefing"]["risk"]["level"] for r in flood_runs],
         "evacuation_recommendations": [r["briefing"]["evacuation_recommendation"]["recommendation"] for r in flood_runs],
         "citation_id_sets": [[c["record_id"] for c in r["briefing"]["citations"]] for r in flood_runs],
-        "exact_risk_agreement": len({r["briefing"]["risk"]["level"] for r in flood_runs}) == 1,
-        "exact_evac_agreement": len({r["briefing"]["evacuation_recommendation"]["recommendation"] for r in flood_runs}) == 1,
+        "exact_risk_agreement": len({r["briefing"]["risk"]["level"] for r in flood_runs}) == 1 if flood_runs else False,
+        "exact_evac_agreement": len({r["briefing"]["evacuation_recommendation"]["recommendation"] for r in flood_runs}) == 1 if flood_runs else False,
     }
-
     report = {
         "git_commit": commit_hash,
+        "completed_runs": len(runs_summary),
         "total_live_llm_calls": sum(r["llm_calls"] for r in runs_summary),
         "flood_repeat_agreement": flood_agreement,
         "runs": runs_summary,
@@ -330,20 +349,22 @@ async def run_live_suite(commit_hash: str) -> dict[str, Any]:
 
 
 async def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--only", default=None, help="Run a single scenario tag from SCENARIOS.")
+    parser.add_argument("--timeout", type=float, default=240.0, help="Per-scenario wall-clock timeout seconds.")
+    parser.add_argument("--skip-scripted", action="store_true")
+    args = parser.parse_args()
+
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     commit_hash = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=PROJECT_ROOT, text=True).strip()
 
-    # 1. Grep audit for json.loads, regex, and unsourced defaults/divisors across active backend/
     grep_proc = subprocess.run(
         ["git", "grep", "-n", "-E", r"json\.loads|re\.(search|match|findall|sub|compile)", "--", "backend/"],
         cwd=PROJECT_ROOT,
         capture_output=True,
         text=True,
     )
-    (OUT_DIR / "json_loads_regex_audit.txt").write_text(
-        f"# git_commit={commit_hash}\n{grep_proc.stdout}",
-        encoding="utf-8",
-    )
+    (OUT_DIR / "json_loads_regex_audit.txt").write_text(f"# git_commit={commit_hash}\n{grep_proc.stdout}", encoding="utf-8")
 
     div_grep = subprocess.run(
         ["git", "grep", "-n", "-E", r"/ 5000|\* 3|\* 2|186000|4200|132000|_fallback_population", "--", "backend/", "config/"],
@@ -351,20 +372,16 @@ async def main() -> None:
         capture_output=True,
         text=True,
     )
-    (OUT_DIR / "unsourced_divisors_audit.txt").write_text(
-        f"# git_commit={commit_hash}\n{div_grep.stdout}",
-        encoding="utf-8",
-    )
+    (OUT_DIR / "unsourced_divisors_audit.txt").write_text(f"# git_commit={commit_hash}\n{div_grep.stdout}", encoding="utf-8")
 
-    # 2. Scripted gate captures
-    scripted = await capture_scripted_gates()
-    (OUT_DIR / "scripted_gates.json").write_text(
-        json.dumps({"git_commit": commit_hash, **scripted}, indent=2),
-        encoding="utf-8",
-    )
+    if not args.skip_scripted:
+        scripted = await capture_scripted_gates()
+        (OUT_DIR / "scripted_gates.json").write_text(
+            json.dumps({"git_commit": commit_hash, **scripted}, indent=2),
+            encoding="utf-8",
+        )
 
-    # 3. 6-scenario live proof
-    await run_live_suite(commit_hash)
+    await run_live_suite(commit_hash, only_tag=args.only, per_scenario_timeout_s=args.timeout)
 
 
 if __name__ == "__main__":
