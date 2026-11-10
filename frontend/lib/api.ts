@@ -88,6 +88,64 @@ export type AgentQuestionResponse = {
   confidence: number;
 };
 
+export type OrchestrationEvent = {
+  event: string;
+  run_id: string;
+  agent?: string | null;
+  data?: Record<string, unknown>;
+};
+
+export async function streamOrchestrationScenario(
+  scenario: DisasterScenarioRequest,
+  onEvent: (event: OrchestrationEvent) => void,
+  signal: AbortSignal,
+): Promise<Record<string, unknown>> {
+  const response = await fetch("/api/orchestrate/stream", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(scenario),
+    cache: "no-store",
+    signal,
+  });
+  if (!response.ok || !response.body) {
+    const text = await response.text();
+    throw new Error(text || `Orchestration failed with status ${response.status}`);
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let finalBriefing: Record<string, unknown> | undefined;
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      buffer += decoder.decode(value, { stream: !done });
+      const blocks = buffer.split(/\r?\n\r?\n/);
+      buffer = blocks.pop() ?? "";
+      for (const block of blocks) {
+        const eventLine = block.split(/\r?\n/).find((line) => line.startsWith("data: "));
+        if (!eventLine) continue;
+        const event = JSON.parse(eventLine.slice(6)) as OrchestrationEvent;
+        onEvent(event);
+        if (event.event === "run_failed") {
+          throw new Error(String(event.data?.error ?? "Orchestration failed."));
+        }
+        if (event.event === "briefing_ready") {
+          const briefing = event.data?.briefing;
+          if (briefing && typeof briefing === "object" && !Array.isArray(briefing)) {
+            finalBriefing = briefing as Record<string, unknown>;
+          }
+        }
+      }
+      if (done) break;
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  if (!finalBriefing) throw new Error("The stream ended without a verified briefing.");
+  return finalBriefing;
+}
+
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") || "";
 
