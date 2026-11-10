@@ -10,3 +10,19 @@
 - **Evidence:** `verification/task_7/live_run.txt`; no complete `resilience_report.json` was produced.
 - **Blocker:** Upstream NIM timeout/rate limiting prevented reliable completion of the live proof in this run. Retry only within the pre-registered 300-call cap after service availability allows a complete run.
 
+
+## Attempt 3 — interrupted live retry after Retry-After change
+- Recorded at (Asia/Calcutta host clock): 2026-11-10T20:36:15.4520955+05:30
+- Code under test: dbfb6d890bb8cb2f986446bbd33f8d6762fba33f
+- Command: .venv\Scripts\python.exe -u scripts\verify_task7_resilience.py with ENABLE_BACKEND_KEEPALIVE=false.
+- Outcome: offline 20-request loop lag reported 44.304 ms; /health returned 200. One live orchestration request then logged an SDK RateLimitError retry. The user instructed stop; run was interrupted before orchestration or SSE completed.
+- HTTP response body/headers were not captured on this attempt, so the exact upstream 429 status/body/Retry-After value cannot be established from this transcript.
+- Raw attempt files were moved without editing to erification/task_7/failed_attempts/ and are failed-attempt evidence only.
+- Source file timestamps and sizes at preservation:
+
+Name                                     LastWrite                         Length
+----                                     ---------                         ------
+verification\task_7\gates_output.txt     2026-11-10T20:30:09.0343444+05:30   9791
+verification\task_7\live_run_current.txt 2026-11-10T20:30:34.1587543+05:30    192
+
+

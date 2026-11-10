@@ -1,0 +1,3 @@
+[TASK 7] Offline 20-request loop lag: max=44.304ms, under_100ms=True
+[TASK 7] Live /health status=200
+Retrying LLM request (nvidia/nemotron-3-ultra-550b-a55b) in 4.41s after RateLimitError
