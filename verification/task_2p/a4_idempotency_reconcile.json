@@ -1,0 +1,30 @@
+{
+  "throwaway_namespace": "__a4_idempotency_tmp",
+  "seed_upserted": 20,
+  "remote_after_seed": 20,
+  "pass2_idempotent": {
+    "embedded_count": 0,
+    "upserted_count": 0,
+    "remote_vector_count": 20,
+    "embed_http_calls": 0,
+    "upsert_http_calls": 0,
+    "describe_index_stats_http_calls": 1
+  },
+  "deleted_ids": [
+    "2000-0003-BGD",
+    "2000-0004-BRA",
+    "2000-0005-CHN",
+    "2000-0006-CHN",
+    "2000-0007-EGY"
+  ],
+  "remote_after_delete": 15,
+  "reconcile_run": {
+    "embedded_count": 5,
+    "upserted_count": 5,
+    "embed_http_calls": 1,
+    "upsert_http_calls": 1
+  },
+  "remote_after_reconcile": 20,
+  "throwaway_deleted_confirmed": true,
+  "prod_namespace_count_intact": 16833
+}

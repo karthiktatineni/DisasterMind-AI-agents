@@ -28,6 +28,8 @@
 
 ## 2. Pre-Fix Retrieval Evaluation Baseline (Exact Cosine Simulator on 12,000 Records)
 
+> **In-Sample / Optimistic Disclosure (R10):** Retrieval metrics below and DEV retrieval benchmarks across Tasks 0–2P are **in-sample and optimistic** because DEV queries were used to inspect failures, select candidate embedding models, and calibrate the similarity reject threshold. `eval/audit_test_suite.py` also contains hardcoded `execution_time_ms` (`4.5`) and should never be cited as latency evidence.
+
 - **Script:** `eval/audit_test_suite.py`
 - **Evaluated Dataset:** 16,834 curated EM-DAT records, 12,000 embedded (4,096 dimensions)
 - **Results:**

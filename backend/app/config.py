@@ -14,9 +14,10 @@ load_dotenv(PROJECT_ROOT / ".env", override=False)
 @dataclass(frozen=True)
 class Settings:
     nvidia_api_key: str
-    nvidia_embedding_model: str = "llama-text-embed-v2"
-    nvidia_embedding_dimension: int = 1024
-    similarity_threshold: float = 0.3211
+    embedding_provider: str = "pinecone"
+    embedding_model: str = "llama-text-embed-v2"
+    embedding_dimension: int = 1024
+    similarity_threshold: float = 0.3112
     pinecone_api_key: str = ""
     pinecone_index_name: str = "disastermind"
     pinecone_environment: str = ""
@@ -91,9 +92,10 @@ def get_settings() -> Settings:
     ).strip()
     return Settings(
         nvidia_api_key=os.getenv("NVIDIA_API_KEY", "").strip(),
-        nvidia_embedding_model=os.getenv("NVIDIA_EMBEDDING_MODEL", "llama-text-embed-v2").strip(),
-        nvidia_embedding_dimension=_get_int("NVIDIA_EMBEDDING_DIMENSION", 1024),
-        similarity_threshold=_get_float("SIMILARITY_THRESHOLD", 0.3211),
+        embedding_provider=os.getenv("EMBEDDING_PROVIDER", "pinecone").strip(),
+        embedding_model=os.getenv("EMBEDDING_MODEL", "llama-text-embed-v2").strip(),
+        embedding_dimension=_get_int("EMBEDDING_DIMENSION", 1024),
+        similarity_threshold=_get_float("SIMILARITY_THRESHOLD", 0.3112),
         pinecone_api_key=os.getenv("PINECONE_API_KEY", "").strip(),
         pinecone_index_name=os.getenv("PINECONE_INDEX_NAME", "disastermind").strip(),
         pinecone_environment=os.getenv("PINECONE_ENVIRONMENT", "").strip(),

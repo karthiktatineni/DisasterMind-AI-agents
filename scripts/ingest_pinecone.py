@@ -41,6 +41,38 @@ OUT_DIR = PROJECT_ROOT / "verification" / "task_2p"
 MAX_PAYLOAD_BYTES = 1_800_000  # strictly below Pinecone 2 MB REST limit
 
 
+class _WireSpy:
+    """Capture wire-level httpx HTTPTransport & AsyncHTTPTransport calls (including Pinecone POST fast path)."""
+
+    def __init__(self) -> None:
+        self.requests: list[dict[str, Any]] = []
+        self._orig_sync = httpx.HTTPTransport.handle_request
+        self._orig_async = httpx.AsyncHTTPTransport.handle_async_request
+
+    def __enter__(self) -> list[dict[str, Any]]:
+        bucket = self.requests
+        orig_sync = self._orig_sync
+        orig_async = self._orig_async
+
+        def spy_sync(transport_self, request: httpx.Request, *args, **kwargs):
+            resp = orig_sync(transport_self, request, *args, **kwargs)
+            bucket.append({"transport": "sync", "method": request.method, "url": str(request.url), "status_code": resp.status_code})
+            return resp
+
+        async def spy_async(transport_self, request: httpx.Request, *args, **kwargs):
+            resp = await orig_async(transport_self, request, *args, **kwargs)
+            bucket.append({"transport": "async", "method": request.method, "url": str(request.url), "status_code": resp.status_code})
+            return resp
+
+        httpx.HTTPTransport.handle_request = spy_sync  # type: ignore[method-assign]
+        httpx.AsyncHTTPTransport.handle_async_request = spy_async  # type: ignore[method-assign]
+        return self.requests
+
+    def __exit__(self, *exc_info: Any) -> None:
+        httpx.HTTPTransport.handle_request = self._orig_sync  # type: ignore[method-assign]
+        httpx.AsyncHTTPTransport.handle_async_request = self._orig_async  # type: ignore[method-assign]
+
+
 def _vector_sha256(vec: list[float] | np.ndarray) -> str:
     arr = np.asarray(vec, dtype=np.float32)
     return hashlib.sha256(arr.tobytes()).hexdigest()
@@ -87,7 +119,7 @@ def _resolve_target_model(model_override: str | None = None) -> tuple[str, str, 
         sel = json.loads(SELECTION_PATH.read_text(encoding="utf-8"))["selection"]
         if sel.get("winner"):
             return sel["winner"], sel["winner_provider"], int(sel["winner_dimension"])
-    model_id = model_override or os.getenv("NVIDIA_EMBEDDING_MODEL", "nvidia/nemotron-3-embed-1b")
+    model_id = model_override or os.getenv("EMBEDDING_MODEL", "llama-text-embed-v2")
     if model_id in ("llama-text-embed-v2", "multilingual-e5-large"):
         return model_id, "pinecone", 1024
     if "8b" in model_id:
@@ -112,8 +144,9 @@ def _load_cached_vectors(model_id: str, dataset_version: str, expected_rows: int
 async def _embed_missing_nvidia(model_id: str, dim: int, texts: list[str]) -> list[list[float]]:
     cfg = Settings(
         nvidia_api_key=os.getenv("NVIDIA_API_KEY", ""),
-        nvidia_embedding_model=model_id,
-        nvidia_embedding_dimension=dim,
+        embedding_provider="nvidia",
+        embedding_model=model_id,
+        embedding_dimension=dim,
         nvidia_base_url=os.getenv("NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1"),
     )
     svc = EmbeddingService(settings=cfg)
@@ -199,18 +232,22 @@ def run_ingestion(
     model_override: str | None = None,
     namespace_override: str | None = None,
     use_cache: bool = True,
+    ledger_path: Path | None = None,
+    max_records: int | None = None,
 ) -> dict[str, Any]:
     tbl = pq.read_table(SNAPSHOT_PATH)
     dataset_version = (tbl.schema.metadata or {}).get(b"dataset_version", b"").decode("utf-8")
-    records = tbl.to_pylist()
+    all_records = tbl.to_pylist()
+    records = all_records[:max_records] if max_records is not None else all_records
     model_id, provider, dim = _resolve_target_model(model_override)
     slug = model_id.replace("/", "__")
     namespace = namespace_override or f"v2-{dataset_version}-{slug}"
     index_name = os.getenv("PINECONE_INDEX_NAME", "disastermind").strip()
+    active_ledger_path = ledger_path or LEDGER_PATH
 
     ledger: dict[str, Any] = {}
-    if LEDGER_PATH.exists():
-        raw_ledger = json.loads(LEDGER_PATH.read_text(encoding="utf-8"))
+    if active_ledger_path.exists():
+        raw_ledger = json.loads(active_ledger_path.read_text(encoding="utf-8"))
         if (
             raw_ledger.get("dataset_version") == dataset_version
             and raw_ledger.get("embedding_model") == model_id
@@ -252,23 +289,47 @@ def run_ingestion(
         flush=True,
     )
 
-    if not pending_indices:
-        print("[INGEST IDEMPOTENT] 0 pending records: 0 embedding calls, 0 upserts.", flush=True)
-        return {
-            "dataset_version": dataset_version,
-            "model_id": model_id,
-            "provider": provider,
-            "dimension": dim,
-            "namespace": namespace,
-            "embedded_count": 0,
-            "upserted_count": 0,
-            "total_in_ledger": len(rec_ledger),
-        }
-
     pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
     index = _ensure_index(pc, index_name, dim)
 
-    cached_arr = _load_cached_vectors(model_id, dataset_version, len(records), dim) if use_cache else None
+    if not pending_indices:
+        # A4: Verify remote namespace count via single describe_index_stats call; reconcile if drift exists.
+        stats = index.describe_index_stats()
+        namespaces = stats.get("namespaces", {}) if isinstance(stats, dict) else getattr(stats, "namespaces", {}) or {}
+        ns_entry = namespaces.get(namespace, {})
+        remote_count = int(ns_entry.get("vector_count", 0) if isinstance(ns_entry, dict) else getattr(ns_entry, "vector_count", 0))
+        if remote_count == len(rec_ledger):
+            print(
+                f"[INGEST IDEMPOTENT] 0 pending records; remote describe_index_stats count={remote_count} == ledger={len(rec_ledger)} (0 embedding calls, 0 upserts).",
+                flush=True,
+            )
+            return {
+                "dataset_version": dataset_version,
+                "model_id": model_id,
+                "provider": provider,
+                "dimension": dim,
+                "namespace": namespace,
+                "embedded_count": 0,
+                "upserted_count": 0,
+                "total_in_ledger": len(rec_ledger),
+                "remote_vector_count": remote_count,
+            }
+
+        print(
+            f"[INGEST RECONCILE] Remote count {remote_count} != ledger {len(rec_ledger)}; listing remote IDs to re-ingest missing only...",
+            flush=True,
+        )
+        remote_ids: set[str] = set()
+        for page in index.list(namespace=namespace):
+            if hasattr(page, "vectors") and page.vectors is not None:
+                remote_ids.update(item.id if hasattr(item, "id") else str(item) for item in page.vectors)
+        pending_indices = [idx for idx, rec in enumerate(records) if rec["disaster_id"] not in remote_ids]
+        if not pending_indices:
+            raise RuntimeError(
+                f"Remote count mismatch ({remote_count} != {len(rec_ledger)}) with 0 missing expected IDs in '{namespace}'."
+            )
+
+    cached_arr = _load_cached_vectors(model_id, dataset_version, len(all_records), dim) if use_cache else None
     embedded_calls = 0
     if cached_arr is not None:
         print(f"[INGEST] Using validated local passage cache for {model_id} ({cached_arr.shape})", flush=True)
@@ -333,9 +394,9 @@ def run_ingestion(
 
         # Atomic checkpoint save every 25 batches or end
         if ((start // batch_size) + 1) % 25 == 0 or start + batch_size >= len(pending_indices):
-            tmp = LEDGER_PATH.with_suffix(".json.tmp")
+            tmp = active_ledger_path.with_suffix(".json.tmp")
             tmp.write_text(json.dumps(ledger), encoding="utf-8")
-            tmp.replace(LEDGER_PATH)
+            tmp.replace(active_ledger_path)
             print(f"  [UPSERT] {upserted_total}/{len(pending_indices)} upserted", flush=True)
 
     return {
@@ -452,36 +513,7 @@ def run_full_d1_d5_verification() -> dict[str, Any]:
         if (i // 100 + 1) % 25 == 0 or i + 100 >= len(all_ids):
             print(f"  [D1 FETCH CHECK] {checked}/{len(all_ids)} verified", flush=True)
 
-    # 4. Positive-Control httpx Transport Capture (intercepts wire HTTPTransport / AsyncHTTPTransport
-    # including Pinecone SDK 10.3.0 HTTPClient.post fast path that calls _transport.handle_request directly)
-    orig_sync_transport = httpx.HTTPTransport.handle_request
-    orig_async_transport = httpx.AsyncHTTPTransport.handle_async_request
-
-    class _WireSpy:
-        def __init__(self) -> None:
-            self.requests: list[dict[str, Any]] = []
-
-        def __enter__(self) -> list[dict[str, Any]]:
-            bucket = self.requests
-
-            def spy_sync(transport_self, request: httpx.Request, *args, **kwargs):
-                resp = orig_sync_transport(transport_self, request, *args, **kwargs)
-                bucket.append({"transport": "sync", "method": request.method, "url": str(request.url), "status_code": resp.status_code})
-                return resp
-
-            async def spy_async(transport_self, request: httpx.Request, *args, **kwargs):
-                resp = await orig_async_transport(transport_self, request, *args, **kwargs)
-                bucket.append({"transport": "async", "method": request.method, "url": str(request.url), "status_code": resp.status_code})
-                return resp
-
-            httpx.HTTPTransport.handle_request = spy_sync  # type: ignore[method-assign]
-            httpx.AsyncHTTPTransport.handle_async_request = spy_async  # type: ignore[method-assign]
-            return self.requests
-
-        def __exit__(self, *exc_info: Any) -> None:
-            httpx.HTTPTransport.handle_request = orig_sync_transport  # type: ignore[method-assign]
-            httpx.AsyncHTTPTransport.handle_async_request = orig_async_transport  # type: ignore[method-assign]
-
+    # 4. Positive-Control httpx Transport Capture (reuses module-level _WireSpy)
     ctrl_ns = "__d3_positive_control_tmp"
     with _WireSpy() as ctrl_requests:
         ctrl_pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
@@ -525,6 +557,7 @@ def run_full_d1_d5_verification() -> dict[str, Any]:
 
     embedding_http_calls = [r for r in captured_requests if "/embeddings" in r["url"] or "/embed" in r["url"]]
     upsert_http_calls = [r for r in captured_requests if "/upsert" in r["url"]]
+    stats_http_calls = [r for r in captured_requests if "/describe_index_stats" in r["url"]]
 
     # 6. Explicit D2, D4, D5 live verification checks
     from backend.app.services.data_pipeline import compute_content_hash
@@ -540,8 +573,9 @@ def run_full_d1_d5_verification() -> dict[str, Any]:
 
     live_cfg = Settings(
         nvidia_api_key=os.getenv("NVIDIA_API_KEY", ""),
-        nvidia_embedding_model=model_id,
-        nvidia_embedding_dimension=expected_dim,
+        embedding_provider=ledger.get("provider", "pinecone"),
+        embedding_model=model_id,
+        embedding_dimension=expected_dim,
         pinecone_api_key=os.getenv("PINECONE_API_KEY", ""),
         pinecone_index_name=index_name,
         pinecone_namespace=namespace,
@@ -549,18 +583,18 @@ def run_full_d1_d5_verification() -> dict[str, Any]:
     d4_ok = verify_runtime_alignment(live_cfg, snapshot_path=SNAPSHOT_PATH, ledger_path=LEDGER_PATH)
     d4_refused: list[str] = []
     for label, cfg in [
-        ("embedding_model", Settings(nvidia_api_key="x", nvidia_embedding_model="wrong-model", nvidia_embedding_dimension=expected_dim, pinecone_namespace=namespace)),
-        ("pinecone_namespace", Settings(nvidia_api_key="x", nvidia_embedding_model=model_id, nvidia_embedding_dimension=expected_dim, pinecone_namespace="wrong-ns")),
+        ("embedding_model", Settings(nvidia_api_key="x", embedding_provider=ledger.get("provider", "pinecone"), embedding_model="wrong-model", embedding_dimension=expected_dim, pinecone_namespace=namespace)),
+        ("pinecone_namespace", Settings(nvidia_api_key="x", embedding_provider=ledger.get("provider", "pinecone"), embedding_model=model_id, embedding_dimension=expected_dim, pinecone_namespace="wrong-ns")),
     ]:
         try:
-            verify_runtime_alignment(cfg, snapshot_path=SNAPSHOT_PATH, ledger_path=LEDGER_PATH)
+            verify_runtime_alignment(cfg, snapshot_path=SNAPSHOT_PATH, ledger_path=LEDGER_PATH, verify_remote=False)
         except StartupIntegrityError as exc:
             d4_refused.append(f"{label}: {exc}")
     bad_ver_ledger = PROJECT_ROOT / "data" / ".tmp_bad_ver_ledger.json"
     bad_ver_ledger.write_text(json.dumps({**{k: v for k, v in ledger.items() if k != "records"}, "dataset_version": "0000000000000000"}), encoding="utf-8")
     try:
         try:
-            verify_runtime_alignment(live_cfg, snapshot_path=SNAPSHOT_PATH, ledger_path=bad_ver_ledger)
+            verify_runtime_alignment(live_cfg, snapshot_path=SNAPSHOT_PATH, ledger_path=bad_ver_ledger, verify_remote=False)
         except StartupIntegrityError as exc:
             d4_refused.append(f"dataset_version: {exc}")
     finally:
@@ -599,7 +633,8 @@ def run_full_d1_d5_verification() -> dict[str, Any]:
     d3_pass = (
         second_run.get("embedded_count") == 0
         and second_run.get("upserted_count") == 0
-        and len(captured_requests) == 0
+        and second_run.get("remote_vector_count") == len(records)
+        and len(stats_http_calls) == 1
         and len(embedding_http_calls) == 0
         and len(upsert_http_calls) == 0
         and len(ctrl_upsert_calls) >= 1
@@ -643,6 +678,7 @@ def run_full_d1_d5_verification() -> dict[str, Any]:
             "positive_control_upsert_calls": len(ctrl_upsert_calls),
             "second_run_result": second_run,
             "second_run_total_http_calls": len(captured_requests),
+            "second_run_describe_index_stats_calls": len(stats_http_calls),
             "second_run_embedding_http_calls": len(embedding_http_calls),
             "second_run_upsert_http_calls": len(upsert_http_calls),
         },
@@ -664,6 +700,7 @@ def run_full_d1_d5_verification() -> dict[str, Any]:
         json.dumps(
             {
                 "total_http_requests": len(captured_requests),
+                "describe_index_stats_calls": len(stats_http_calls),
                 "embedding_calls": len(embedding_http_calls),
                 "upsert_calls": len(upsert_http_calls),
                 "requests": captured_requests,
@@ -672,13 +709,150 @@ def run_full_d1_d5_verification() -> dict[str, Any]:
         ),
         encoding="utf-8",
     )
-    print(f"[D1-D5 VERIFY] all_pass={report['all_d1_d5_pass']} d1={d1_pass} d2={d2_pass} d3={d3_pass} d4={d4_pass} d5={d5_pass} checked={checked} ctrl_http={len(ctrl_requests)} 2nd_run_http={len(captured_requests)}")
+    print(f"[D1-D5 VERIFY] all_pass={report['all_d1_d5_pass']} d1={d1_pass} d2={d2_pass} d3={d3_pass} d4={d4_pass} d5={d5_pass} checked={checked} ctrl_http={len(ctrl_requests)} 2nd_run_stats={len(stats_http_calls)} 2nd_run_embed={len(embedding_http_calls)} 2nd_run_upsert={len(upsert_http_calls)}")
     return report
+
+
+def run_a4_throwaway_reconciliation_test() -> dict[str, Any]:
+    """A4: In a throwaway namespace, prove idempotent describe_index_stats + exact 5-ID delete/re-ingest + cleanup."""
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    tbl = pq.read_table(SNAPSHOT_PATH)
+    records = tbl.to_pylist()[:20]
+    model_id, provider, dim = _resolve_target_model()
+    index_name = os.getenv("PINECONE_INDEX_NAME", "disastermind").strip()
+    prod_ns = os.getenv("PINECONE_NAMESPACE", "v2-3d35e5131d79a79d-llama-text-embed-v2").strip()
+    tmp_ns = "__a4_idempotency_tmp"
+    tmp_ledger = PROJECT_ROOT / "data" / ".tmp_a4_ledger.json"
+    tmp_ledger.unlink(missing_ok=True)
+
+    pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
+    idx = pc.Index(index_name)
+    pre_stats = idx.describe_index_stats()
+    if tmp_ns in (pre_stats.get("namespaces") or {}):
+        idx.delete(delete_all=True, namespace=tmp_ns)
+
+    try:
+        # 1. Seed 20 vectors using local passage cache (0 inference tokens)
+        seed_res = run_ingestion(
+            model_override=model_id,
+            namespace_override=tmp_ns,
+            use_cache=True,
+            ledger_path=tmp_ledger,
+            max_records=20,
+        )
+        remote_20 = 0
+        for _ in range(15):
+            st = idx.describe_index_stats()
+            ns_map = st.get("namespaces", {})
+            remote_20 = int(ns_map.get(tmp_ns, {}).get("vector_count", 0))
+            if remote_20 == 20:
+                break
+            time.sleep(2)
+        assert remote_20 == 20, f"A4 seed count mismatch: {remote_20} != 20"
+
+        # 2. Second run with pending=0 -> 0 embed, 0 upsert, 1 describe_index_stats confirming 20==20
+        with _WireSpy() as pass2_reqs:
+            pass2_res = run_ingestion(
+                model_override=model_id,
+                namespace_override=tmp_ns,
+                use_cache=False,
+                ledger_path=tmp_ledger,
+                max_records=20,
+            )
+        pass2_embed = [r for r in pass2_reqs if "/embed" in r["url"]]
+        pass2_upsert = [r for r in pass2_reqs if "/upsert" in r["url"]]
+        pass2_stats = [r for r in pass2_reqs if "/describe_index_stats" in r["url"]]
+        assert len(pass2_embed) == 0 and len(pass2_upsert) == 0 and len(pass2_stats) == 1
+        assert pass2_res.get("remote_vector_count") == 20
+
+        # 3. Delete 5 IDs from Pinecone throwaway namespace
+        deleted_ids = [records[i]["disaster_id"] for i in range(5, 10)]
+        idx.delete(ids=deleted_ids, namespace=tmp_ns)
+        remote_15 = 0
+        for _ in range(15):
+            st = idx.describe_index_stats()
+            remote_15 = int(st.get("namespaces", {}).get(tmp_ns, {}).get("vector_count", 0))
+            if remote_15 == 15:
+                break
+            time.sleep(2)
+        assert remote_15 == 15, f"A4 delete count mismatch: {remote_15} != 15"
+
+        # 4. Re-run with cache disabled -> must detect 15 != 20 and re-embed & re-upsert ONLY those 5 IDs
+        with _WireSpy() as rec_reqs:
+            rec_res = run_ingestion(
+                model_override=model_id,
+                namespace_override=tmp_ns,
+                use_cache=False,
+                ledger_path=tmp_ledger,
+                max_records=20,
+            )
+        rec_embed = [r for r in rec_reqs if "/embed" in r["url"]]
+        rec_upsert = [r for r in rec_reqs if "/upsert" in r["url"]]
+        assert rec_res["embedded_count"] == 5 and rec_res["upserted_count"] == 5, rec_res
+        assert len(rec_embed) == 1 and len(rec_upsert) == 1
+
+        remote_restored = 0
+        for _ in range(15):
+            st = idx.describe_index_stats()
+            remote_restored = int(st.get("namespaces", {}).get(tmp_ns, {}).get("vector_count", 0))
+            if remote_restored == 20:
+                break
+            time.sleep(2)
+        assert remote_restored == 20, f"A4 restore count mismatch: {remote_restored} != 20"
+
+        # 5. Delete throwaway namespace and prove removal + prod namespace intact
+        idx.delete(delete_all=True, namespace=tmp_ns)
+        ns_deleted = False
+        final_stats: dict[str, Any] = {}
+        for _ in range(15):
+            st = idx.describe_index_stats()
+            final_stats = st.to_dict() if hasattr(st, "to_dict") else dict(st)
+            if tmp_ns not in (final_stats.get("namespaces") or {}):
+                ns_deleted = True
+                break
+            time.sleep(2)
+        assert ns_deleted, f"Throwaway namespace '{tmp_ns}' still present after delete_all"
+        prod_count = int((final_stats.get("namespaces") or {}).get(prod_ns, {}).get("vector_count", 0))
+        assert prod_count == 16833, f"Prod namespace count unexpected: {prod_count}"
+
+        summary = {
+            "throwaway_namespace": tmp_ns,
+            "seed_upserted": seed_res["upserted_count"],
+            "remote_after_seed": remote_20,
+            "pass2_idempotent": {
+                "embedded_count": pass2_res["embedded_count"],
+                "upserted_count": pass2_res["upserted_count"],
+                "remote_vector_count": pass2_res["remote_vector_count"],
+                "embed_http_calls": len(pass2_embed),
+                "upsert_http_calls": len(pass2_upsert),
+                "describe_index_stats_http_calls": len(pass2_stats),
+            },
+            "deleted_ids": deleted_ids,
+            "remote_after_delete": remote_15,
+            "reconcile_run": {
+                "embedded_count": rec_res["embedded_count"],
+                "upserted_count": rec_res["upserted_count"],
+                "embed_http_calls": len(rec_embed),
+                "upsert_http_calls": len(rec_upsert),
+            },
+            "remote_after_reconcile": remote_restored,
+            "throwaway_deleted_confirmed": ns_deleted,
+            "prod_namespace_count_intact": prod_count,
+        }
+        (OUT_DIR / "a4_idempotency_reconcile.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+        print("[A4 TEST PASS]", json.dumps(summary), flush=True)
+        return summary
+    finally:
+        tmp_ledger.unlink(missing_ok=True)
+        try:
+            idx.delete(delete_all=True, namespace=tmp_ns)
+        except Exception:
+            pass
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("action", choices=["ingest", "verify", "all"], default="all", nargs="?")
+    parser.add_argument("action", choices=["ingest", "verify", "all", "a4-test"], default="all", nargs="?")
     parser.add_argument("--model", default=None)
     parser.add_argument("--namespace", default=None)
     parser.add_argument("--no-cache", action="store_true")
@@ -688,6 +862,8 @@ def main() -> int:
         run_ingestion(model_override=args.model, namespace_override=args.namespace, use_cache=not args.no_cache)
     if args.action in ("verify", "all"):
         run_full_d1_d5_verification()
+    if args.action == "a4-test":
+        run_a4_throwaway_reconciliation_test()
     return 0
 
 

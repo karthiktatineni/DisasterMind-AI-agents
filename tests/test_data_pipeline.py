@@ -111,6 +111,7 @@ def test_d4_startup_guard_refuses_mismatch(tmp_path):
 
     snap = tmp_path / "snapshot.parquet"
     ledger = tmp_path / "ledger.json"
+    no_manifest = tmp_path / "no_manifest.json"
     schema = pa.schema(
         [pa.field("disaster_id", pa.string())],
         metadata={b"dataset_version": b"ver-abc"},
@@ -130,32 +131,35 @@ def test_d4_startup_guard_refuses_mismatch(tmp_path):
 
     ok_cfg = Settings(
         nvidia_api_key="k",
-        nvidia_embedding_model="nvidia/nemotron-3.5-embed-1b",
+        embedding_provider="nvidia",
+        embedding_model="nvidia/nemotron-3.5-embed-1b",
         pinecone_namespace="v2-ver-abc",
-        nvidia_embedding_dimension=2048,
+        embedding_dimension=2048,
     )
-    assert verify_runtime_alignment(ok_cfg, snapshot_path=snap, ledger_path=ledger)["status"] == "ok"
+    assert verify_runtime_alignment(ok_cfg, manifest_path=no_manifest, snapshot_path=snap, ledger_path=ledger)["status"] == "ok"
 
     bad_model = Settings(
         nvidia_api_key="k",
-        nvidia_embedding_model="other-model",
+        embedding_provider="nvidia",
+        embedding_model="other-model",
         pinecone_namespace="v2-ver-abc",
-        nvidia_embedding_dimension=2048,
+        embedding_dimension=2048,
     )
     try:
-        verify_runtime_alignment(bad_model, snapshot_path=snap, ledger_path=ledger)
+        verify_runtime_alignment(bad_model, manifest_path=no_manifest, snapshot_path=snap, ledger_path=ledger)
         raise AssertionError("Expected StartupIntegrityError on model mismatch")
     except StartupIntegrityError as exc:
         assert "embedding_model mismatch" in str(exc)
 
     bad_ns = Settings(
         nvidia_api_key="k",
-        nvidia_embedding_model="nvidia/nemotron-3.5-embed-1b",
+        embedding_provider="nvidia",
+        embedding_model="nvidia/nemotron-3.5-embed-1b",
         pinecone_namespace="wrong-ns",
-        nvidia_embedding_dimension=2048,
+        embedding_dimension=2048,
     )
     try:
-        verify_runtime_alignment(bad_ns, snapshot_path=snap, ledger_path=ledger)
+        verify_runtime_alignment(bad_ns, manifest_path=no_manifest, snapshot_path=snap, ledger_path=ledger)
         raise AssertionError("Expected StartupIntegrityError on namespace mismatch")
     except StartupIntegrityError as exc:
         assert "pinecone_namespace mismatch" in str(exc)
@@ -173,7 +177,7 @@ def test_d4_startup_guard_refuses_mismatch(tmp_path):
         encoding="utf-8",
     )
     try:
-        verify_runtime_alignment(ok_cfg, snapshot_path=snap, ledger_path=ledger_wrong_ver)
+        verify_runtime_alignment(ok_cfg, manifest_path=no_manifest, snapshot_path=snap, ledger_path=ledger_wrong_ver)
         raise AssertionError("Expected StartupIntegrityError on dataset_version mismatch")
     except StartupIntegrityError as exc:
         assert "dataset_version mismatch" in str(exc)
@@ -193,6 +197,7 @@ def test_d4_fastapi_app_refuses_startup_on_mismatch(tmp_path, monkeypatch):
 
     snap = tmp_path / "snapshot.parquet"
     ledger = tmp_path / "ledger.json"
+    manifest = tmp_path / "missing_manifest.json"
     schema = pa.schema([pa.field("disaster_id", pa.string())], metadata={b"dataset_version": b"ver-live"})
     pq.write_table(pa.Table.from_pylist([{"disaster_id": "1"}], schema=schema), snap)
     ledger.write_text(
@@ -207,14 +212,16 @@ def test_d4_fastapi_app_refuses_startup_on_mismatch(tmp_path, monkeypatch):
         encoding="utf-8",
     )
 
+    monkeypatch.setattr(snapshot_guard, "DEFAULT_MANIFEST_PATH", manifest)
     monkeypatch.setattr(snapshot_guard, "DEFAULT_SNAPSHOT_PATH", snap)
     monkeypatch.setattr(snapshot_guard, "DEFAULT_LEDGER_PATH", ledger)
 
     # 1. Valid alignment -> FastAPI boots and /health responds 200
     valid_cfg = Settings(
         nvidia_api_key="test-key",
-        nvidia_embedding_model="llama-text-embed-v2",
-        nvidia_embedding_dimension=1024,
+        embedding_provider="pinecone",
+        embedding_model="llama-text-embed-v2",
+        embedding_dimension=1024,
         pinecone_namespace="v2-ver-live-llama-text-embed-v2",
         enable_backend_keepalive=False,
     )
@@ -225,8 +232,8 @@ def test_d4_fastapi_app_refuses_startup_on_mismatch(tmp_path, monkeypatch):
 
     # 2. Mismatched model / namespace / dataset_version -> FastAPI startup refuses
     for bad_cfg in [
-        Settings(nvidia_api_key="test-key", nvidia_embedding_model="wrong-model", nvidia_embedding_dimension=1024, pinecone_namespace="v2-ver-live-llama-text-embed-v2", enable_backend_keepalive=False),
-        Settings(nvidia_api_key="test-key", nvidia_embedding_model="llama-text-embed-v2", nvidia_embedding_dimension=1024, pinecone_namespace="wrong-ns", enable_backend_keepalive=False),
+        Settings(nvidia_api_key="test-key", embedding_provider="pinecone", embedding_model="wrong-model", embedding_dimension=1024, pinecone_namespace="v2-ver-live-llama-text-embed-v2", enable_backend_keepalive=False),
+        Settings(nvidia_api_key="test-key", embedding_provider="pinecone", embedding_model="llama-text-embed-v2", embedding_dimension=1024, pinecone_namespace="wrong-ns", enable_backend_keepalive=False),
     ]:
         monkeypatch.setattr("backend.app.main.get_settings", lambda cfg=bad_cfg: cfg)
         try:
@@ -252,5 +259,149 @@ def test_d4_fastapi_app_refuses_startup_on_mismatch(tmp_path, monkeypatch):
             raise AssertionError("Expected FastAPI startup to abort on dataset_version mismatch")
     except StartupIntegrityError:
         pass
+
+
+def test_a3_deployment_manifest_guard_all_failure_modes(tmp_path):
+    """A3: Manifest + Pinecone remote guard refuses missing manifest in prod, deleted-ledger bypass, and all mismatches."""
+    import json
+    import pytest
+    from backend.app.config import Settings
+    from backend.app.services.snapshot_guard import StartupIntegrityError, verify_runtime_alignment
+
+    manifest_path = tmp_path / "index_manifest.json"
+    missing_manifest = tmp_path / "does_not_exist.json"
+    absent_ledger = tmp_path / "deleted_ledger.json"
+    absent_snapshot = tmp_path / "absent_snapshot.parquet"
+
+    manifest = {
+        "dataset_version": "3d35e5131d79a79d",
+        "snapshot_sha256": "deadbeef",
+        "record_count": 16833,
+        "embedding_provider": "pinecone",
+        "embedding_model": "llama-text-embed-v2",
+        "embedding_dimension": 1024,
+        "pinecone_index_name": "disastermind",
+        "pinecone_namespace": "v2-3d35e5131d79a79d-llama-text-embed-v2",
+    }
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    prod_cfg = Settings(
+        nvidia_api_key="k",
+        pinecone_api_key="pcsk_dummy",
+        embedding_provider="pinecone",
+        embedding_model="llama-text-embed-v2",
+        embedding_dimension=1024,
+        pinecone_index_name="disastermind",
+        pinecone_namespace="v2-3d35e5131d79a79d-llama-text-embed-v2",
+        app_env="production",
+    )
+    ok_desc = {"name": "disastermind", "dimension": 1024, "metric": "cosine"}
+    ok_stats = {"namespaces": {"v2-3d35e5131d79a79d-llama-text-embed-v2": {"vector_count": 16833}}}
+
+    # Even with ledger and snapshot deleted (deployment container), valid manifest + Pinecone passes
+    res = verify_runtime_alignment(
+        prod_cfg,
+        manifest_path=manifest_path,
+        snapshot_path=absent_snapshot,
+        ledger_path=absent_ledger,
+        pinecone_stats=ok_stats,
+        index_description=ok_desc,
+    )
+    assert res["status"] == "ok" and res["remote_vector_count"] == 16833
+
+    # Missing manifest in production refuses even with deleted ledger
+    with pytest.raises(StartupIntegrityError, match="Committed index manifest missing"):
+        verify_runtime_alignment(
+            prod_cfg,
+            manifest_path=missing_manifest,
+            snapshot_path=absent_snapshot,
+            ledger_path=absent_ledger,
+        )
+
+    # Every config vs manifest mismatch refuses
+    mismatch_cases = [
+        ("embedding_provider", Settings(nvidia_api_key="k", pinecone_api_key="p", embedding_provider="nvidia", embedding_model="llama-text-embed-v2", embedding_dimension=1024, pinecone_namespace="v2-3d35e5131d79a79d-llama-text-embed-v2", app_env="production")),
+        ("embedding_model", Settings(nvidia_api_key="k", pinecone_api_key="p", embedding_provider="pinecone", embedding_model="multilingual-e5-large", embedding_dimension=1024, pinecone_namespace="v2-3d35e5131d79a79d-llama-text-embed-v2", app_env="production")),
+        ("embedding_dimension", Settings(nvidia_api_key="k", pinecone_api_key="p", embedding_provider="pinecone", embedding_model="llama-text-embed-v2", embedding_dimension=2048, pinecone_namespace="v2-3d35e5131d79a79d-llama-text-embed-v2", app_env="production")),
+        ("pinecone_index_name", Settings(nvidia_api_key="k", pinecone_api_key="p", embedding_provider="pinecone", embedding_model="llama-text-embed-v2", embedding_dimension=1024, pinecone_index_name="other-index", pinecone_namespace="v2-3d35e5131d79a79d-llama-text-embed-v2", app_env="production")),
+        ("pinecone_namespace", Settings(nvidia_api_key="k", pinecone_api_key="p", embedding_provider="pinecone", embedding_model="llama-text-embed-v2", embedding_dimension=1024, pinecone_namespace="wrong-ns", app_env="production")),
+    ]
+    for pattern, bad_cfg in mismatch_cases:
+        with pytest.raises(StartupIntegrityError, match=pattern):
+            verify_runtime_alignment(
+                bad_cfg,
+                manifest_path=manifest_path,
+                snapshot_path=absent_snapshot,
+                ledger_path=absent_ledger,
+                pinecone_stats=ok_stats,
+                index_description=ok_desc,
+            )
+
+    # Remote Pinecone mismatches refuse even if config == manifest and ledger is deleted
+    with pytest.raises(StartupIntegrityError, match="dimension mismatch"):
+        verify_runtime_alignment(
+            prod_cfg,
+            manifest_path=manifest_path,
+            snapshot_path=absent_snapshot,
+            ledger_path=absent_ledger,
+            pinecone_stats=ok_stats,
+            index_description={"name": "disastermind", "dimension": 2048},
+        )
+    with pytest.raises(StartupIntegrityError, match="namespace missing"):
+        verify_runtime_alignment(
+            prod_cfg,
+            manifest_path=manifest_path,
+            snapshot_path=absent_snapshot,
+            ledger_path=absent_ledger,
+            pinecone_stats={"namespaces": {}},
+            index_description=ok_desc,
+        )
+    with pytest.raises(StartupIntegrityError, match="vector count mismatch"):
+        verify_runtime_alignment(
+            prod_cfg,
+            manifest_path=manifest_path,
+            snapshot_path=absent_snapshot,
+            ledger_path=absent_ledger,
+            pinecone_stats={"namespaces": {"v2-3d35e5131d79a79d-llama-text-embed-v2": {"vector_count": 16828}}},
+            index_description=ok_desc,
+        )
+
+
+def test_a8_quarantine_source_1988_0424_ven_regression():
+    """A8 regression: 1988-0424-VEN source temporal inversion (2026 > 1988) is quarantined, never guessed."""
+    raw = _sample_raw(
+        disaster_id="1988-0424-VEN",
+        event_name="Hurricane 'Gilbert'",
+        country="Venezuela (Bolivarian Republic of)",
+        start_year=2026,
+        start_month=9.0,
+        start_day=11.0,
+        end_year=1988,
+        end_month=9.0,
+        end_day=11.0,
+        total_deaths=5.0,
+        total_affected=float("nan"),
+        affected=float("nan"),
+        total_damage_usd_thousands=3000.0,
+    )
+    cleaned, err = validate_and_clean_record(raw)
+    assert cleaned is None and err is not None
+    assert err[0] == "TEMPORAL_INVERSION_END_BEFORE_START"
+    assert "2026" in err[1] and "1988" in err[1]
+
+
+import pytest
+
+
+@pytest.mark.live
+def test_live_deployment_manifest_and_pinecone_alignment():
+    from backend.app.config import get_settings
+    from backend.app.services.snapshot_guard import verify_runtime_alignment
+
+    res = verify_runtime_alignment(get_settings())
+    assert res["status"] == "ok"
+    assert res["remote_vector_count"] == 16833
+    assert res["remote_dimension"] == 1024
+
 
 

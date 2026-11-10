@@ -93,7 +93,10 @@ async def _check_nvidia_async(
     except APIConnectionError as exc:
         fail(f"NVIDIA connection error (AsyncOpenAI): {exc}")
     except APIError as exc:
-        fail(f"NVIDIA API error (HTTP {getattr(exc, 'status_code', 'unknown')}): {exc}")
+        status_code = getattr(exc, "status_code", "unknown")
+        if status_code == 410:
+            fail(f"NVIDIA model DEPRECATED / GONE (HTTP 410): {exc}")
+        fail(f"NVIDIA API error (HTTP {status_code}): {exc}")
     except Exception as exc:
         fail(f"NVIDIA unexpected error: {exc}")
     finally:
@@ -111,7 +114,8 @@ def run_preflight(control: str = "none") -> int:
     index_name = os.getenv("PINECONE_INDEX_NAME", "disastermind").strip()
     namespace = os.getenv("PINECONE_NAMESPACE", "v2-3d35e5131d79a79d-llama-text-embed-v2").strip()
     chat_model = os.getenv("NVIDIA_MODEL", "nvidia/nemotron-3-ultra-550b-a55b").strip()
-    embed_model = os.getenv("NVIDIA_EMBEDDING_MODEL", "llama-text-embed-v2").strip()
+    embed_provider = os.getenv("EMBEDDING_PROVIDER", "pinecone").strip().lower()
+    embed_model = os.getenv("EMBEDDING_MODEL", "llama-text-embed-v2").strip()
     nvidia_base_url = os.getenv("NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1").rstrip("/")
 
     client_timeout = 20.0
@@ -132,6 +136,8 @@ def run_preflight(control: str = "none") -> int:
         pinecone_timeout = 0.001
     elif control == "pinecone-timeout":
         pinecone_timeout = 0.001
+    elif control == "bad-model-410":
+        chat_model = "nvidia/llama-3.3-nemotron-super-49b-v1"
 
     if not pinecone_key:
         fail("Missing PINECONE_API_KEY in environment / .env")
@@ -141,7 +147,7 @@ def run_preflight(control: str = "none") -> int:
     ok("PINECONE_API_KEY and NVIDIA_API_KEY are configured.")
 
     # 1. Live NVIDIA Chat (+ Embedding if NVIDIA-hosted) checks via AsyncOpenAI (httpx)
-    is_pinecone_embed = embed_model in PINECONE_INFERENCE_MODELS
+    is_pinecone_embed = embed_provider == "pinecone" or embed_model in PINECONE_INFERENCE_MODELS
     embed_dim = asyncio.run(
         _check_nvidia_async(
             api_key=nvidia_key,
@@ -249,7 +255,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Task 1P Preflight Check & Negative Controls")
     parser.add_argument(
         "--control",
-        choices=["none", "bad-nvidia-key", "bad-pinecone-key", "wrong-dim", "host-blocked", "timeout", "pinecone-timeout"],
+        choices=["none", "bad-nvidia-key", "bad-pinecone-key", "wrong-dim", "host-blocked", "timeout", "pinecone-timeout", "bad-model-410"],
         default="none",
         help="Run a negative control (default: none = normal live check)",
     )

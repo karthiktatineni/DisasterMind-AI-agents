@@ -1,5 +1,7 @@
 # Task 2P Step 8 — Embedding Model Selection Report (DEV Set Exact Cosine)
 
+> **In-Sample / Optimistic Disclosure (R10):** All metrics below were measured on `eval/dev_set.json`, which was also used for model selection and threshold calibration; treat these figures as **in-sample and optimistic** rather than held-out generalization performance.
+
 - **Snapshot Version:** `3d35e5131d79a79d` (16,833 records)
 - **DEV Suite:** 35 answerable queries + 5 OOD queries
 - **Winner (per pre-registered rule):** `llama-text-embed-v2` (pinecone, 1024-dim)

@@ -46,7 +46,7 @@ class EmbeddingService:
         pinecone_client: AsyncPinecone | Any | None = None,
     ):
         self.settings = settings or get_settings()
-        self.dimension = self.settings.nvidia_embedding_dimension or DEFAULT_EMBEDDING_DIM
+        self.dimension = self.settings.embedding_dimension or DEFAULT_EMBEDDING_DIM
         self._client: AsyncOpenAI | None = None
         self._pinecone_client: AsyncPinecone | Any | None = None
         self._owns_pinecone = False
@@ -56,7 +56,12 @@ class EmbeddingService:
             self._client = client
             return
 
-        if pinecone_client is not None or self.model in PINECONE_INFERENCE_MODELS:
+        use_pinecone = (
+            pinecone_client is not None
+            or self.model in PINECONE_INFERENCE_MODELS
+            or self.settings.embedding_provider.lower() == "pinecone"
+        )
+        if use_pinecone:
             self._backend = "pinecone"
             if pinecone_client is not None:
                 self._pinecone_client = pinecone_client
@@ -83,7 +88,7 @@ class EmbeddingService:
 
     @property
     def model(self) -> str:
-        return self.settings.nvidia_embedding_model
+        return self.settings.embedding_model
 
     async def aclose(self) -> None:
         if self._client is not None and hasattr(self._client, "close"):

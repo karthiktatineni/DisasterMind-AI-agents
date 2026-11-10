@@ -1,0 +1,12 @@
+{
+  "dataset_version": "3d35e5131d79a79d",
+  "snapshot_sha256": "daedf12440d30f5aa8d0281e500bfc02851ed1131d30a16e92a132e02260ea11",
+  "record_count": 16833,
+  "embedding_provider": "pinecone",
+  "embedding_model": "llama-text-embed-v2",
+  "embedding_dimension": 1024,
+  "pinecone_index_name": "disastermind",
+  "pinecone_namespace": "v2-3d35e5131d79a79d-llama-text-embed-v2",
+  "calibrated_similarity_threshold": 0.3112
+}
+

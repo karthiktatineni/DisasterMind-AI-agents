@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
+
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -64,6 +66,16 @@ from backend.app.services.nvidia_generation import (
     NvidiaGenerationError,
 )
 
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    verify_runtime_alignment(get_settings())
+    await keepalive_service.start()
+    try:
+        yield
+    finally:
+        await keepalive_service.stop()
+
+
 settings = get_settings()
 keepalive_service = KeepAliveService(settings)
 app = FastAPI(
@@ -73,6 +85,7 @@ app = FastAPI(
     docs_url=None if settings.production else "/docs",
     redoc_url=None if settings.production else "/redoc",
     openapi_url=None if settings.production else "/openapi.json",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -89,17 +102,6 @@ app.add_middleware(
 )
 app.add_middleware(RequestSizeLimitMiddleware, max_bytes=settings.max_request_bytes)
 app.add_middleware(SecurityHeadersMiddleware, settings=settings)
-
-
-@app.on_event("startup")
-async def start_keepalive() -> None:
-    verify_runtime_alignment(get_settings())
-    await keepalive_service.start()
-
-
-@app.on_event("shutdown")
-async def stop_keepalive() -> None:
-    await keepalive_service.stop()
 
 
 @app.get("/health")

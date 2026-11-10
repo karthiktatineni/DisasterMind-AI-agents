@@ -82,8 +82,9 @@ async def test_pinecone_query_maps_matches_with_metadata():
 async def test_pinecone_health_check_reports_stats():
     settings = Settings(
         nvidia_api_key="test-key",
-        nvidia_embedding_model="nvidia/nemotron-3-embed-1b",
-        nvidia_embedding_dimension=2048,
+        embedding_provider="nvidia",
+        embedding_model="nvidia/nemotron-3-embed-1b",
+        embedding_dimension=2048,
         pinecone_api_key="pcsk_test",
         pinecone_index_name="disastermind",
     )
@@ -112,8 +113,9 @@ async def test_pinecone_scores_direct_descending_no_inversion():
     """Verify similarity scores come straight from Pinecone scores in descending order (no 1 - score inversion)."""
     settings = Settings(
         nvidia_api_key="test-key",
-        nvidia_embedding_model="nvidia/nemotron-3-embed-1b",
-        nvidia_embedding_dimension=2048,
+        embedding_provider="nvidia",
+        embedding_model="nvidia/nemotron-3-embed-1b",
+        embedding_dimension=2048,
         pinecone_api_key="pcsk_test",
         pinecone_index_name="disastermind",
     )
@@ -162,8 +164,9 @@ async def test_similarity_and_rag_preserve_pinecone_scores_and_query_input_type(
     fake_openai = SimpleNamespace(embeddings=FakeEmbeddingsAPI())
     settings = Settings(
         nvidia_api_key="test-key",
-        nvidia_embedding_model="nvidia/nemotron-3-embed-1b",
-        nvidia_embedding_dimension=2048,
+        embedding_provider="nvidia",
+        embedding_model="nvidia/nemotron-3-embed-1b",
+        embedding_dimension=2048,
         pinecone_api_key="pcsk_test",
         pinecone_index_name="disastermind",
     )
@@ -227,8 +230,9 @@ async def test_embed_text_requires_input_type_and_retries_5xx(monkeypatch):
     fake_openai = SimpleNamespace(embeddings=FlakyEmbeddingsAPI())
     settings = Settings(
         nvidia_api_key="test-key",
-        nvidia_embedding_model="nvidia/nemotron-3-embed-1b",
-        nvidia_embedding_dimension=2048,
+        embedding_provider="nvidia",
+        embedding_model="nvidia/nemotron-3-embed-1b",
+        embedding_dimension=2048,
     )
     emb = EmbeddingService(settings=settings, client=fake_openai)
 
@@ -272,8 +276,9 @@ async def test_embedding_service_pinecone_inference_provider(monkeypatch):
     fake_pc = SimpleNamespace(inference=FakeInference())
     settings = Settings(
         nvidia_api_key="test-key",
-        nvidia_embedding_model="llama-text-embed-v2",
-        nvidia_embedding_dimension=1024,
+        embedding_provider="pinecone",
+        embedding_model="llama-text-embed-v2",
+        embedding_dimension=1024,
         pinecone_api_key="pcsk_test",
     )
     emb = EmbeddingService(settings=settings, pinecone_client=fake_pc)
@@ -306,8 +311,9 @@ async def test_retrieval_service_filters_threshold_no_data_and_record_ids():
 
     settings = Settings(
         nvidia_api_key="test-key",
-        nvidia_embedding_model="llama-text-embed-v2",
-        nvidia_embedding_dimension=1024,
+        embedding_provider="pinecone",
+        embedding_model="llama-text-embed-v2",
+        embedding_dimension=1024,
         pinecone_api_key="pcsk_test",
         pinecone_index_name="disastermind",
         pinecone_namespace="v2-test",

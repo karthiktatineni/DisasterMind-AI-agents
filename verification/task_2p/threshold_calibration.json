@@ -1,0 +1,372 @@
+{
+  "pre_registration_commit": "a42b7479abfa4ceceee72b1a7aafc018d01be373",
+  "dev_negatives_expanded_sha256": "dc073da48fa015a81eac080481172b4286166cd1bb52bac86f4f0566fab21010",
+  "negative_count": 35,
+  "max_negative_top1_score": 0.3111,
+  "lowest_zero_fp_threshold": 0.3112,
+  "false_positives_at_threshold": 0,
+  "highest_10_negatives": [
+    {
+      "id": "DEV-RET-36",
+      "category": "out_of_domain",
+      "source": "dev_set",
+      "top1_score": 0.3111,
+      "top1_id": "2001-0647-USA",
+      "top1_label": "Brick fa\u00e7ade (2001) \u2014 United States of America"
+    },
+    {
+      "id": "DEV-RET-39",
+      "category": "out_of_domain",
+      "source": "dev_set",
+      "top1_score": 0.2706,
+      "top1_id": "2014-0219-RUS",
+      "top1_label": "Subway (2014) \u2014 Russian Federation"
+    },
+    {
+      "id": "DEV-NEG-18",
+      "category": "unsupported_hazard",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.2676,
+      "top1_id": "2000-0521-RUS",
+      "top1_label": "Submarine \"Kursk\" (2000) \u2014 Russian Federation"
+    },
+    {
+      "id": "DEV-NEG-20",
+      "category": "unsupported_hazard",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.245,
+      "top1_id": "2013-0060-RUS",
+      "top1_label": "Impact - Russian Federation (2013)"
+    },
+    {
+      "id": "DEV-NEG-04",
+      "category": "other_language",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.2366,
+      "top1_id": "2019-0100-BRA",
+      "top1_label": "Flood - Brazil (2019)"
+    },
+    {
+      "id": "DEV-NEG-02",
+      "category": "other_language",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.2333,
+      "top1_id": "2021-0016-ESP",
+      "top1_label": "Storm 'Filomena! (2021) \u2014 Spain"
+    },
+    {
+      "id": "DEV-NEG-22",
+      "category": "wrong_region_or_era",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.2316,
+      "top1_id": "2014-0318-USA",
+      "top1_label": "Earthquake - United States of America (2014)"
+    },
+    {
+      "id": "DEV-NEG-05",
+      "category": "other_language",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.2179,
+      "top1_id": "2002-0716-DZA",
+      "top1_label": "Boulangerie (2002) \u2014 Algeria"
+    },
+    {
+      "id": "DEV-NEG-15",
+      "category": "vague",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.1969,
+      "top1_id": "2021-0384-DZA",
+      "top1_label": "Miscellaneous accident (General) - Algeria (2021)"
+    },
+    {
+      "id": "DEV-RET-38",
+      "category": "out_of_domain",
+      "source": "dev_set",
+      "top1_score": 0.1936,
+      "top1_id": "2021-0358-USA",
+      "top1_label": "Residential complex 'Champlain Towers South' (2021) \u2014 United States of America"
+    }
+  ],
+  "all_negatives": [
+    {
+      "id": "DEV-RET-36",
+      "category": "out_of_domain",
+      "source": "dev_set",
+      "top1_score": 0.3111,
+      "top1_id": "2001-0647-USA",
+      "top1_label": "Brick fa\u00e7ade (2001) \u2014 United States of America"
+    },
+    {
+      "id": "DEV-RET-39",
+      "category": "out_of_domain",
+      "source": "dev_set",
+      "top1_score": 0.2706,
+      "top1_id": "2014-0219-RUS",
+      "top1_label": "Subway (2014) \u2014 Russian Federation"
+    },
+    {
+      "id": "DEV-NEG-18",
+      "category": "unsupported_hazard",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.2676,
+      "top1_id": "2000-0521-RUS",
+      "top1_label": "Submarine \"Kursk\" (2000) \u2014 Russian Federation"
+    },
+    {
+      "id": "DEV-NEG-20",
+      "category": "unsupported_hazard",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.245,
+      "top1_id": "2013-0060-RUS",
+      "top1_label": "Impact - Russian Federation (2013)"
+    },
+    {
+      "id": "DEV-NEG-04",
+      "category": "other_language",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.2366,
+      "top1_id": "2019-0100-BRA",
+      "top1_label": "Flood - Brazil (2019)"
+    },
+    {
+      "id": "DEV-NEG-02",
+      "category": "other_language",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.2333,
+      "top1_id": "2021-0016-ESP",
+      "top1_label": "Storm 'Filomena! (2021) \u2014 Spain"
+    },
+    {
+      "id": "DEV-NEG-22",
+      "category": "wrong_region_or_era",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.2316,
+      "top1_id": "2014-0318-USA",
+      "top1_label": "Earthquake - United States of America (2014)"
+    },
+    {
+      "id": "DEV-NEG-05",
+      "category": "other_language",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.2179,
+      "top1_id": "2002-0716-DZA",
+      "top1_label": "Boulangerie (2002) \u2014 Algeria"
+    },
+    {
+      "id": "DEV-NEG-15",
+      "category": "vague",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.1969,
+      "top1_id": "2021-0384-DZA",
+      "top1_label": "Miscellaneous accident (General) - Algeria (2021)"
+    },
+    {
+      "id": "DEV-RET-38",
+      "category": "out_of_domain",
+      "source": "dev_set",
+      "top1_score": 0.1936,
+      "top1_id": "2021-0358-USA",
+      "top1_label": "Residential complex 'Champlain Towers South' (2021) \u2014 United States of America"
+    },
+    {
+      "id": "DEV-NEG-16",
+      "category": "unsupported_hazard",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.1918,
+      "top1_id": "2001-0203-CAN",
+      "top1_label": "Cryptosporidiosis (2001) \u2014 Canada"
+    },
+    {
+      "id": "DEV-NEG-21",
+      "category": "wrong_region_or_era",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.1858,
+      "top1_id": "2006-0219-ITA",
+      "top1_label": "Mass movement (wet) - Italy (2006)"
+    },
+    {
+      "id": "DEV-NEG-11",
+      "category": "vague",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.1813,
+      "top1_id": "2021-0358-USA",
+      "top1_label": "Residential complex 'Champlain Towers South' (2021) \u2014 United States of America"
+    },
+    {
+      "id": "DEV-NEG-23",
+      "category": "wrong_region_or_era",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.1784,
+      "top1_id": "2022-0255-COD",
+      "top1_label": "Bubonic Plague (2022) \u2014 Democratic Republic of the Congo"
+    },
+    {
+      "id": "DEV-NEG-03",
+      "category": "other_language",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.1783,
+      "top1_id": "2021-0363-DEU",
+      "top1_label": "Storm - Germany (2021)"
+    },
+    {
+      "id": "DEV-NEG-08",
+      "category": "typos_only",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.1716,
+      "top1_id": "2024-0137-URY",
+      "top1_label": "Flood - Uruguay (2024)"
+    },
+    {
+      "id": "DEV-NEG-17",
+      "category": "unsupported_hazard",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.164,
+      "top1_id": "2017-0427-PRK",
+      "top1_label": "Nuclear site (2017) \u2014 Democratic People's Republic of Korea"
+    },
+    {
+      "id": "DEV-RET-37",
+      "category": "out_of_domain",
+      "source": "dev_set",
+      "top1_score": 0.157,
+      "top1_id": "2002-0775-USA",
+      "top1_label": "Apartment building (2002) \u2014 United States of America"
+    },
+    {
+      "id": "DEV-NEG-09",
+      "category": "typos_only",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.1546,
+      "top1_id": "2024-0016-BOL",
+      "top1_label": "Flood - Bolivia (Plurinational State of) (2024)"
+    },
+    {
+      "id": "DEV-NEG-10",
+      "category": "typos_only",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.1524,
+      "top1_id": "2025-0813-LAO",
+      "top1_label": "Typhoon 'Bualoi' (Opong) (2025) \u2014 Lao People's Democratic Republic"
+    },
+    {
+      "id": "DEV-NEG-13",
+      "category": "vague",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.1521,
+      "top1_id": "2019-0051-BRA",
+      "top1_label": "Football training center Flamengo (2019) \u2014 Brazil"
+    },
+    {
+      "id": "DEV-NEG-07",
+      "category": "typos_only",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.1463,
+      "top1_id": "2026-0086-AFG",
+      "top1_label": "Road - Afghanistan (2026)"
+    },
+    {
+      "id": "DEV-NEG-24",
+      "category": "wrong_region_or_era",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.1461,
+      "top1_id": "2000-0739-ZAF",
+      "top1_label": "Floor-polish factory (2000) \u2014 South Africa"
+    },
+    {
+      "id": "DEV-NEG-06",
+      "category": "typos_only",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.1457,
+      "top1_id": "2021-0327-LAO",
+      "top1_label": "Tropical storm 'Koguma' (2021) \u2014 Lao People's Democratic Republic"
+    },
+    {
+      "id": "DEV-NEG-01",
+      "category": "other_language",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.1392,
+      "top1_id": "2023-0598-FRA",
+      "top1_label": "Holiday cottage (2023) \u2014 France"
+    },
+    {
+      "id": "DEV-NEG-25",
+      "category": "wrong_region_or_era",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.1358,
+      "top1_id": "2024-0477-NPL",
+      "top1_label": "Mass movement (wet) - Nepal (2024)"
+    },
+    {
+      "id": "DEV-NEG-12",
+      "category": "vague",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.1345,
+      "top1_id": "2022-0711-COD",
+      "top1_label": "Stampede (2022) \u2014 Democratic Republic of the Congo"
+    },
+    {
+      "id": "DEV-RET-40",
+      "category": "out_of_domain",
+      "source": "dev_set",
+      "top1_score": 0.1289,
+      "top1_id": "2008-0556-IRN",
+      "top1_label": "Aldultered alcool (2008) \u2014 Iran (Islamic Republic of)"
+    },
+    {
+      "id": "DEV-NEG-14",
+      "category": "vague",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.1235,
+      "top1_id": "2025-0987-ITA",
+      "top1_label": "Storms 'Claudia' (Aemet) and 'Sascha' (2025) \u2014 Italy"
+    },
+    {
+      "id": "DEV-NEG-30",
+      "category": "non_disaster_text",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.1232,
+      "top1_id": "2011-0447-HUN",
+      "top1_label": "Road - Hungary (2011)"
+    },
+    {
+      "id": "DEV-NEG-28",
+      "category": "non_disaster_text",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.1192,
+      "top1_id": "2006-0387-USA",
+      "top1_label": "Extreme temperature - United States of America (2006)"
+    },
+    {
+      "id": "DEV-NEG-19",
+      "category": "unsupported_hazard",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.1147,
+      "top1_id": "2000-0513-PAN",
+      "top1_label": "Minesweeper \"Valiente\" and cargo \"Skyros\" (2000) \u2014 Panama"
+    },
+    {
+      "id": "DEV-NEG-29",
+      "category": "non_disaster_text",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.1047,
+      "top1_id": "2026-0018-AUS",
+      "top1_label": "Wildfire - Australia (2026)"
+    },
+    {
+      "id": "DEV-NEG-26",
+      "category": "non_disaster_text",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.0926,
+      "top1_id": "2024-0573-CAN",
+      "top1_label": "Tropical cyclone 'Debby' (2024) \u2014 Canada"
+    },
+    {
+      "id": "DEV-NEG-27",
+      "category": "non_disaster_text",
+      "source": "dev_negatives_expanded",
+      "top1_score": 0.0627,
+      "top1_id": "2018-0025-NLD",
+      "top1_label": "'Friederike' (David) (2018) \u2014 Netherlands (Kingdom of the)"
+    }
+  ]
+}

@@ -1,6 +1,26 @@
 {
-  "total_http_requests": 0,
+  "total_http_requests": 3,
+  "describe_index_stats_calls": 1,
   "embedding_calls": 0,
   "upsert_calls": 0,
-  "requests": []
+  "requests": [
+    {
+      "transport": "sync",
+      "method": "GET",
+      "url": "https://api.pinecone.io/indexes",
+      "status_code": 200
+    },
+    {
+      "transport": "sync",
+      "method": "GET",
+      "url": "https://api.pinecone.io/indexes/disastermind",
+      "status_code": 200
+    },
+    {
+      "transport": "sync",
+      "method": "POST",
+      "url": "https://disastermind-nu066ad.svc.aped-4627-b74a.pinecone.io/describe_index_stats",
+      "status_code": 200
+    }
+  ]
 }

@@ -84,10 +84,10 @@ def generate(limit: int | None = None, resume: bool = False) -> None:
     settings = get_settings()
     if not settings.nvidia_api_key:
         raise SystemExit("NVIDIA_API_KEY is required in .env for embedding generation.")
-    if settings.nvidia_embedding_dimension != EMBEDDING_DIM:
-        raise SystemExit(f"NVIDIA_EMBEDDING_DIMENSION must be {EMBEDDING_DIM}.")
+    if settings.embedding_dimension != EMBEDDING_DIM:
+        raise SystemExit(f"EMBEDDING_DIMENSION must be {EMBEDDING_DIM}.")
 
-    model = settings.nvidia_embedding_model
+    model = settings.embedding_model
     client = OpenAI(
         api_key=settings.nvidia_api_key,
         base_url=settings.nvidia_base_url,

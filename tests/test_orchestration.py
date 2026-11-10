@@ -70,6 +70,7 @@ def orchestrator():
     )
 
 
+@pytest.mark.live
 @pytest.mark.asyncio
 async def test_orchestration_executes_all_agents_in_required_order(orchestrator, tmp_path, monkeypatch):
     import joblib
@@ -108,6 +109,7 @@ async def test_orchestration_executes_all_agents_in_required_order(orchestrator,
     assert response.evidence_used
 
 
+@pytest.mark.live
 @pytest.mark.asyncio
 async def test_validation_preserves_capacity_warnings_before_decision(orchestrator, tmp_path, monkeypatch):
     import joblib
@@ -164,6 +166,7 @@ async def test_orchestration_returns_insufficient_data_without_retrieval():
     assert response.agent_results == []
 
 
+@pytest.mark.live
 @pytest.mark.asyncio
 async def test_orchestration_accepts_intake_after_enrichment(monkeypatch):
     async def fake_enrich(intake: ScenarioIntakeRequest) -> DisasterScenario:

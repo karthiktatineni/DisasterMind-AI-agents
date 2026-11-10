@@ -40,9 +40,11 @@
       "namespace": "v2-3d35e5131d79a79d-llama-text-embed-v2",
       "embedded_count": 0,
       "upserted_count": 0,
-      "total_in_ledger": 16833
+      "total_in_ledger": 16833,
+      "remote_vector_count": 16833
     },
-    "second_run_total_http_calls": 0,
+    "second_run_total_http_calls": 3,
+    "second_run_describe_index_stats_calls": 1,
     "second_run_embedding_http_calls": 0,
     "second_run_upsert_http_calls": 0
   },
@@ -51,14 +53,18 @@
     "live_alignment": {
       "status": "ok",
       "dataset_version": "3d35e5131d79a79d",
+      "embedding_provider": "pinecone",
       "embedding_model": "llama-text-embed-v2",
+      "embedding_dimension": "1024",
       "pinecone_namespace": "v2-3d35e5131d79a79d-llama-text-embed-v2",
-      "embedding_dimension": "1024"
+      "record_count": 16833,
+      "remote_dimension": 1024,
+      "remote_vector_count": 16833
     },
     "refused_mismatches": [
-      "embedding_model: embedding_model mismatch: config='wrong-model' != ledger='llama-text-embed-v2'",
-      "pinecone_namespace: pinecone_namespace mismatch: config='wrong-ns' != ledger='v2-3d35e5131d79a79d-llama-text-embed-v2'",
-      "dataset_version: dataset_version mismatch: snapshot='3d35e5131d79a79d' != ledger='0000000000000000'"
+      "embedding_model: embedding_model mismatch: config='wrong-model' != manifest='llama-text-embed-v2'",
+      "pinecone_namespace: pinecone_namespace mismatch: config='wrong-ns' != manifest='v2-3d35e5131d79a79d-llama-text-embed-v2'",
+      "dataset_version: dataset_version mismatch: ledger='0000000000000000' != manifest='3d35e5131d79a79d'"
     ]
   },
   "d5": {
