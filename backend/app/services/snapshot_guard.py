@@ -199,7 +199,7 @@ def verify_runtime_alignment(
             **remote_info,
         }
 
-    # Legacy fallback when manifest is omitted in local dev tests only
+    # Legacy dev-test path when manifest is omitted in isolated tests only
     snap_version = read_snapshot_version(snap_p)
     ledger = json.loads(led_p.read_text(encoding="utf-8"))
     if ledger.get("dataset_version") != snap_version:

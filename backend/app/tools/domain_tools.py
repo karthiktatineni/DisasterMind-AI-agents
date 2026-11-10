@@ -136,6 +136,7 @@ def build_domain_tools(
             {
                 "call_id": call_id,
                 "matches": safe_matches,
+                "match_count": len(safe_matches),
                 "record_ids": [m["record_id"] for m in safe_matches],
                 "threshold_used": res.threshold_used,
                 "top_score": res.top_score,
@@ -172,8 +173,8 @@ def build_domain_tools(
         top = _pick_country_match(results, country_filter) if (results and country_filter) else (results[0] if results else None)
 
         if top is None and country_filter:
-            fallback_results = await _query_open_meteo_geo(place, 10)
-            top = _pick_country_match(fallback_results, country_filter)
+            country_results = await _query_open_meteo_geo(place, 10)
+            top = _pick_country_match(country_results, country_filter)
 
         if top is None:
             return "no_data", {"call_id": call_id, "region": raw_region}, f"No geocoding match for '{raw_region}'."

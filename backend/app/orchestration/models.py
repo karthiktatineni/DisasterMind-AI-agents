@@ -90,6 +90,7 @@ class EvacuationAgentOutput(_StrictModel):
         "mandatory_evacuation",
         "insufficient_data",
     ]
+    requires_human_approval: bool | None = None
     target_headcount: int | None = Field(default=None, ge=0)
     target_headcount_provenance: str | None = None
     trigger_criteria: list[str] = Field(default_factory=list)
@@ -150,6 +151,7 @@ class EvacuationSummary(_StrictModel):
         "mandatory_evacuation",
         "insufficient_data",
     ]
+    requires_human_approval: bool = True
     target_headcount: int | None = None
     target_headcount_provenance: str | None = None
     trigger_criteria: list[str] = Field(default_factory=list)

@@ -267,6 +267,11 @@
           "title": "Recommendation",
           "type": "string"
         },
+        "requires_human_approval": {
+          "default": true,
+          "title": "Requires Human Approval",
+          "type": "boolean"
+        },
         "target_headcount": {
           "anyOf": [
             {

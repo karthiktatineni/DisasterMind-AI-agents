@@ -9,14 +9,6 @@ import httpx
 from backend.app.schemas import DisasterScenario, ScenarioIntakeRequest
 
 
-SEVERITY_SCALE = {
-    "Low": 0.45,
-    "Moderate": 0.7,
-    "High": 1.0,
-    "Critical": 1.35,
-}
-
-
 @dataclass(frozen=True)
 class EnrichmentResult:
     scenario: DisasterScenario
@@ -81,13 +73,13 @@ async def enrich_scenario(intake: ScenarioIntakeRequest) -> DisasterScenario:
     country_population: int | None = None
     country_area_km2 = 0.0
     beds_per_1000: float | None = None
-    temperature = 0.0
-    humidity = 0.0
-    wind_speed = 0.0
-    rainfall = 0.0
-    elevation = 0.0
-    hospital_capacity = 0
-    shelter_capacity = 0
+    temperature: float | None = None
+    humidity: float | None = None
+    wind_speed: float | None = None
+    rainfall: float | None = None
+    elevation: float | None = None
+    hospital_capacity: int | None = None
+    shelter_capacity: int | None = None
 
     async with httpx.AsyncClient(
         timeout=httpx.Timeout(10.0),
@@ -111,7 +103,7 @@ async def enrich_scenario(intake: ScenarioIntakeRequest) -> DisasterScenario:
             population = int(population) if population else None
             sources.append(_source("Open-Meteo Geocoding", "live", "Resolved region globally."))
         except Exception:
-            sources.append(_source("Open-Meteo Geocoding", "fallback", "Could not resolve region live."))
+            sources.append(_source("Open-Meteo Geocoding", "unavailable", "Could not resolve region live."))
 
         if latitude is not None and longitude is not None:
             try:
@@ -134,7 +126,7 @@ async def enrich_scenario(intake: ScenarioIntakeRequest) -> DisasterScenario:
                 population_area_km2 = _bbox_area_km2(place.get("boundingbox"))
                 sources.append(_source("Nominatim", "live", "Fetched OSM place metadata and bounding box."))
             except Exception:
-                sources.append(_source("Nominatim", "fallback", "OSM place metadata unavailable."))
+                sources.append(_source("Nominatim", "unavailable", "OSM place metadata unavailable."))
 
             try:
                 forecast = await client.get(
@@ -149,13 +141,17 @@ async def enrich_scenario(intake: ScenarioIntakeRequest) -> DisasterScenario:
                 )
                 forecast.raise_for_status()
                 current = forecast.json().get("current", {})
-                temperature = float(current.get("temperature_2m") or temperature)
-                humidity = float(current.get("relative_humidity_2m") or humidity)
-                wind_speed = float(current.get("wind_speed_10m") or wind_speed)
-                rainfall = float(current.get("precipitation") or rainfall)
+                if current.get("temperature_2m") is not None:
+                    temperature = float(current["temperature_2m"])
+                if current.get("relative_humidity_2m") is not None:
+                    humidity = float(current["relative_humidity_2m"])
+                if current.get("wind_speed_10m") is not None:
+                    wind_speed = float(current["wind_speed_10m"])
+                if current.get("precipitation") is not None:
+                    rainfall = float(current["precipitation"])
                 sources.append(_source("Open-Meteo Forecast", "live", "Fetched current weather globally."))
             except Exception:
-                sources.append(_source("Open-Meteo Forecast", "fallback", "Weather service unavailable."))
+                sources.append(_source("Open-Meteo Forecast", "unavailable", "Weather service unavailable."))
 
             try:
                 elev = await client.get(
@@ -164,10 +160,11 @@ async def enrich_scenario(intake: ScenarioIntakeRequest) -> DisasterScenario:
                 )
                 elev.raise_for_status()
                 values = elev.json().get("elevation") or []
-                elevation = float(values[0]) if values else elevation
+                if values and values[0] is not None:
+                    elevation = float(values[0])
                 sources.append(_source("Open-Meteo Elevation", "live", "Fetched 90m DEM elevation."))
             except Exception:
-                sources.append(_source("Open-Meteo Elevation", "fallback", "Elevation service unavailable."))
+                sources.append(_source("Open-Meteo Elevation", "unavailable", "Elevation service unavailable."))
 
             try:
                 overpass_query = f"""
@@ -193,20 +190,21 @@ async def enrich_scenario(intake: ScenarioIntakeRequest) -> DisasterScenario:
                 elements: list[dict[str, Any]] = osm.json().get("elements", [])
                 hospital_facilities = 0
                 shelter_facilities = 0
+                raw_hosp_cap = 0
+                raw_shelt_cap = 0
                 for element in elements:
                     tags = element.get("tags", {})
                     cap = _tag_capacity(tags)
-
                     if tags.get("amenity") in ("hospital", "clinic"):
                         hospital_facilities += 1
-                        if not cap:
-                            cap = 150 if tags.get("amenity") == "hospital" else 25
-                        hospital_capacity += cap
+                        if cap > 0:
+                            raw_hosp_cap += cap
                     if tags.get("social_facility") == "shelter" or tags.get("emergency") == "assembly_point":
                         shelter_facilities += 1
-                        if not cap:
-                            cap = 300 if tags.get("social_facility") == "shelter" else 500
-                        shelter_capacity += cap
+                        if cap > 0:
+                            raw_shelt_cap += cap
+                hospital_capacity = raw_hosp_cap if raw_hosp_cap > 0 else None
+                shelter_capacity = raw_shelt_cap if raw_shelt_cap > 0 else None
                 sources.append(
                     _source(
                         "OpenStreetMap Overpass",
@@ -218,7 +216,7 @@ async def enrich_scenario(intake: ScenarioIntakeRequest) -> DisasterScenario:
                     )
                 )
             except Exception:
-                sources.append(_source("OpenStreetMap Overpass", "fallback", "Facility lookup unavailable."))
+                sources.append(_source("OpenStreetMap Overpass", "unavailable", "Facility lookup unavailable."))
 
         if country_code:
             try:
@@ -235,7 +233,7 @@ async def enrich_scenario(intake: ScenarioIntakeRequest) -> DisasterScenario:
                 country_iso3 = country_data.get("cca3")
                 sources.append(_source("REST Countries", "live", "Fetched country population and area."))
             except Exception:
-                sources.append(_source("REST Countries", "fallback", "Country population API unavailable."))
+                sources.append(_source("REST Countries", "unavailable", "Country population API unavailable."))
 
         if country_iso3:
             try:
@@ -248,7 +246,7 @@ async def enrich_scenario(intake: ScenarioIntakeRequest) -> DisasterScenario:
                 if beds_per_1000 is not None:
                     sources.append(_source("World Bank", "latest", "Fetched latest hospital beds per 1,000 people."))
             except Exception:
-                sources.append(_source("World Bank", "fallback", "Hospital bed density API unavailable."))
+                sources.append(_source("World Bank", "unavailable", "Hospital bed density API unavailable."))
 
     population = population or country_population
     area_km2 = population_area_km2 or country_area_km2
@@ -260,14 +258,14 @@ async def enrich_scenario(intake: ScenarioIntakeRequest) -> DisasterScenario:
         time_horizon=intake.time_horizon,
         severity=intake.severity,
         population=population,
-        hospital_capacity=hospital_capacity or None,
-        shelter_capacity=shelter_capacity or None,
-        wind_speed=wind_speed or None,
-        rainfall=rainfall or None,
-        elevation=elevation or None,
+        hospital_capacity=hospital_capacity,
+        shelter_capacity=shelter_capacity,
+        wind_speed=wind_speed,
+        rainfall=rainfall,
+        elevation=elevation,
         population_density=density,
-        temperature=temperature or None,
-        humidity=humidity or None,
+        temperature=temperature,
+        humidity=humidity,
         historical_damage=None,
         notes=intake.notes,
         latitude=latitude,

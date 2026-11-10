@@ -209,7 +209,7 @@ class NativeToolLLMClient:
         raise LLMClientError(f"NVIDIA LLM failed unexpectedly: {last_exc}")
 
     @staticmethod
-    def _parse_completion(completion: Any, fallback_model: str, elapsed_ms: float) -> LLMToolResponse:
+    def _parse_completion(completion: Any, default_model: str, elapsed_ms: float) -> LLMToolResponse:
         choices = getattr(completion, "choices", None) or []
         if not choices:
             raise LLMClientError("NVIDIA completion contained empty choices.")
@@ -231,7 +231,7 @@ class NativeToolLLMClient:
         usage = getattr(completion, "usage", None)
         comp_details = getattr(usage, "completion_tokens_details", None) if usage else None
         return LLMToolResponse(
-            model=str(getattr(completion, "model", None) or fallback_model),
+            model=str(getattr(completion, "model", None) or default_model),
             request_id=getattr(completion, "id", None),
             finish_reason=getattr(choice, "finish_reason", None),
             content=getattr(msg, "content", None),

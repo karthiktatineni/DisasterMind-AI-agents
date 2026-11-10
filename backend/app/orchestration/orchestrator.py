@@ -242,6 +242,10 @@ class DisasterMindOrchestrator:
         except Exception as exc:
             if owns_http:
                 await http_client.aclose()
+            from backend.app.orchestration.models import AbstentionItem
+
+            state.abstained_agents.add("coordinator")
+            state.abstentions.append(AbstentionItem(agent="coordinator", reason=f"LLM configuration error: {exc}"))
             emit(
                 SSEEventRecord(
                     event="run_failed",
@@ -501,6 +505,7 @@ class DisasterMindOrchestrator:
         evac_summary = (
             EvacuationSummary(
                 recommendation=evac_out.recommendation,
+                requires_human_approval=True,
                 target_headcount=evac_out.target_headcount,
                 target_headcount_provenance=evac_out.target_headcount_provenance,
                 trigger_criteria=list(evac_out.trigger_criteria),
@@ -510,6 +515,7 @@ class DisasterMindOrchestrator:
             if evac_out is not None
             else EvacuationSummary(
                 recommendation="insufficient_data",
+                requires_human_approval=True,
                 verified_by_agent=None,
             )
         )
@@ -587,9 +593,13 @@ class DisasterMindOrchestrator:
             status = "partial"
 
         review_reasons: list[str] = []
-        if evac_summary.recommendation in ("standby_advisory", "voluntary_evacuation", "mandatory_evacuation"):
+        if evac_out is not None or evac_summary.recommendation != "insufficient_data":
             review_reasons.append(
-                f"Evacuation action '{evac_summary.recommendation}' requires mandatory human approval."
+                f"Evacuation recommendation '{evac_summary.recommendation}' requires mandatory human approval."
+            )
+        if evac_out is not None and evac_out.requires_human_approval is False:
+            review_reasons.append(
+                "Model emitted requires_human_approval=false; overridden to true by code policy."
             )
         if conflicts:
             review_reasons.append("Risk and Evacuation assessments disagree.")
@@ -600,8 +610,10 @@ class DisasterMindOrchestrator:
         if status != "complete":
             review_reasons.append(f"Briefing completed with status '{status}'.")
 
-        human_required = len(review_reasons) > 0 or (
-            evac_summary.recommendation not in ("no_evacuation", "insufficient_data")
+        human_required = (
+            len(review_reasons) > 0
+            or evac_summary.requires_human_approval
+            or evac_out is not None
         )
 
         label_lit: Any = (

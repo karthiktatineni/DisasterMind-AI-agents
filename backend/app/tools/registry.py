@@ -95,14 +95,14 @@ def compact_tool_result_for_model(
     if len(serialized) <= max_chars:
         return serialized
 
-    fallback = {
+    truncated_summary = {
         "status": envelope.status,
         "call_id": envelope.call_id,
         "already_provided": already_provided,
         "truncated": True,
         "summary": serialized[: max(120, max_chars - 160)],
     }
-    return json.dumps(fallback, ensure_ascii=False)[:max_chars]
+    return json.dumps(truncated_summary, ensure_ascii=False)[:max_chars]
 
 
 def decode_tool_arguments(raw_arguments: str | dict[str, Any]) -> dict[str, Any]:

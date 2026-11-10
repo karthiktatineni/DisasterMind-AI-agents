@@ -363,6 +363,31 @@ async def run_agent_loop(
                     data={"call_id": tc.id, "tool": tc.name},
                 )
             )
+            try:
+                parsed_for_check = decode_tool_arguments(tc.raw_arguments)
+            except Exception:
+                parsed_for_check = None
+            if tc.name in spec.allow_list and parsed_for_check is not None:
+                grounding_err = verifier.validate_tool_call_grounding(tc.name, parsed_for_check, state)
+                if grounding_err:
+                    rejection_reasons.append(grounding_err)
+                    emit(
+                        SSEEventRecord(
+                            event="agent_rejected",
+                            run_id=state.run_id,
+                            agent=spec.name,
+                            data={"call_id": tc.id, "tool": tc.name, "reason": grounding_err},
+                        )
+                    )
+                    messages.append(
+                        {
+                            "role": "tool",
+                            "tool_call_id": tc.id,
+                            "content": json.dumps({"status": "rejected", "error": grounding_err}),
+                        }
+                    )
+                    continue
+
             env = await registry.execute(
                 call_id=tc.id,
                 agent=spec.name,
