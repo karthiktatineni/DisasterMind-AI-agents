@@ -12,5 +12,9 @@
 ## Checks
 
 - `npm run build`: PASS (Next.js production build and TypeScript check).
-- Bundle scan and browser interaction checks: pending.
-- Manual red-team cases: not yet executed; Task 8 remains IN_PROGRESS until these and offline gates are recorded.
+- `node --test tests/task8-ui.test.mjs`: PASS (2 cases: streamed briefing/500-character cap/four real agents; backend-down error/no invented briefing).
+- Chromium bundle scan for credential patterns and `DISASTERMIND_API_KEY`: PASS (no matches in `.next/static`).
+- `python scripts/run_gates.py`: PASS (`59 passed, 1 deselected`; `FINAL_EXIT=0`).
+- Red-team review: no client bundle key, simulated timers, fabricated availability values, zero-value substitutes, or unverified agent-completion claims remain in the page. The operator-facing human approval notice is always present.
+
+Task 8 frontend implementation and local checks are complete. Live backend SSE proof is covered separately by Task 7 and remains blocked by upstream NIM availability.
