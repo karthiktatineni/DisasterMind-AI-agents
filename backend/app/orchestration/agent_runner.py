@@ -25,6 +25,7 @@ from backend.app.orchestration.verifier import (
     InAppVerifier,
 )
 from backend.app.services.llm_client import LLMClientConfigError, LLMClientError, NativeToolLLMClient
+from backend.app.services.wire_capture import ACTIVE_AGENT_CTX
 from backend.app.tools.registry import (
     SubmissionToolSpec,
     ToolRegistry,
@@ -182,6 +183,7 @@ async def run_agent_loop(
             )
 
         req_snapshot = [dict(m) for m in messages]
+        active_agent_token = ACTIVE_AGENT_CTX.set(spec.name)
         try:
             resp = await llm_client.chat_with_tools(
                 messages=messages,
@@ -194,6 +196,8 @@ async def run_agent_loop(
         except (LLMClientConfigError, LLMClientError) as exc:
             rejection_reasons.append(f"LLM unavailable/error: {exc}")
             return _abstain(f"LLM invocation failed: {exc}", budget_exhausted=False)
+        finally:
+            ACTIVE_AGENT_CTX.reset(active_agent_token)
 
         if resp.model and resp.model not in state.model_ids:
             state.model_ids.append(resp.model)
@@ -394,13 +398,17 @@ async def run_agent_loop(
                     )
                     continue
 
-            env = await registry.execute(
-                call_id=tc.id,
-                agent=spec.name,
-                tool_name=tc.name,
-                raw_arguments=tc.raw_arguments,
-                allow_list=spec.allow_list,
-            )
+            active_agent_token = ACTIVE_AGENT_CTX.set(spec.name)
+            try:
+                env = await registry.execute(
+                    call_id=tc.id,
+                    agent=spec.name,
+                    tool_name=tc.name,
+                    raw_arguments=tc.raw_arguments,
+                    allow_list=spec.allow_list,
+                )
+            finally:
+                ACTIVE_AGENT_CTX.reset(active_agent_token)
             if env.status == "rejected":
                 err = env.error or f"Tool call '{tc.name}' rejected."
                 rejection_reasons.append(err)
