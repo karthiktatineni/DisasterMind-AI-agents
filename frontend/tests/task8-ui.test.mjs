@@ -51,7 +51,11 @@ test("renders only SSE-backed agents and displays the verified briefing", async 
   await page.route("**/api/orchestrate/stream", (route) => route.fulfill({
     status: 200, contentType: "text/event-stream", body: frames,
   }));
-  await page.goto(baseURL);
+  const pageResponse = await page.goto(baseURL);
+  const headers = await pageResponse.allHeaders();
+  assert.equal(headers["x-frame-options"], "DENY");
+  assert.match(headers["content-security-policy"], /connect-src 'self'/);
+  assert.doesNotMatch(headers["content-security-policy"], /unsafe-eval/);
   await page.getByLabel("Disaster type").selectOption("Flood");
   await page.getByLabel("Region").fill("Test district");
   const notes = page.getByLabel(/Operational notes/);
