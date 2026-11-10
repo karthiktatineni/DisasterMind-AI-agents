@@ -1,0 +1,617 @@
+{
+  "$defs": {
+    "AbstentionItem": {
+      "additionalProperties": false,
+      "properties": {
+        "agent": {
+          "enum": [
+            "coordinator",
+            "risk",
+            "logistics",
+            "evacuation"
+          ],
+          "title": "Agent",
+          "type": "string"
+        },
+        "reason": {
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "agent",
+        "reason"
+      ],
+      "title": "AbstentionItem",
+      "type": "object"
+    },
+    "CapacityComparison": {
+      "additionalProperties": false,
+      "properties": {
+        "resource": {
+          "minLength": 1,
+          "title": "Resource",
+          "type": "string"
+        },
+        "required": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Required"
+        },
+        "required_unit": {
+          "minLength": 1,
+          "title": "Required Unit",
+          "type": "string"
+        },
+        "available": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Available"
+        },
+        "available_status": {
+          "enum": [
+            "provided_by_user",
+            "not_provided"
+          ],
+          "title": "Available Status",
+          "type": "string"
+        },
+        "deficit_or_surplus": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Deficit Or Surplus"
+        },
+        "provenance": {
+          "minLength": 1,
+          "title": "Provenance",
+          "type": "string"
+        },
+        "inputs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Inputs",
+          "type": "array"
+        }
+      },
+      "required": [
+        "resource",
+        "required",
+        "required_unit",
+        "available_status",
+        "provenance"
+      ],
+      "title": "CapacityComparison",
+      "type": "object"
+    },
+    "CitationItem": {
+      "additionalProperties": false,
+      "description": "Allow-listed EM-DAT citation fields exposed to models and users (never raw search_text).",
+      "properties": {
+        "record_id": {
+          "minLength": 1,
+          "title": "Record Id",
+          "type": "string"
+        },
+        "event_name": {
+          "minLength": 1,
+          "title": "Event Name",
+          "type": "string"
+        },
+        "disaster_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Disaster Type"
+        },
+        "country": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Country"
+        },
+        "region": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Region"
+        },
+        "start_year": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start Year"
+        },
+        "total_deaths": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Total Deaths"
+        },
+        "total_affected": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Total Affected"
+        },
+        "total_damage_usd_thousands": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Total Damage Usd Thousands"
+        },
+        "similarity": {
+          "title": "Similarity",
+          "type": "number"
+        }
+      },
+      "required": [
+        "record_id",
+        "event_name",
+        "similarity"
+      ],
+      "title": "CitationItem",
+      "type": "object"
+    },
+    "ConflictItem": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "minLength": 1,
+          "title": "Kind",
+          "type": "string"
+        },
+        "description": {
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "risk_level": {
+          "title": "Risk Level",
+          "type": "string"
+        },
+        "evacuation_recommendation": {
+          "title": "Evacuation Recommendation",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "description",
+        "risk_level",
+        "evacuation_recommendation"
+      ],
+      "title": "ConflictItem",
+      "type": "object"
+    },
+    "EvacuationSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "recommendation": {
+          "enum": [
+            "no_evacuation",
+            "standby_advisory",
+            "voluntary_evacuation",
+            "mandatory_evacuation",
+            "insufficient_data"
+          ],
+          "title": "Recommendation",
+          "type": "string"
+        },
+        "target_headcount": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Headcount"
+        },
+        "target_headcount_provenance": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Headcount Provenance"
+        },
+        "trigger_criteria": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Trigger Criteria",
+          "type": "array"
+        },
+        "priority_zones": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Priority Zones",
+          "type": "array"
+        },
+        "verified_by_agent": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Verified By Agent"
+        }
+      },
+      "required": [
+        "recommendation"
+      ],
+      "title": "EvacuationSummary",
+      "type": "object"
+    },
+    "HumanReviewInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "required": {
+          "title": "Required",
+          "type": "boolean"
+        },
+        "reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reasons",
+          "type": "array"
+        }
+      },
+      "required": [
+        "required"
+      ],
+      "title": "HumanReviewInfo",
+      "type": "object"
+    },
+    "LogisticsSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "resource_adequacy": {
+          "enum": [
+            "adequate",
+            "constrained",
+            "insufficient_inventory_data",
+            "insufficient_data"
+          ],
+          "title": "Resource Adequacy",
+          "type": "string"
+        },
+        "capacity_comparisons": {
+          "items": {
+            "$ref": "#/$defs/CapacityComparison"
+          },
+          "title": "Capacity Comparisons",
+          "type": "array"
+        },
+        "supply_recommendations": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Supply Recommendations",
+          "type": "array"
+        },
+        "verified_by_agent": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Verified By Agent"
+        }
+      },
+      "required": [
+        "resource_adequacy"
+      ],
+      "title": "LogisticsSummary",
+      "type": "object"
+    },
+    "QuantityItem": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Value"
+        },
+        "unit": {
+          "minLength": 1,
+          "title": "Unit",
+          "type": "string"
+        },
+        "provenance": {
+          "minLength": 1,
+          "title": "Provenance",
+          "type": "string"
+        },
+        "inputs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Inputs",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "value",
+        "unit",
+        "provenance"
+      ],
+      "title": "QuantityItem",
+      "type": "object"
+    },
+    "RiskSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "level": {
+          "enum": [
+            "low",
+            "moderate",
+            "high",
+            "extreme",
+            "insufficient_data"
+          ],
+          "title": "Level",
+          "type": "string"
+        },
+        "premise_valid": {
+          "title": "Premise Valid",
+          "type": "boolean"
+        },
+        "premise_issue": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Premise Issue"
+        },
+        "summary": {
+          "title": "Summary",
+          "type": "string"
+        },
+        "verified_by_agent": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Verified By Agent"
+        }
+      },
+      "required": [
+        "level",
+        "premise_valid",
+        "summary"
+      ],
+      "title": "RiskSummary",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Canonical structured Task 4 Briefing schema exported to docs/briefing_schema.json.",
+  "properties": {
+    "run_id": {
+      "title": "Run Id",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "complete",
+        "partial",
+        "insufficient_data"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "risk": {
+      "$ref": "#/$defs/RiskSummary"
+    },
+    "evacuation_recommendation": {
+      "$ref": "#/$defs/EvacuationSummary"
+    },
+    "logistics_summary": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LogisticsSummary"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "quantities": {
+      "items": {
+        "$ref": "#/$defs/QuantityItem"
+      },
+      "title": "Quantities",
+      "type": "array"
+    },
+    "citations": {
+      "items": {
+        "$ref": "#/$defs/CitationItem"
+      },
+      "title": "Citations",
+      "type": "array"
+    },
+    "data_gaps": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Data Gaps",
+      "type": "array"
+    },
+    "abstentions": {
+      "items": {
+        "$ref": "#/$defs/AbstentionItem"
+      },
+      "title": "Abstentions",
+      "type": "array"
+    },
+    "conflicts": {
+      "items": {
+        "$ref": "#/$defs/ConflictItem"
+      },
+      "title": "Conflicts",
+      "type": "array"
+    },
+    "human_review": {
+      "$ref": "#/$defs/HumanReviewInfo"
+    },
+    "disclaimers": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Disclaimers",
+      "type": "array"
+    },
+    "label": {
+      "enum": [
+        "historical_precedent",
+        "hypothetical_scenario"
+      ],
+      "title": "Label",
+      "type": "string"
+    },
+    "model_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Model Ids",
+      "type": "array"
+    },
+    "dataset_version": {
+      "title": "Dataset Version",
+      "type": "string"
+    },
+    "executive_summary": {
+      "default": "",
+      "title": "Executive Summary",
+      "type": "string"
+    },
+    "action_plan": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Action Plan",
+      "type": "array"
+    }
+  },
+  "required": [
+    "run_id",
+    "status",
+    "risk",
+    "evacuation_recommendation",
+    "human_review",
+    "label",
+    "dataset_version"
+  ],
+  "title": "Briefing",
+  "type": "object"
+}

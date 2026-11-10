@@ -1,18 +1,25 @@
+"""FastAPI entrypoint for DisasterMind AI 4-agent orchestration and SSE streaming."""
+
 from __future__ import annotations
 
+import asyncio
 from contextlib import asynccontextmanager
+import json
 
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
+import httpx
 
 from backend.app.config import get_settings
+from backend.app.orchestration.models import OrchestrationRunResult, SSEEventRecord
+from backend.app.orchestration.orchestrator import DisasterMindOrchestrator
 from backend.app.schemas import (
     AgentQuestionRequest,
     AgentQuestionResponse,
     DisasterScenario,
     GenerationRequest,
     GenerationResponse,
-    OrchestrationResponse,
     ScenarioIntakeRequest,
 )
 from backend.app.security import (
@@ -22,66 +29,44 @@ from backend.app.security import (
     require_api_key,
 )
 from backend.app.services.keepalive import KeepAliveService
-from backend.app.services.orchestration import DisasterMindOrchestrator
-from backend.app.services.snapshot_guard import verify_runtime_alignment
-from backend.app.schemas import AgentResult
-
-def _normalize_agent_results(results: list[AgentResult]) -> None:
-    for res in results:
-        if res.agent_name == "validation":
-            res.output.setdefault("issues", [])
-            res.output.setdefault("warnings", [])
-            res.output.setdefault("validation_status", "failed")
-        elif res.agent_name == "planner":
-            res.output.setdefault("phases", [])
-            res.output.setdefault("evacuation_strategy", "Unknown")
-            res.output.setdefault("resource_estimates", {})
-            res.output.setdefault("shelter_assignments", {})
-        elif res.agent_name == "logistics":
-            res.output.setdefault("resource_plan", {})
-            res.output.setdefault("resource_shortfalls", [])
-        elif res.agent_name == "evacuation":
-            res.output.setdefault("evacuation_zones", [])
-            res.output.setdefault("shelter_gap", 0)
-            res.output.setdefault("route_conflicts", [])
-        elif res.agent_name == "simulation":
-            res.output.setdefault("scenario_results", [])
-            res.output.setdefault("resilience_gaps", [])
-        elif res.agent_name == "decision":
-            res.output.setdefault("executive_recommendation", "Awaiting decision.")
-            res.output.setdefault("prioritized_actions", [])
-            res.output.setdefault("unresolved_risks", [])
-        elif res.agent_name == "explainability":
-            res.output.setdefault("explanations", {})
-        elif res.agent_name == "knowledge":
-            res.output.setdefault("historical_events", [])
-            res.output.setdefault("damage_patterns", {})
-        elif res.agent_name == "reporting":
-            res.output.setdefault("sections", [])
-            res.output.setdefault("report_text", "")
-            res.output.setdefault("evidence_used", [])
+from backend.app.services.llm_client import LLMClientConfigError, NativeToolLLMClient
 from backend.app.services.nvidia_generation import (
     NvidiaBuildGenerationClient,
     NvidiaGenerationConfigError,
     NvidiaGenerationError,
 )
+from backend.app.services.snapshot_guard import verify_runtime_alignment
+
+settings = get_settings()
+keepalive_service = KeepAliveService(settings)
+
 
 @asynccontextmanager
-async def lifespan(_app: FastAPI):
-    verify_runtime_alignment(get_settings())
+async def lifespan(app_instance: FastAPI):
+    cfg = get_settings()
+    verify_runtime_alignment(cfg)
+    http_client = httpx.AsyncClient(
+        timeout=httpx.Timeout(90.0, connect=20.0),
+        limits=httpx.Limits(max_connections=30, max_keepalive_connections=10),
+        headers={"User-Agent": "DisasterMindAI/0.2"},
+    )
+    app_instance.state.http_client = http_client
+    try:
+        app_instance.state.llm_client = NativeToolLLMClient(settings=cfg, http_client=http_client)
+    except LLMClientConfigError:
+        app_instance.state.llm_client = None
     await keepalive_service.start()
     try:
         yield
     finally:
         await keepalive_service.stop()
+        await http_client.aclose()
 
 
-settings = get_settings()
-keepalive_service = KeepAliveService(settings)
 app = FastAPI(
     title="DisasterMind AI Backend",
-    description="Multi-agent disaster orchestration backed by NVIDIA Build / NIM generation.",
-    version="0.1.0",
+    description="4-agent native tool-calling disaster briefing orchestration backed by NVIDIA NIM & Pinecone.",
+    version="0.2.0",
     docs_url=None if settings.production else "/docs",
     redoc_url=None if settings.production else "/redoc",
     openapi_url=None if settings.production else "/openapi.json",
@@ -104,25 +89,33 @@ app.add_middleware(RequestSizeLimitMiddleware, max_bytes=settings.max_request_by
 app.add_middleware(SecurityHeadersMiddleware, settings=settings)
 
 
+def _get_orchestrator() -> DisasterMindOrchestrator:
+    http_client = getattr(app.state, "http_client", None)
+    llm_client = getattr(app.state, "llm_client", None)
+    return DisasterMindOrchestrator(
+        settings=get_settings(),
+        llm_client=llm_client,
+        http_client=http_client,
+    )
+
+
 @app.get("/health")
 async def health() -> dict[str, str | bool | int]:
+    cfg = get_settings()
     return {
         "status": "ok",
-        "nvidia_configured": bool(settings.nvidia_api_key),
-        "nvidia_model": settings.nvidia_model,
-        "api_key_required": settings.api_key_required,
-        "environment": settings.app_env,
+        "nvidia_configured": bool(cfg.nvidia_api_key),
+        "nvidia_model": cfg.nvidia_model,
+        "api_key_required": cfg.api_key_required,
+        "environment": cfg.app_env,
         "backend_keepalive_configured": keepalive_service.backend_enabled,
-        "pinecone_configured": bool(settings.pinecone_api_key and settings.pinecone_index_name),
+        "pinecone_configured": bool(cfg.pinecone_api_key and cfg.pinecone_index_name),
     }
 
 
 @app.get("/keepalive")
 async def keepalive() -> dict:
-    return {
-        "status": "ok",
-        **keepalive_service.status(),
-    }
+    return {"status": "ok", **keepalive_service.status()}
 
 
 @app.post(
@@ -150,26 +143,63 @@ async def generate(request: GenerationRequest) -> GenerationResponse:
 
 @app.post(
     "/orchestrate",
-    response_model=OrchestrationResponse,
+    response_model=OrchestrationRunResult,
     dependencies=[Depends(require_api_key)],
 )
-async def orchestrate(request: DisasterScenario) -> OrchestrationResponse:
-    orchestrator = DisasterMindOrchestrator()
-    response = await orchestrator.run(request)
-    _normalize_agent_results(response.agent_results)
-    return response
+async def orchestrate(request: DisasterScenario) -> OrchestrationRunResult:
+    orchestrator = _get_orchestrator()
+    return await orchestrator.run(request)
 
 
 @app.post(
     "/orchestrate-intake",
-    response_model=OrchestrationResponse,
+    response_model=OrchestrationRunResult,
     dependencies=[Depends(require_api_key)],
 )
-async def orchestrate_intake(request: ScenarioIntakeRequest) -> OrchestrationResponse:
-    orchestrator = DisasterMindOrchestrator()
-    response = await orchestrator.run_from_intake(request)
-    _normalize_agent_results(response.agent_results)
-    return response
+async def orchestrate_intake(request: ScenarioIntakeRequest) -> OrchestrationRunResult:
+    orchestrator = _get_orchestrator()
+    return await orchestrator.run(request)
+
+
+@app.post(
+    "/orchestrate/stream",
+    dependencies=[Depends(require_api_key)],
+)
+async def orchestrate_stream(request: ScenarioIntakeRequest) -> StreamingResponse:
+    orchestrator = _get_orchestrator()
+    queue: asyncio.Queue[SSEEventRecord | None] = asyncio.Queue()
+
+    def _push_event(ev: SSEEventRecord) -> None:
+        queue.put_nowait(ev)
+
+    async def _run_job() -> None:
+        try:
+            await orchestrator.run(request, on_event=_push_event)
+        except Exception as exc:
+            queue.put_nowait(
+                SSEEventRecord(
+                    event="run_failed",
+                    run_id="unknown",
+                    data={"error": str(exc)},
+                )
+            )
+        finally:
+            queue.put_nowait(None)
+
+    async def _event_generator():
+        task = asyncio.create_task(_run_job())
+        try:
+            while True:
+                item = await queue.get()
+                if item is None:
+                    break
+                payload = json.dumps(item.model_dump(), ensure_ascii=False)
+                yield f"event: {item.event}\ndata: {payload}\n\n"
+        finally:
+            if not task.done():
+                task.cancel()
+
+    return StreamingResponse(_event_generator(), media_type="text/event-stream")
 
 
 @app.post(
@@ -178,9 +208,17 @@ async def orchestrate_intake(request: ScenarioIntakeRequest) -> OrchestrationRes
     dependencies=[Depends(require_api_key)],
 )
 async def agent_answer(request: AgentQuestionRequest) -> AgentQuestionResponse:
-    orchestrator = DisasterMindOrchestrator()
-    if request.intake is not None:
-        return await orchestrator.answer_question_from_intake(request.intake, request.question)
-    if request.scenario is None:
+    orchestrator = _get_orchestrator()
+    target = request.intake if request.intake is not None else request.scenario
+    if target is None:
         raise HTTPException(status_code=422, detail="Either scenario or intake is required.")
-    return await orchestrator.answer_question(request.scenario, request.question)
+    res = await orchestrator.run(target)
+    b = res.briefing
+    return AgentQuestionResponse(
+        request_id=b.run_id,
+        answer=b.executive_summary or f"Status: {b.status}",
+        provider="nvidia-nim" if b.model_ids else "none",
+        model=b.model_ids[0] if b.model_ids else None,
+        cited_agents=[k for k in ("risk", "logistics", "evacuation") if getattr(b, "status") != "insufficient_data"],
+        confidence=1.0 if b.status == "complete" else (0.5 if b.status == "partial" else 0.0),
+    )

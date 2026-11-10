@@ -1,0 +1,30 @@
+{
+  "source": "The Sphere Handbook: Humanitarian Charter and Minimum Standards in Humanitarian Response",
+  "edition": "2018 (4th Edition)",
+  "urls": [
+    "https://handbook.spherestandards.org/en/sphere/",
+    "https://emergency.unhcr.org/"
+  ],
+  "retrieved_date": "2026-11-10",
+  "provenance_tag": "standard",
+  "standards": {
+    "water_litres_per_person_per_day": {
+      "value": 15.0,
+      "unit": "litres/person/day",
+      "chapter": "WASH — Water Supply Standard 2.1, Key Indicator 1",
+      "notes": "Minimum household emergency quantity for drinking, cooking, and personal hygiene."
+    },
+    "shelter_covered_area_m2_per_person": {
+      "value": 3.5,
+      "unit": "m2/person",
+      "chapter": "Shelter and Settlement — Standard 3",
+      "notes": "Minimum covered floor living area per person in temporary communal/household shelters (excluding cooking/sanitation/circulation)."
+    },
+    "food_kcal_per_person_per_day": {
+      "value": 2100.0,
+      "unit": "kcal/person/day",
+      "chapter": "Food Security and Nutrition — Standard",
+      "notes": "Initial daily mean energy planning figure per person for general food rations."
+    }
+  }
+}
