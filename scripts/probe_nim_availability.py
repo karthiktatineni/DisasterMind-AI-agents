@@ -36,20 +36,23 @@ async def main() -> None:
         ("tiny_chat", {
             "model": settings.nvidia_model,
             "messages": [{"role": "user", "content": "Reply with OK."}],
-            "max_tokens": 4,
+            "max_tokens": 128,
             "temperature": 0,
             "stream": False,
         }),
         ("forced_tool", {
             "model": settings.nvidia_model,
-            "messages": [{"role": "user", "content": "Call the probe function."}],
+            "messages": [
+                {"role": "system", "content": "When requested, call the required function with the specified arguments."},
+                {"role": "user", "content": "Call probe with ok=true."},
+            ],
             "tools": [{"type": "function", "function": {
                 "name": "probe", "description": "Availability probe only.",
                 "parameters": {"type": "object", "properties": {"ok": {"type": "boolean"}},
                                "required": ["ok"], "additionalProperties": False},
             }}],
             "tool_choice": "required",
-            "max_tokens": 8,
+            "max_tokens": 512,
             "temperature": 0,
             "stream": False,
         }),
@@ -64,12 +67,19 @@ async def main() -> None:
                     headers={"Authorization": f"Bearer {settings.nvidia_api_key}", "Content-Type": "application/json"},
                     json=payload,
                 )
+                response_json = response.json() if response.headers.get("content-type", "").startswith("application/json") else {}
+                choices = response_json.get("choices") or []
+                message = choices[0].get("message", {}) if choices else {}
+                tool_calls = message.get("tool_calls") or []
                 results.append({
                     "probe": name,
                     "timestamp": started,
                     "status": response.status_code,
                     "headers": {k.lower(): v for k, v in response.headers.items() if k.lower() in SAFE_HEADERS},
                     "body": _safe_body(response.text),
+                    "finish_reason": choices[0].get("finish_reason") if choices else None,
+                    "tool_call_observed": bool(tool_calls) if name == "forced_tool" else None,
+                    "tool_call_names": [item.get("function", {}).get("name") for item in tool_calls],
                     "model": settings.nvidia_model,
                     "base_host": httpx.URL(settings.nvidia_base_url).host,
                 })
