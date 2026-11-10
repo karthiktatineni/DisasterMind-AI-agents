@@ -1,0 +1,6 @@
+INFO:     Started server process [30456]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+Retrying LLM request (nvidia/nemotron-3-ultra-550b-a55b) in 3.15s after RateLimitError
+Retrying LLM request (nvidia/nemotron-3-ultra-550b-a55b) in 7.07s after RateLimitError

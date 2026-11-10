@@ -34,3 +34,10 @@ verification\task_7\live_run_current.txt 2026-11-10T20:30:34.1587543+05:30    19
 - Pinecone index description, embedding, and query requests were captured; all recorded responses were 200. The initial capture hook missed NVIDIA's shared client's default transport, so this attempt does not establish the NVIDIA HTTP status/body/Retry-After header or a complete request trace.
 - Raw captured traffic and server log are preserved under `verification/task_7/failed_attempts/live_real_20261110/`. This is failed, incomplete evidence only.
 - Root cause in capture instrumentation was patched in commit `54d3bcc`; default-client transport construction was locally verified to instantiate `WireSpyAsyncHTTPTransport`. No subsequent live retry has been run yet.
+
+## Attempt 5 — real HTTP orchestration with corrected wire capture
+- Recorded: 2026-11-10 20:55 Asia/Calcutta; server started from committed code `a2991fb`.
+- `/health` returned 200. The real `/orchestrate` request reached Open-Meteo (200), Pinecone (embedding/index/query traffic; recorded in the raw capture), and NVIDIA NIM.
+- NIM returned 200 twice and then HTTP 429 twice (`Too Many Requests`). The 429 responses had no `Retry-After` header. Captured request ID: `task7-orchestrate-real-001`; no API key values were captured.
+- The then-current client retried the two 429s after 3.15s and 7.07s. The client was interrupted and server stopped before an HTTP response or SSE check. These automatic short retries were the defect fixed in commit `2c321c2`: a 429 without a valid `Retry-After` now fails fast; a focused test asserts exactly one upstream request.
+- Raw transport evidence and server logs are in `verification/task_7/failed_attempts/live_real_20261110_attempt2/`. This is failed/incomplete evidence; it does not pass Task 7.

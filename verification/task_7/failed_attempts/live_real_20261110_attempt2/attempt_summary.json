@@ -1,0 +1,82 @@
+{
+  "attempt": "2026-11-10-live-direct-02",
+  "server_started": "2026-11-10T20:55:10.9569119+05:30",
+  "code_commit": "a2991fb",
+  "request_id": "task7-orchestrate-real-001",
+  "captured_traffic": [
+    {
+      "kind": "http_request",
+      "host": "geocoding-api.open-meteo.com",
+      "path": "/v1/search",
+      "status": null,
+      "count": 1,
+      "agents": "coordinator"
+    },
+    {
+      "kind": "http_request",
+      "host": "integrate.api.nvidia.com",
+      "path": "/v1/chat/completions",
+      "status": null,
+      "count": 4,
+      "agents": "coordinator,risk"
+    },
+    {
+      "kind": "http_response",
+      "host": "geocoding-api.open-meteo.com",
+      "path": "/v1/search",
+      "status": 200,
+      "count": 1,
+      "agents": "coordinator"
+    },
+    {
+      "kind": "http_response",
+      "host": "integrate.api.nvidia.com",
+      "path": "/v1/chat/completions",
+      "status": 200,
+      "count": 2,
+      "agents": "coordinator"
+    },
+    {
+      "kind": "http_response",
+      "host": "integrate.api.nvidia.com",
+      "path": "/v1/chat/completions",
+      "status": 429,
+      "count": 2,
+      "agents": "risk"
+    }
+  ],
+  "nvidia_429_headers": [
+    {
+      "date": "Tue, 10 Nov 2026 15:25:37 GMT",
+      "content-type": "application/problem+json",
+      "content-length": "42",
+      "connection": "keep-alive",
+      "nvcf-error-source": "upstream_status",
+      "vary": "Origin",
+      "x-request-id": "66d67afc-f021-4d91-bc4b-05f51fda0bdf"
+    },
+    {
+      "date": "Tue, 10 Nov 2026 15:25:40 GMT",
+      "content-type": "application/problem+json",
+      "content-length": "42",
+      "connection": "keep-alive",
+      "nvcf-error-source": "upstream_status",
+      "vary": "Origin",
+      "x-request-id": "4bee2e02-0562-4ba7-b7e1-a130e147eaec"
+    }
+  ],
+  "nvidia_429_bodies": [
+    {
+      "status": 429,
+      "title": "Too Many Requests"
+    },
+    {
+      "status": 429,
+      "title": "Too Many Requests"
+    }
+  ],
+  "client_received_response": false,
+  "user_cancelled_after_capture": true,
+  "result": "INCOMPLETE_FAILED_ATTEMPT",
+  "no_retry_after_header": true
+}
