@@ -1,3 +1,6 @@
+> [!NOTE]
+> **Pre-Fix System Archive**: This document describes the historical pre-fix state of DisasterMind AI prior to the principal engineer / adversarial QA remediation overhaul. It is preserved strictly for audit trail and baseline comparison purposes.
+
 # DisasterMind AI — Architecture Audit Report
 
 **Date:** 2026-06-09  

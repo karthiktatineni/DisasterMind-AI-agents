@@ -32,13 +32,9 @@ build/
 /.agents
 .agents/skills
 
-/supabase_connection_report.md
-/upload_report.md
-.cursor
-docs
+logs/
+.cursor/
 
 # Deployment specific ignores
 embeddings/*.json
 data/
-database/*.md
-verification/

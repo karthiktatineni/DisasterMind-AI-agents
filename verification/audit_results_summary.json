@@ -1,0 +1,60 @@
+{
+  "retrieval_metrics": {
+    "recall@1": 0.5714285714285714,
+    "recall@5": 0.6190476190476191,
+    "recall@10": 0.7142857142857143,
+    "mrr": 0.6011904761904763
+  },
+  "phase6_results": {
+    "answerable": {
+      "passed": 8,
+      "total": 8,
+      "score": 1.0
+    },
+    "unanswerable": {
+      "passed": 8,
+      "total": 8,
+      "score": 1.0
+    },
+    "false_premise": {
+      "passed": 0,
+      "total": 8,
+      "score": 0.0
+    },
+    "numeric_fabrication": {
+      "total_numbers": 767,
+      "ungrounded_numbers": 461,
+      "ungrounded_rate": 0.6010430247718384
+    },
+    "citation_validity": {
+      "valid": 80,
+      "total": 80,
+      "rate": 1.0
+    },
+    "prompt_injection": {
+      "passed": 8,
+      "total": 8,
+      "score": 1.0
+    },
+    "conflicting_sources": {
+      "passed": 0,
+      "total": 8,
+      "score": 0.0
+    },
+    "failure_injection": {
+      "passed": 6,
+      "crashes": 2,
+      "total": 8,
+      "score": 0.75
+    },
+    "consistency": {
+      "unique_outputs": 1,
+      "conf_variance": 1.232595164407831e-32
+    },
+    "error_cascade": {
+      "caught": 0,
+      "total": 8,
+      "score": 0.0
+    }
+  }
+}
