@@ -2,13 +2,34 @@
 
 from __future__ import annotations
 
-from openai import AsyncOpenAI
+import asyncio
+import random
+from typing import Sequence
+
+import tiktoken
+from openai import APIConnectionError, APIStatusError, APITimeoutError, AsyncOpenAI
 
 from backend.app.config import Settings, get_settings
 
 DEFAULT_EMBEDDING_DIM = 2048
+EMBEDDING_DIM = DEFAULT_EMBEDDING_DIM
 INPUT_TYPE_QUERY = "query"
 INPUT_TYPE_PASSAGE = "passage"
+MODEL_CONTEXT_TOKEN_LIMIT = 4096
+SAFE_CLIENT_TOKEN_LIMIT = 3800
+_TOKENIZER = tiktoken.get_encoding("cl100k_base")
+
+
+def count_tokens_approx(text: str) -> int:
+    """Count tokens using cl100k_base (calibrated within ~5% of live NVIDIA NIM usage.prompt_tokens)."""
+    return len(_TOKENIZER.encode(text))
+
+
+def _truncate_to_token_limit(text: str, max_tokens: int) -> str:
+    tokens = _TOKENIZER.encode(text)
+    if len(tokens) <= max_tokens:
+        return text
+    return _TOKENIZER.decode(tokens[:max_tokens])
 
 
 class EmbeddingConfigError(RuntimeError):
@@ -28,7 +49,7 @@ class EmbeddingService:
             api_key=self.settings.nvidia_api_key,
             base_url=self.settings.nvidia_base_url,
             timeout=120,
-            max_retries=2,
+            max_retries=0,
         )
 
     @property
@@ -39,22 +60,73 @@ class EmbeddingService:
     def model(self) -> str:
         return self.settings.nvidia_embedding_model
 
+    async def _request_with_retry(
+        self,
+        payload_input: str | list[str],
+        *,
+        input_type: str,
+        max_retries: int = 5,
+        base_delay: float = 1.0,
+    ):
+        last_exc: Exception | None = None
+        for attempt in range(max_retries):
+            try:
+                return await self._client.embeddings.create(
+                    model=self.model,
+                    input=payload_input,
+                    extra_body={
+                        "input_type": input_type,
+                        "encoding_format": "float",
+                        "truncate": "END",
+                    },
+                )
+            except APIStatusError as exc:
+                last_exc = exc
+                if exc.status_code not in (429, 500, 502, 503, 504) or attempt == max_retries - 1:
+                    raise
+            except (APIConnectionError, APITimeoutError) as exc:
+                last_exc = exc
+                if attempt == max_retries - 1:
+                    raise
+            delay = base_delay * (2**attempt) + random.uniform(0.0, 0.5)
+            await asyncio.sleep(delay)
+        assert last_exc is not None
+        raise last_exc
+
     async def embed_text(self, text: str, *, input_type: str) -> list[float]:
         if input_type not in (INPUT_TYPE_QUERY, INPUT_TYPE_PASSAGE):
             raise ValueError(f"input_type must be '{INPUT_TYPE_QUERY}' or '{INPUT_TYPE_PASSAGE}', got '{input_type}'")
-        response = await self._client.embeddings.create(
-            model=self.model,
-            input=text,
-            extra_body={
-                "input_type": input_type,
-                "encoding_format": "float",
-                "truncate": "END",
-            },
-        )
+        safe_text = _truncate_to_token_limit(text, SAFE_CLIENT_TOKEN_LIMIT)
+        response = await self._request_with_retry(safe_text, input_type=input_type)
         vector = response.data[0].embedding
         if len(vector) != self.dimension:
             raise ValueError(f"Expected embedding dim {self.dimension}, got {len(vector)}")
         return vector
+
+    async def embed_texts(
+        self,
+        texts: Sequence[str],
+        *,
+        input_type: str,
+        max_retries: int = 5,
+        base_delay: float = 1.0,
+    ) -> list[list[float]]:
+        if input_type not in (INPUT_TYPE_QUERY, INPUT_TYPE_PASSAGE):
+            raise ValueError(f"input_type must be '{INPUT_TYPE_QUERY}' or '{INPUT_TYPE_PASSAGE}', got '{input_type}'")
+        if not texts:
+            return []
+        safe_texts = [_truncate_to_token_limit(t, SAFE_CLIENT_TOKEN_LIMIT) for t in texts]
+        response = await self._request_with_retry(
+            safe_texts,
+            input_type=input_type,
+            max_retries=max_retries,
+            base_delay=base_delay,
+        )
+        vectors = [item.embedding for item in response.data]
+        for vector in vectors:
+            if len(vector) != self.dimension:
+                raise ValueError(f"Expected embedding dim {self.dimension}, got {len(vector)}")
+        return vectors
 
     @staticmethod
     def build_scenario_query(scenario: dict) -> str:

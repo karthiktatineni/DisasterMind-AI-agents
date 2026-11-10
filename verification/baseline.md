@@ -248,13 +248,13 @@ The numbers represent different levels of aggregation in the npm audit v2 report
    - 9 Moderate/Low Advisories: `1124186`, `1124188`, `1124190`, `1124194`, `1124196`, `1241490`, `1241492`, `1241493`, `1241495`
 3. **33 Total Distinct Advisories Across All Dependencies:**
    - `next`: 20 direct advisories
-   - `postcss`: 4 direct advisories (`GHSA-6g55-p6wh-862q`, `GHSA-fxqj-rqcc-2cmp`, `GHSA-r28c-9q8g-f849`, etc.)
+   - `postcss`: 4 direct advisories (`GHSA-qx2v-qp2m-jg93`, `GHSA-6g55-p6wh-862q`, `GHSA-fxqj-rqcc-2cmp`, `GHSA-r28c-9q8g-f849`)
    - `sharp`: 3 direct advisories (`GHSA-f88m-g3jw-g9cj`, `GHSA-rgj7-g3m4-5g8c`, `GHSA-wq5f-xc86-pv6w`)
    - `browserslist`: 2 direct advisories (`GHSA-c83g-rgw3-j3cx`, `GHSA-73wf-gq98-2v4g`)
    - `nanoid`: 2 direct advisories (`GHSA-28wg-ghj8-5hjv`, `GHSA-2v37-7h3g-55p8`)
    - `source-map-js`: 1 direct advisory (`GHSA-68fv-2mgg-jv7q`)
    - `baseline-browser-mapping`: 1 direct advisory (`GHSA-w5vr-8v7q-w6rv`)
-- **Fix Available:** Upgrading `next` to `>=16.4.6` in `frontend/package.json` resolves the critical Next.js vulnerabilities.
+- **Pre-Upgrade Audit `fixAvailable` & Advisory Upper Bounds:** Raw pre-upgrade audit output is saved in [`verification/raw_npm_audit.json`](raw_npm_audit.json). The highest affected range upper bound among all `next` advisories is `<=16.4.0` (`GHSA-2464-fhr4-w9xw`, `GHSA-p3m5-59mp-jv5r`, `GHSA-673q-mjm6-r5xr`); no advisory specifies `16.4.6`, though `npm audit --json` reports `fixAvailable: {"name": "next", "version": "16.4.6"}`.
 
 ### 7.3 EM-DAT Terms of Use & Licensing Constraints
 - **Primary Source:** Verified against EM-DAT CRED / UCLouvain documentation (`https://www.emdat.be` and `data/public_emdat_custom_request_2026-06-09_9221c56d-9867-40b3-9b51-cef53eda41e3.xlsx` sheet `EM-DAT Info`).

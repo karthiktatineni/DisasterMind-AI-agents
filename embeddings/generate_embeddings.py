@@ -6,19 +6,25 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import random
 import sys
 import time
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from openai import OpenAI
+from openai import APIConnectionError, APIStatusError, APITimeoutError, OpenAI
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from backend.app.config import get_settings  # noqa: E402
-from backend.app.services.embedding_service import EMBEDDING_DIM, INPUT_TYPE_PASSAGE  # noqa: E402
+from backend.app.services.embedding_service import (  # noqa: E402
+    DEFAULT_EMBEDDING_DIM as EMBEDDING_DIM,
+    INPUT_TYPE_PASSAGE,
+    SAFE_CLIENT_TOKEN_LIMIT,
+    _truncate_to_token_limit,
+)
 from embeddings.build_search_text import build_search_text  # noqa: E402
 
 DATASET_PATH = PROJECT_ROOT / "data" / "disastermind_curated_dataset.json"
@@ -45,12 +51,13 @@ def _load_dataset(limit: int | None = None) -> list[dict[str, Any]]:
     return records
 
 
-def _embed_batch(client: OpenAI, model: str, texts: list[str], retries: int = 4) -> list[list[float]]:
+def _embed_batch(client: OpenAI, model: str, texts: list[str], retries: int = 5) -> list[list[float]]:
+    safe_texts = [_truncate_to_token_limit(t, SAFE_CLIENT_TOKEN_LIMIT) for t in texts]
     for attempt in range(retries):
         try:
             response = client.embeddings.create(
                 model=model,
-                input=texts,
+                input=safe_texts,
                 extra_body={
                     "input_type": INPUT_TYPE_PASSAGE,
                     "encoding_format": "float",
@@ -58,11 +65,17 @@ def _embed_batch(client: OpenAI, model: str, texts: list[str], retries: int = 4)
                 },
             )
             return [item.embedding for item in response.data]
-        except Exception as exc:
+        except APIStatusError as exc:
+            if exc.status_code not in (429, 500, 502, 503, 504) or attempt == retries - 1:
+                raise
+            wait = (2**attempt) + random.uniform(0.0, 0.5)
+            print(f"Embedding batch HTTP {exc.status_code} ({exc}); retry in {wait:.2f}s...")
+            time.sleep(wait)
+        except (APIConnectionError, APITimeoutError, Exception) as exc:
             if attempt == retries - 1:
                 raise
-            wait = 2**attempt
-            print(f"Embedding batch failed ({exc}); retry in {wait}s...")
+            wait = (2**attempt) + random.uniform(0.0, 0.5)
+            print(f"Embedding batch failed ({exc}); retry in {wait:.2f}s...")
             time.sleep(wait)
     raise RuntimeError("Unreachable")
 

@@ -139,3 +139,99 @@ async def test_pinecone_scores_direct_descending_no_inversion():
     assert scores[2] == 0.70 and scores[2] != round(1.0 - 0.70, 4)
 
 
+@pytest.mark.asyncio
+async def test_similarity_and_rag_preserve_pinecone_scores_and_query_input_type():
+    """Verify SimilarityService and RAGService forward raw Pinecone scores descending and pass input_type='query'."""
+    from types import SimpleNamespace
+    from backend.app.schemas import DisasterScenario
+    from backend.app.services.embedding_service import EmbeddingService
+    from backend.app.services.rag_service import RAGService
+    from backend.app.services.similarity_service import SimilarityService
+
+    recorded_embed_calls = []
+
+    class FakeEmbeddingsAPI:
+        async def create(self, **kwargs):
+            recorded_embed_calls.append(kwargs)
+            return SimpleNamespace(data=[SimpleNamespace(embedding=[0.01] * 2048)])
+
+    fake_openai = SimpleNamespace(embeddings=FakeEmbeddingsAPI())
+    settings = Settings(
+        nvidia_api_key="test-key",
+        pinecone_api_key="pcsk_test",
+        pinecone_index_name="disastermind",
+    )
+    emb_service = EmbeddingService(settings=settings, client=fake_openai)
+
+    mock_pc = MagicMock()
+    mock_index = MagicMock()
+    mock_pc.Index.return_value = mock_index
+    mock_index.query.return_value = {
+        "matches": [
+            {"id": "2019-1", "score": 0.9123, "metadata": {"event_name": "Storm Alpha", "start_year": 2019}},
+            {"id": "2018-2", "score": 0.7654, "metadata": {"event_name": "Storm Beta", "start_year": 2018}},
+            {"id": "2015-3", "score": 0.6011, "metadata": {"event_name": "Storm Gamma", "start_year": 2015}},
+        ]
+    }
+    pc_client = PineconeVectorClient(settings=settings, pc=mock_pc)
+
+    sim_service = SimilarityService(embedding_service=emb_service, pinecone_client=pc_client)
+    rag_service = RAGService(embedding_service=emb_service, pinecone_client=pc_client)
+    scenario = DisasterScenario(disaster_type="Storm", region="Odisha", country="India", severity="High")
+
+    sim_res = await sim_service.search_scenario(scenario, top_k=3)
+    sim_text_res = await sim_service.search_text("cyclone in India", top_k=3)
+    rag_res = await rag_service.retrieve(scenario, top_k=3)
+
+    assert sim_res["status"] == "ok"
+    assert [m["similarity"] for m in sim_res["matches"]] == [0.9123, 0.7654, 0.6011]
+    assert [m["similarity"] for m in sim_text_res["matches"]] == [0.9123, 0.7654, 0.6011]
+    assert [d["similarity"] for d in rag_res["retrieved_disasters"]] == [0.9123, 0.7654, 0.6011]
+    assert all(call["extra_body"]["input_type"] == "query" for call in recorded_embed_calls)
+
+
+@pytest.mark.asyncio
+async def test_embed_text_requires_input_type_and_retries_5xx(monkeypatch):
+    """Verify input_type is required keyword-only and 5xx errors trigger exponential backoff retry."""
+    from types import SimpleNamespace
+    import httpx
+    from openai import APIStatusError
+    from backend.app.services.embedding_service import EmbeddingService
+
+    sleep_delays = []
+
+    async def fake_sleep(delay):
+        sleep_delays.append(delay)
+
+    monkeypatch.setattr("backend.app.services.embedding_service.asyncio.sleep", fake_sleep)
+
+    attempts = {"count": 0}
+    recorded_calls = []
+
+    class FlakyEmbeddingsAPI:
+        async def create(self, **kwargs):
+            recorded_calls.append(kwargs)
+            attempts["count"] += 1
+            if attempts["count"] <= 2:
+                req = httpx.Request("POST", "https://integrate.api.nvidia.com/v1/embeddings")
+                resp = httpx.Response(500, request=req)
+                raise APIStatusError("service inference failed", response=resp, body={"message": "server_error"})
+            return SimpleNamespace(data=[SimpleNamespace(embedding=[0.02] * 2048)])
+
+    fake_openai = SimpleNamespace(embeddings=FlakyEmbeddingsAPI())
+    settings = Settings(nvidia_api_key="test-key")
+    emb = EmbeddingService(settings=settings, client=fake_openai)
+
+    with pytest.raises(TypeError):
+        await emb.embed_text("missing input_type")  # type: ignore[call-arg]
+
+    with pytest.raises(ValueError, match="input_type must be"):
+        await emb.embed_text("invalid input_type", input_type="invalid")
+
+    vecs = await emb.embed_texts(["passage text"], input_type="passage", max_retries=4, base_delay=0.5)
+    assert len(vecs) == 1
+    assert len(vecs[0]) == 2048
+    assert len(sleep_delays) == 2
+    assert recorded_calls[-1]["extra_body"]["input_type"] == "passage"
+
+

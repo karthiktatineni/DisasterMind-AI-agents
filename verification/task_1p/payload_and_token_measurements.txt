@@ -1,0 +1,49 @@
+=== TASK 241: LIVE TOKEN LIMIT, DATASET MAXES & LIVE PAYLOAD SIZES ===
+=== 1. DETERMINISTIC TOKEN LIMIT PROBE WITH RETRIES (truncate=NONE) ===
+  words=1000 (chars= 6000) | final_status=200 | attempts=[200] | prompt_tokens=1004 | 
+  words=2000 (chars=12000) | final_status=200 | attempts=[200] | prompt_tokens=2004 | 
+  words=3000 (chars=18000) | final_status=200 | attempts=[500, 500, 200] | prompt_tokens=3004 | 
+  words=4000 (chars=24000) | final_status=500 | attempts=[500, 500, 500] | prompt_tokens=None | {'object': 'error', 'message': 'service inference failed', 'type': 'server_error'}
+  words=6000 (chars=36000) | final_status=500 | attempts=[500, 500, 500] | prompt_tokens=None | {'object': 'error', 'message': 'service inference failed', 'type': 'server_error'}
+  words=8000 (chars=48000) | final_status=500 | attempts=[500, 500, 500] | prompt_tokens=None | {'object': 'error', 'message': 'service inference failed', 'type': 'server_error'}
+  words=8192 (chars=49152) | final_status=500 | attempts=[500, 500, 500] | prompt_tokens=None | {'object': 'error', 'message': 'service inference failed', 'type': 'server_error'}
+  words=8500 (chars=51000) | final_status=500 | attempts=[500, 500, 500] | prompt_tokens=None | {'object': 'error', 'message': 'service inference failed', 'type': 'server_error'}
+
+=== 2. TRUNCATE=END AT 8500 WORDS ===
+  words=8500 | final_status=500 | attempts=[500, 500, 500] | prompt_tokens=None | body={'object': 'error', 'message': 'service inference failed', 'type': 'server_error'}
+
+=== 3. DATASET MAX SEARCH_TEXT STATS & LIVE SERVER TOKENIZER CHECK ===
+Total records: 16834
+Max chars:        3095 (id=2009-9323-IND)
+Max words:        349
+Max cl100k_base:  1161
+
+Top 5 longest search_text records (live server prompt_tokens vs cl100k_base):
+  id=2009-9323-IND | chars=3095 | words=349 | cl100k_base=1161 | server_prompt_tokens=1166 | status=200
+  id=2003-0210-USA | chars=2308 | words=264 | cl100k_base=606 | server_prompt_tokens=633 | status=200
+  id=2009-0414-PHL | chars=1943 | words=242 | cl100k_base=577 | server_prompt_tokens=577 | status=200
+  id=2001-0620-DZA | chars=1607 | words=211 | cl100k_base=573 | server_prompt_tokens=584 | status=200
+  id=2004-0249-USA | chars=1595 | words=182 | cl100k_base=392 | server_prompt_tokens=423 | status=200
+
+=== 4. LIVE EMBEDDING FLOAT PAYLOAD MEASUREMENT ===
+Live vector len=2048, sample_elem=0.20019531
+  batch= 25 -> orjson=  667,602 bytes (0.64 MiB)
+  batch= 40 -> orjson=1,068,132 bytes (1.02 MiB)
+  batch= 50 -> orjson=1,335,152 bytes (1.27 MiB)
+  batch= 75 -> orjson=2,002,702 bytes (1.91 MiB)
+  batch=100 -> orjson=2,670,252 bytes (2.55 MiB)
+
+
+=== TASK 263: 3100-4100 WORD BISECTION WITH RETRIES ===
+words=3100 trunc=NONE -> status=200 tokens=3104 msg={"object":"error","message":"service inference failed","type":"server_error"}
+words=3100 trunc=END  -> status=200 tokens=3104 msg=
+words=3250 trunc=NONE -> status=200 tokens=3254 msg={"object":"error","message":"service inference failed","type":"server_error"}
+words=3250 trunc=END  -> status=200 tokens=3254 msg=
+words=3500 trunc=NONE -> status=200 tokens=3504 msg=
+words=3500 trunc=END  -> status=200 tokens=3504 msg={"object":"error","message":"service inference failed","type":"server_error"}
+words=3800 trunc=NONE -> status=200 tokens=3804 msg=
+words=3800 trunc=END  -> status=500 tokens=None msg={"object":"error","message":"service inference failed","type":"server_error"}
+words=4092 trunc=NONE -> status=200 tokens=4096 msg={"object":"error","message":"service inference failed","type":"server_error"}
+words=4092 trunc=END  -> status=200 tokens=4096 msg={"object":"error","message":"service inference failed","type":"server_error"}
+words=4100 trunc=NONE -> status=500 tokens=None msg={"object":"error","message":"service inference failed","type":"server_error"}
+words=4100 trunc=END  -> status=200 tokens=4104 msg=

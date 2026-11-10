@@ -1,0 +1,56 @@
+Last 15 STABLE next versions:
+16.3.1
+16.3.2
+16.3.3
+16.3.4
+16.3.5
+16.3.6
+16.3.7
+16.3.8
+16.4.0
+16.4.1
+16.4.2
+16.4.3
+16.4.4
+16.4.5
+16.4.6
+
+next@16.4.1 dependencies:
+{
+  "postcss": "8.5.23",
+  "@next/env": "16.4.1",
+  "styled-jsx": "5.1.6",
+  "@swc/helpers": "0.5.23",
+  "caniuse-lite": "^1.0.30001579",
+  "baseline-browser-mapping": "^2.9.19"
+}
+
+next@16.4.6 dependencies:
+{
+  "postcss": "8.5.23",
+  "@next/env": "16.4.6",
+  "styled-jsx": "5.1.6",
+  "@swc/helpers": "0.5.23",
+  "caniuse-lite": "^1.0.30001579",
+  "baseline-browser-mapping": "^2.9.19"
+}
+
+Post-upgrade npm audit metadata (next@16.4.1):
+{
+  "vulnerabilities": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 0,
+    "critical": 0,
+    "total": 0
+  },
+  "dependencies": {
+    "prod": 59,
+    "dev": 51,
+    "optional": 61,
+    "peer": 1,
+    "peerOptional": 0,
+    "total": 148
+  }
+}

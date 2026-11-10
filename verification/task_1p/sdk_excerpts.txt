@@ -1,0 +1,496 @@
+Pinecone installed version: 10.3.0
+Package path: C:\Users\karth\AppData\Local\Programs\Python\Python314\Lib\site-packages\pinecone
+
+
+=== C:\Users\karth\AppData\Local\Programs\Python\Python314\Lib\site-packages\pinecone\index\__init__.py (lines 253-326) ===
+ 253:     def upsert(
+ 254:         self,
+ 255:         *,
+ 256:         vectors: Sequence[
+ 257:             Vector
+ 258:             | tuple[str, Sequence[float]]
+ 259:             | tuple[str, Sequence[float], Mapping[str, Any]]
+ 260:             | Mapping[str, Any]
+ 261:         ],
+ 262:         namespace: str = "",
+ 263:         batch_size: int | None = None,
+ 264:         show_progress: bool = True,
+ 265:         max_concurrency: int = DEFAULT_MAX_CONCURRENCY,
+ 266:         timeout: float | None = None,
+ 267:         total_timeout: float | None = None,
+ 268:     ) -> UpsertResponse:
+ 269:         """Upsert a batch of vectors into a namespace.
+ 270: 
+ 271:         Serves indexes created with ``dimension``/``metric`` and legacy integrated
+ 272:         indexes; on a document index use :attr:`documents` instead. A vector whose ID
+ 273:         already exists in the namespace is overwritten. Each request is capped on both
+ 274:         vector count and encoded size, and wide vectors or large metadata usually hit
+ 275:         the size cap first, so pass ``batch_size`` to split a long sequence into
+ 276:         requests that stay under both.
+ 277: 
+ 278:         Args:
+ 279:             vectors: Vectors to upsert. Each element can be a
+ 280:                 :class:`~pinecone.models.vectors.vector.Vector`, a tuple of
+ 281:                 ``(id, values)`` or ``(id, values, metadata)``, or a dict with ``id``,
+ 282:                 ``values``, and optional ``sparse_values`` / ``metadata`` keys.
+ 283:             namespace (str): Target namespace, e.g. ``"articles-en"``. Defaults to the
+ 284:                 index's default namespace.
+ 285:             batch_size (int | None): Split *vectors* into chunks of this size and send
+ 286:                 one request per chunk, e.g. ``100``. ``None`` (default) sends every vector
+ 287:                 in one request. Must be a positive integer.
+ 288:             show_progress (bool): When ``True`` (default) and ``tqdm`` is installed,
+ 289:                 display a progress bar that advances as batches complete. No effect when
+ 290:                 ``batch_size`` is ``None``.
+ 291:             max_concurrency (int): Most batch requests this call keeps in flight at once,
+ 292:                 e.g. ``16``. Defaults to ``8``. Only used when ``batch_size`` is set. A
+ 293:                 process-wide limit per host also applies and holds concurrency lower when
+ 294:                 the host pushes back; see
+ 295:                 `Bulk ingest <https://sdk.pinecone.io/python/guides/bulk-ingest.html>`__.
+ 296:             timeout (float | None): Timeout in seconds for one attempt of one request,
+ 297:                 e.g. ``30.0``. A batch is retried on its own under the client's retry
+ 298:                 policy, so this does not bound the whole call. ``None`` (default) uses
+ 299:                 the client-level default.
+ 300:             total_timeout (float | None): Deadline in seconds for the whole batched
+ 301:                 operation, e.g. ``600.0``. Only used when ``batch_size`` is set. On expiry
+ 302:                 no further batches are submitted, batches already in flight are awaited,
+ 303:                 and unsent batches are reported in ``failed_items``. ``None`` (default)
+ 304:                 means no deadline. Zero or a negative value raises
+ 305:                 :exc:`~pinecone.errors.exceptions.PineconeValueError`.
+ 306: 
+ 307:         Returns:
+ 308:             :class:`~pinecone.models.vectors.responses.UpsertResponse` with
+ 309:             ``upserted_count``. With ``batch_size`` set, a failed batch does not raise:
+ 310:             ``has_errors``, ``errors`` and ``failed_items`` report what did not land, and
+ 311:             ``failed_items`` can be passed straight back to :meth:`upsert`.
+ 312:             ``response_info`` then carries the aggregate LSN of the successful batches,
+ 313:             or ``None`` if no LSN headers came back.
+ 314: 
+ 315:         Raises:
+ 316:             :exc:`PineconeTypeError`: If a vector element is not one of the forms listed
+ 317:                 above.
+ 318:             :exc:`PineconeValueError`: If a vector element is malformed, *batch_size* is
+ 319:                 not a positive integer, or *max_concurrency* is out of range.
+ 320:             :exc:`~pinecone.errors.exceptions.PayloadTooLargeError`: If ``batch_size`` is
+ 321:                 ``None`` and the request exceeds the server's cap on encoded size. Set a
+ 322:                 ``batch_size`` and retry.
+ 323:             :exc:`ApiError`: If ``batch_size`` is ``None`` and the request exceeds the
+ 324:                 server's cap on vectors per request.
+ 325: 
+ 326:         Examples:
+
+=== C:\Users\karth\AppData\Local\Programs\Python\Python314\Lib\site-packages\pinecone\index\__init__.py (lines 365-386) ===
+ 365:         if batch_size is None:
+ 366:             return self._upsert_one_batch(vectors=vectors, namespace=namespace, timeout=timeout)
+ 367: 
+ 368:         validate_batch_size(batch_size)
+ 369:         require_in_range("max_concurrency", max_concurrency, 1, 64)
+ 370: 
+ 371:         built = [VectorFactory.build(v) for v in vectors]
+ 372:         items: list[dict[str, Any]] = [_vector_to_dict(v) for v in built]
+ 373: 
+ 374:         def _operation(chunk: list[dict[str, Any]]) -> UpsertResponse:
+ 375:             return self._upsert_dict_batch(items=chunk, namespace=namespace, timeout=timeout)
+ 376: 
+ 377:         batch_result = bulk_execute_sync(
+ 378:             items=items,
+ 379:             operation=_operation,
+ 380:             batch_size=batch_size,
+ 381:             max_concurrency=max_concurrency,
+ 382:             show_progress=show_progress,
+ 383:             desc="Upserting",
+ 384:             host=self._host,
+ 385:             total_timeout=total_timeout,
+ 386:         )
+
+=== C:\Users\karth\AppData\Local\Programs\Python\Python314\Lib\site-packages\pinecone\index\__init__.py (lines 410-447) ===
+ 410:     def _upsert_one_batch(
+ 411:         self,
+ 412:         *,
+ 413:         vectors: Sequence[
+ 414:             Vector
+ 415:             | tuple[str, Sequence[float]]
+ 416:             | tuple[str, Sequence[float], Mapping[str, Any]]
+ 417:             | Mapping[str, Any]
+ 418:         ],
+ 419:         namespace: str,
+ 420:         timeout: float | None,
+ 421:     ) -> UpsertResponse:
+ 422:         built = [VectorFactory.build(v) for v in vectors]
+ 423:         body: dict[str, Any] = {"vectors": [_vector_to_dict(v) for v in built]}
+ 424:         if namespace:
+ 425:             body["namespace"] = namespace
+ 426:         logger.info("Upserting %d vectors into namespace %r", len(built), namespace)
+ 427:         response = self._http.post("/vectors/upsert", timeout=timeout, json=body)
+ 428:         result = self._adapter.to_upsert_response(response.content)
+ 429:         result.response_info = extract_response_info(response)
+ 430:         logger.debug("Upserted %d vectors", result.upserted_count)
+ 431:         return result
+ 432: 
+ 433:     def _upsert_dict_batch(
+ 434:         self,
+ 435:         *,
+ 436:         items: list[dict[str, Any]],
+ 437:         namespace: str,
+ 438:         timeout: float | None,
+ 439:     ) -> UpsertResponse:
+ 440:         body: dict[str, Any] = {"vectors": items}
+ 441:         if namespace:
+ 442:             body["namespace"] = namespace
+ 443:         response = self._http.post("/vectors/upsert", timeout=timeout, json=body)
+ 444:         result = self._adapter.to_upsert_response(response.content)
+ 445:         result.response_info = extract_response_info(response)
+ 446:         return result
+ 447: 
+
+=== C:\Users\karth\AppData\Local\Programs\Python\Python314\Lib\site-packages\pinecone\async_client\async_index.py (lines 323-392) ===
+ 323:     async def upsert(
+ 324:         self,
+ 325:         *,
+ 326:         vectors: Sequence[
+ 327:             Vector
+ 328:             | tuple[str, Sequence[float]]
+ 329:             | tuple[str, Sequence[float], Mapping[str, Any]]
+ 330:             | Mapping[str, Any]
+ 331:         ],
+ 332:         namespace: str = "",
+ 333:         batch_size: int | None = None,
+ 334:         show_progress: bool = True,
+ 335:         max_concurrency: int = DEFAULT_MAX_CONCURRENCY,
+ 336:         timeout: float | None = None,
+ 337:         total_timeout: float | None = None,
+ 338:     ) -> UpsertResponse:
+ 339:         """Upsert a batch of vectors into a namespace.
+ 340: 
+ 341:         Serves indexes created with ``dimension``/``metric`` and legacy integrated
+ 342:         indexes; on a document index use :attr:`documents` instead. A vector whose ID
+ 343:         already exists in the namespace is overwritten. Each request is capped on both
+ 344:         vector count and encoded size, and wide vectors or large metadata usually hit
+ 345:         the size cap first, so pass ``batch_size`` to split a long sequence into
+ 346:         requests that stay under both.
+ 347: 
+ 348:         Args:
+ 349:             vectors: Vectors to upsert. Each element can be a
+ 350:                 :class:`~pinecone.models.vectors.vector.Vector`, a tuple of
+ 351:                 ``(id, values)`` or ``(id, values, metadata)``, or a dict with ``id``,
+ 352:                 ``values``, and optional ``sparse_values`` / ``metadata`` keys.
+ 353:             namespace (str): Target namespace, e.g. ``"articles-en"``. Defaults to the
+ 354:                 index's default namespace.
+ 355:             batch_size (int | None): Split *vectors* into chunks of this size and send
+ 356:                 one request per chunk, e.g. ``100``. ``None`` (default) sends every vector
+ 357:                 in one request. Must be a positive integer.
+ 358:             show_progress (bool): When ``True`` (default) and ``tqdm`` is installed,
+ 359:                 display a progress bar that advances as batches complete. No effect when
+ 360:                 ``batch_size`` is ``None``.
+ 361:             max_concurrency (int): Most batch requests this call keeps in flight at once,
+ 362:                 e.g. ``16``. Defaults to ``8``. Only used when ``batch_size`` is set. A
+ 363:                 process-wide limit per host also applies and holds concurrency lower when
+ 364:                 the host pushes back; see
+ 365:                 `Bulk ingest <https://sdk.pinecone.io/python/guides/bulk-ingest.html>`__.
+ 366:             timeout (float | None): Timeout in seconds for one attempt of one request,
+ 367:                 e.g. ``30.0``. A batch is retried on its own under the client's retry
+ 368:                 policy, so this does not bound the whole call. ``None`` (default) uses
+ 369:                 the client-level default.
+ 370:             total_timeout (float | None): Deadline in seconds for the whole batched
+ 371:                 operation, e.g. ``600.0``. Only used when ``batch_size`` is set. On expiry
+ 372:                 no further batches are submitted, batches already in flight are awaited,
+ 373:                 and unsent batches are reported in ``failed_items``. ``None`` (default)
+ 374:                 means no deadline. Zero or a negative value raises
+ 375:                 :exc:`~pinecone.errors.exceptions.PineconeValueError`.
+ 376: 
+ 377:         Returns:
+ 378:             :class:`~pinecone.models.vectors.responses.UpsertResponse` with
+ 379:             ``upserted_count``. With ``batch_size`` set, a failed batch does not raise:
+ 380:             ``has_errors``, ``errors`` and ``failed_items`` report what did not land, and
+ 381:             ``failed_items`` can be passed straight back to :meth:`upsert`.
+ 382:             ``response_info`` then carries the aggregate LSN of the successful batches,
+ 383:             or ``None`` if no LSN headers came back.
+ 384: 
+ 385:         Raises:
+ 386:             :exc:`PineconeTypeError`: If a vector element is not one of the forms listed
+ 387:                 above.
+ 388:             :exc:`PineconeValueError`: If a vector element is malformed, *batch_size* is
+ 389:                 not a positive integer, or *max_concurrency* is out of range.
+ 390:             :exc:`~pinecone.errors.exceptions.PayloadTooLargeError`: If ``batch_size`` is
+ 391:                 ``None`` and the request exceeds the server's cap on encoded size. Set a
+ 392:                 ``batch_size`` and retry.
+
+=== C:\Users\karth\AppData\Local\Programs\Python\Python314\Lib\site-packages\pinecone\_internal\batching.py (lines 13-30) ===
+  13: def validate_batch_size(batch_size: int) -> None:
+  14:     """Raise PineconeValueError unless batch_size is a positive int."""
+  15:     if not isinstance(batch_size, int) or batch_size <= 0:
+  16:         raise PineconeValueError(
+  17:             f"batch_size must be a positive integer, got {batch_size!r} "
+  18:             f"({type(batch_size).__name__}). Pass a positive int, e.g. batch_size=500."
+  19:         )
+  20: 
+  21: 
+  22: def chunked(items: Sequence[T], batch_size: int) -> list[list[T]]:
+  23:     """Split items into successive ``batch_size``-sized lists.
+  24: 
+  25:     Returns ``[]`` for empty input. The final batch may be shorter
+  26:     than ``batch_size``. Caller is responsible for validating
+  27:     ``batch_size`` (use :func:`validate_batch_size`).
+  28:     """
+  29:     return [list(items[i : i + batch_size]) for i in range(0, len(items), batch_size)]
+  30: 
+
+=== C:\Users\karth\AppData\Local\Programs\Python\Python314\Lib\site-packages\pinecone\_internal\bulk\split.py (lines 1-75) ===
+   1: """Halve-and-resend for batches the server rejects as too large.
+   2: 
+   3: A batcher that slices by count cannot know how many bytes a slice encodes to,
+   4: and the server's request-size cap is the server's to state. So this module
+   5: does not predict the cap: a 413 on a multi-item batch is answered by sending
+   6: each half separately, recursively. A batch that fits costs one request; one
+   7: that does not costs a bounded number of extra requests.
+   8: 
+   9: Only a REST ``ApiError`` with ``status_code`` 413 triggers a split. Once
+  10: *expired* reports the caller's deadline has passed, pieces not yet sent are
+  11: recorded as ``unsent`` instead of being sent: the halving must not run past
+  12: ``total_timeout``.
+  13: 
+  14: A 413 on a single item is final — no further split can help — and is recorded
+  15: as that item's failure, in the same shape any other rejection has.
+  16: """
+  17: 
+  18: from __future__ import annotations
+  19: 
+  20: from collections.abc import Awaitable, Callable
+  21: from dataclasses import dataclass, field
+  22: from typing import Any
+  23: 
+  24: from pinecone._internal.bulk.classify import DISPOSITION_REJECTED, DISPOSITION_UNSENT
+  25: 
+  26: _PAYLOAD_TOO_LARGE = 413
+  27: 
+  28: UNSENT_PIECE_GROUP_KEY = "total_timeout expired before this split piece was submitted"
+  29: 
+  30: 
+  31: @dataclass
+  32: class SplitOutcome:
+  33:     """What sending one batch produced: the result of every request that was
+  34:     accepted, and one ``(items, exception, disposition)`` triple per piece that was not."""
+  35: 
+  36:     results: list[Any] = field(default_factory=list)
+  37:     sent_item_count: int = 0
+  38:     failures: list[tuple[list[dict[str, Any]], Exception, str]] = field(default_factory=list)
+  39: 
+  40: 
+  41: def _unsent(piece: list[dict[str, Any]]) -> Exception:
+  42:     from pinecone.errors.exceptions import PineconeTimeoutError
+  43: 
+  44:     return PineconeTimeoutError(f"{UNSENT_PIECE_GROUP_KEY}; {len(piece)} items were not sent")
+  45: 
+  46: 
+  47: def _is_payload_too_large(exc: Exception, batch: list[dict[str, Any]]) -> bool:
+  48:     return len(batch) > 1 and getattr(exc, "status_code", None) == _PAYLOAD_TOO_LARGE
+  49: 
+  50: 
+  51: def send_halving(
+  52:     operation: Callable[[list[dict[str, Any]]], Any],
+  53:     batch: list[dict[str, Any]],
+  54:     *,
+  55:     split: bool,
+  56:     expired: Callable[[], bool] | None = None,
+  57: ) -> SplitOutcome:
+  58:     outcome = SplitOutcome()
+  59: 
+  60:     def _send(piece: list[dict[str, Any]], split_part: bool = False) -> None:
+  61:         if split_part and expired is not None and expired():
+  62:             outcome.failures.append((piece, _unsent(piece), DISPOSITION_UNSENT))
+  63:             return
+  64:         try:
+  65:             result = operation(piece)
+  66:         except Exception as exc:
+  67:             if split and _is_payload_too_large(exc, piece):
+  68:                 mid = len(piece) // 2
+  69:                 _send(piece[:mid], split_part=True)
+  70:                 _send(piece[mid:], split_part=True)
+  71:             else:
+  72:                 outcome.failures.append((piece, exc, DISPOSITION_REJECTED))
+  73:         else:
+  74:             outcome.results.append(result)
+  75:             outcome.sent_item_count += len(piece)
+
+=== C:\Users\karth\AppData\Local\Programs\Python\Python314\Lib\site-packages\pinecone\_internal\vector_factory.py (lines 69-113) ===
+  69: def _validate_metadata(metadata: dict[str, Any]) -> None:
+  70:     """Reject metadata values the server would reject, before the request is sent.
+  71: 
+  72:     The server's rule (pinecone-db ``pc-metadata-filtering/src/metadata/compiler.rs:218-281``):
+  73:     every value is a string, a number, a boolean, or a list whose every element is a string. A
+  74:     nested object, or a list with a non-string in it, is a 400 — and on a batch upsert it is a
+  75:     400 for the whole batch, which is what makes the scan worth its cost.
+  76: 
+  77:     ``None`` is deliberately accepted. The server *strips* null metadata values on write rather
+  78:     than refusing them (``NullHandling::Strip``, ``pc-utils/src/prost_util.rs:75-126``), so a
+  79:     caller passing ``{"tag": None}`` has been silently dropping that key all along; raising here
+  80:     would break working code.
+  81: 
+  82:     ``tuple``, ``set`` and ``frozenset`` are validated alongside ``list`` because msgspec encodes
+  83:     all four to a JSON array, so all four reach the server as a list and are judged by the same
+  84:     rule.
+  85:     """
+  86:     for field, value in metadata.items():
+  87:         value_class = value.__class__
+  88:         if (
+  89:             value_class is str
+  90:             or value_class is bool
+  91:             or value_class is int
+  92:             or value_class is float
+  93:             or value is None
+  94:         ):
+  95:             continue
+  96:         if value_class is list or isinstance(value, _METADATA_SEQUENCES):
+  97:             for element in value:
+  98:                 if not isinstance(element, str):
+  99:                     _reject_metadata_value(field, value)
+ 100:             continue
+ 101:         if isinstance(value, _METADATA_SCALARS):
+ 102:             continue
+ 103:         _reject_metadata_value(field, value)
+ 104: 
+ 105: 
+ 106: def _check_metadata(metadata: Any) -> None:
+ 107:     """Validate a user-supplied ``metadata`` argument: ``None``, or a dict of legal values."""
+ 108:     if metadata is None:
+ 109:         return
+ 110:     if not isinstance(metadata, dict):
+ 111:         raise PineconeTypeError(f"metadata must be a dict, got {type(metadata).__name__}")
+ 112:     _validate_metadata(metadata)
+ 113: 
+
+=== C:\Users\karth\AppData\Local\Programs\Python\Python314\Lib\site-packages\pinecone\errors\exceptions.py (lines 349-368) ===
+ 349: class PayloadTooLargeError(ApiError):
+ 350:     """413 — the request body is over the size the server accepts.
+ 351: 
+ 352:     The cap is on the encoded body, not on a count of items, so a count that
+ 353:     fits one time can exceed it the next when the items are larger. The
+ 354:     request was well-formed and a retry unchanged answers ``413`` again; send
+ 355:     fewer items per request. A batch of one that still raises this cannot be
+ 356:     shrunk further. Only the REST clients raise it; the gRPC transport reports
+ 357:     an oversize message with its own status.
+ 358: 
+ 359:     The class keys on the status code alone. A proxy in front of the service
+ 360:     rejects the largest bodies with a bare ``413`` and no JSON error code, so
+ 361:     ``error_code`` may be ``None`` and ``body`` may be ``None`` here.
+ 362: 
+ 363:     Examples:
+ 364:         >>> from pinecone import ApiError, PayloadTooLargeError
+ 365:         >>> exc = PayloadTooLargeError("Request body is too large")
+ 366:         >>> exc.status_code, isinstance(exc, ApiError)
+ 367:         (413, True)
+ 368:     """
+
+=== C:\Users\karth\AppData\Local\Programs\Python\Python314\Lib\site-packages\pinecone\utils\filter_builder.py (lines 1-46) ===
+   1: """Optional builder for metadata filters.
+   2: 
+   3: A ``filter`` argument is a plain dict, and writing that dict out by hand is
+   4: fully supported: ``{"genre": {"$eq": "drama"}}`` is what every method
+   5: accepts, and what :meth:`Condition.to_dict` produces. This module is for
+   6: filters your code assembles rather than writes: :class:`Field` exposes a
+   7: method for each operator (comparison, set, existence and text match), so
+   8: the operator names are checked by your editor instead of typed into a
+   9: string, and ``&`` / ``|`` compose conditions built in
+  10: different places.
+  11: 
+  12: Either route produces the same filter, so mixing them is fine.
+  13: """
+  14: 
+  15: from __future__ import annotations
+  16: 
+  17: from typing import Any
+  18: 
+  19: from pinecone.errors.exceptions import PineconeTypeError, PineconeValueError
+  20: 
+  21: # Value types accepted by equality / set operators.
+  22: ScalarValue = str | int | float | bool
+  23: 
+  24: # Value types accepted by ordering (numeric-only) operators.
+  25: NumericValue = int | float
+  26: 
+  27: 
+  28: class Condition:
+  29:     """One filter clause, or several combined.
+  30: 
+  31:     Returned by every :class:`Field` operator; you never construct one
+  32:     directly. Combine conditions with ``&`` for ``$and`` and ``|`` for
+  33:     ``$or``, then call :meth:`to_dict` to get the value to pass as
+  34:     ``filter``.
+  35: 
+  36:     Combining flattens same-operator nesting, so chaining three ``&`` gives
+  37:     one ``$and`` of three clauses rather than nested pairs. Mixing the two
+  38:     operators nests as Python's precedence dictates, which is why the
+  39:     operands want parentheses.
+  40: 
+  41:     Examples:
+  42:         >>> from pinecone import Field
+  43:         >>> ((Field("genre") == "drama") & Field("year").gte(2020)).to_dict()
+  44:         {'$and': [{'genre': {'$eq': 'drama'}}, {'year': {'$gte': 2020}}]}
+  45:     """
+  46: 
+
+=== C:\Users\karth\AppData\Local\Programs\Python\Python314\Lib\site-packages\pinecone\index\__init__.py (lines 681-745) ===
+ 681:     def query(
+ 682:         self,
+ 683:         *,
+ 684:         top_k: int,
+ 685:         vector: Sequence[float] | None = None,
+ 686:         id: str | None = None,
+ 687:         namespace: str = "",
+ 688:         filter: Mapping[str, Any] | None = None,
+ 689:         include_values: bool = False,
+ 690:         include_metadata: bool = False,
+ 691:         sparse_vector: SparseValues | Mapping[str, Any] | None = None,
+ 692:         scan_factor: float | None = None,
+ 693:         max_candidates: int | None = None,
+ 694:         timeout: float | None = None,
+ 695:     ) -> QueryResponse:
+ 696:         """Query a namespace for the nearest neighbors of a vector you supply.
+ 697: 
+ 698:         Serves indexes created with ``dimension``/``metric`` and legacy integrated
+ 699:         indexes; on a document index use :attr:`documents` instead. You supply the query vector;
+ 700:         nothing is embedded for you. Pass a dense *vector*, a *sparse_vector*, both for
+ 701:         a hybrid query, or the *id* of a stored vector to use as the query.
+ 702: 
+ 703:         Args:
+ 704:             top_k (int): Number of results to return, e.g. ``5``. The server caps it.
+ 705:             vector (list[float] | None): Dense query vector, at your index's
+ 706:                 dimension.
+ 707:             id (str | None): ID of a stored vector to use as the query, e.g.
+ 708:                 ``"article-101"``. Cannot be combined with *vector* or
+ 709:                 *sparse_vector*.
+ 710:             namespace (str): Namespace to query, e.g. ``"articles-en"``. Defaults
+ 711:                 to the index's default namespace.
+ 712:             filter (dict[str, Any] | None): Metadata filter expression restricting
+ 713:                 which vectors are searched, e.g. ``{"year": {"$gte": 2020}}``.
+ 714:             include_values (bool): Return each match's vector values. ``False``
+ 715:                 (default) keeps the response small.
+ 716:             include_metadata (bool): Return each match's metadata. Set it when you
+ 717:                 need the fields you filtered on back in the result.
+ 718:             sparse_vector (SparseValues | dict[str, Any] | None): Sparse query vector
+ 719:                 with indices and values, e.g.
+ 720:                 ``{"indices": [17, 42], "values": [0.4, 0.9]}``. Combine it with
+ 721:                 *vector* for a hybrid query on a dense index with the
+ 722:                 ``dotproduct`` metric.
+ 723:             scan_factor (float | None): Recall/latency trade for dense indexes on
+ 724:                 dedicated read nodes: a multiplier on how much of the index is
+ 725:                 scanned. Above 1 scans more and favors recall; below 1 scans less
+ 726:                 and favors latency. Omit to let the server choose.
+ 727:             max_candidates (int | None): Recall/latency trade for dense indexes on
+ 728:                 dedicated read nodes: caps how many candidates are reranked before
+ 729:                 *top_k* is taken. Must be at least *top_k*.
+ 730:             timeout (float | None): Per-request timeout in seconds. Overrides the
+ 731:                 client-level default for this call only.
+ 732: 
+ 733:         Returns:
+ 734:             :class:`~pinecone.models.vectors.responses.QueryResponse` with ``matches``
+ 735:             (ordered from most to least similar, each carrying ``id`` and ``score``),
+ 736:             ``namespace``, and ``usage``.
+ 737: 
+ 738:         Raises:
+ 739:             :exc:`PineconeValueError`: If *top_k* is not positive or exceeds the
+ 740:                 server's maximum, if *id* is combined with *vector* or
+ 741:                 *sparse_vector*, if none of *vector*, *id*, or *sparse_vector* is
+ 742:                 given, or if *id* is not a legal vector ID. Raised before any
+ 743:                 request is sent.
+ 744:             :exc:`ApiError`: If *scan_factor* or *max_candidates* is set on an
+ 745:                 index that does not run on dedicated read nodes, or on a sparse

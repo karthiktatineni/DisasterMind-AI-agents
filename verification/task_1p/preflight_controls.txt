@@ -1,0 +1,114 @@
+=== CONTROL: none ===
+CMD: python scripts/preflight.py --control none
+EXIT_CODE: 0
+--- STDOUT ---
+======================================================================
+DisasterMind AI — Task 1P Preflight Check (control=none)
+======================================================================
+[PREFLIGHT OK]   PINECONE_API_KEY and NVIDIA_API_KEY are configured.
+[PREFLIGHT INFO] Testing live NVIDIA chat model via AsyncOpenAI: 'nvidia/nemotron-3-ultra-550b-a55b' (timeout=20.0s)...
+[PREFLIGHT OK]   NVIDIA chat model responds live via AsyncOpenAI. Snippet: 'pong'
+[PREFLIGHT INFO] Testing live NVIDIA embedding model via AsyncOpenAI: 'nvidia/nemotron-3.5-embed-1b' (timeout=20.0s)...
+[PREFLIGHT OK]   NVIDIA embedding model responds live via AsyncOpenAI. Vector dimension: 2048
+[PREFLIGHT INFO] Connecting to Pinecone via Pinecone SDK (timeout=20.0s) for index 'disastermind'...
+[PREFLIGHT INFO] Existing indexes in account: ['disastermind']
+[PREFLIGHT OK]   Index 'disastermind' exists with dimension=2048 and metric='cosine'.
+[PREFLIGHT INFO] Inspecting index stats for namespace 'v1-nemotron-3.5-embed-1b'...
+[PREFLIGHT OK]   EMPTY_NAMESPACE (ready for Task 2P): index has 0 total vectors across 0 namespaces.
+
+======================================================================
+TASK 1P PREFLIGHT: ALL GATES PASS
+======================================================================
+--- STDERR ---
+
+
+=== CONTROL: bad-nvidia-key ===
+CMD: python scripts/preflight.py --control bad-nvidia-key
+EXIT_CODE: 1
+--- STDOUT ---
+======================================================================
+DisasterMind AI — Task 1P Preflight Check (control=bad-nvidia-key)
+======================================================================
+[PREFLIGHT OK]   PINECONE_API_KEY and NVIDIA_API_KEY are configured.
+[PREFLIGHT INFO] Testing live NVIDIA chat model via AsyncOpenAI: 'nvidia/nemotron-3-ultra-550b-a55b' (timeout=20.0s)...
+--- STDERR ---
+[PREFLIGHT FAIL] NVIDIA API error (HTTP 403): Error code: 403 - {'status': 403, 'title': 'Forbidden', 'detail': 'Authorization failed'}
+
+=== CONTROL: bad-pinecone-key ===
+CMD: python scripts/preflight.py --control bad-pinecone-key
+EXIT_CODE: 1
+--- STDOUT ---
+======================================================================
+DisasterMind AI — Task 1P Preflight Check (control=bad-pinecone-key)
+======================================================================
+[PREFLIGHT OK]   PINECONE_API_KEY and NVIDIA_API_KEY are configured.
+[PREFLIGHT INFO] Testing live NVIDIA chat model via AsyncOpenAI: 'nvidia/nemotron-3-ultra-550b-a55b' (timeout=20.0s)...
+[PREFLIGHT OK]   NVIDIA chat model responds live via AsyncOpenAI. Snippet: 'pong'
+[PREFLIGHT INFO] Testing live NVIDIA embedding model via AsyncOpenAI: 'nvidia/nemotron-3.5-embed-1b' (timeout=20.0s)...
+[PREFLIGHT OK]   NVIDIA embedding model responds live via AsyncOpenAI. Vector dimension: 2048
+[PREFLIGHT INFO] Connecting to Pinecone via Pinecone SDK (timeout=20.0s) for index 'disastermind'...
+--- STDERR ---
+[PREFLIGHT FAIL] Pinecone control/connection error: UnauthorizedError: [401 UNAUTHENTICATED] Invalid API key
+
+=== CONTROL: wrong-dim ===
+CMD: python scripts/preflight.py --control wrong-dim
+EXIT_CODE: 1
+--- STDOUT ---
+======================================================================
+DisasterMind AI — Task 1P Preflight Check (control=wrong-dim)
+======================================================================
+[PREFLIGHT OK]   PINECONE_API_KEY and NVIDIA_API_KEY are configured.
+[PREFLIGHT INFO] Testing live NVIDIA chat model via AsyncOpenAI: 'nvidia/nemotron-3-ultra-550b-a55b' (timeout=20.0s)...
+[PREFLIGHT OK]   NVIDIA chat model responds live via AsyncOpenAI. Snippet: 'pong'
+[PREFLIGHT INFO] Testing live NVIDIA embedding model via AsyncOpenAI: 'nvidia/nemotron-3.5-embed-1b' (timeout=20.0s)...
+[PREFLIGHT OK]   NVIDIA embedding model responds live via AsyncOpenAI. Vector dimension: 2048
+[PREFLIGHT INFO] Control wrong-dim overriding reported embedding dimension to 4096.
+[PREFLIGHT INFO] Connecting to Pinecone via Pinecone SDK (timeout=20.0s) for index 'disastermind'...
+[PREFLIGHT INFO] Existing indexes in account: ['disastermind']
+--- STDERR ---
+[PREFLIGHT FAIL] Index dimension mismatch: index 'disastermind' has dimension 2048, but embedding model 'nvidia/nemotron-3.5-embed-1b' requires dimension 4096.
+
+=== CONTROL: host-blocked ===
+CMD: python scripts/preflight.py --control host-blocked
+EXIT_CODE: 1
+--- STDOUT ---
+======================================================================
+DisasterMind AI — Task 1P Preflight Check (control=host-blocked)
+======================================================================
+[PREFLIGHT OK]   PINECONE_API_KEY and NVIDIA_API_KEY are configured.
+[PREFLIGHT INFO] Testing live NVIDIA chat model via AsyncOpenAI: 'nvidia/nemotron-3-ultra-550b-a55b' (timeout=20.0s)...
+[PREFLIGHT OK]   NVIDIA chat model responds live via AsyncOpenAI. Snippet: 'pong'
+[PREFLIGHT INFO] Testing live NVIDIA embedding model via AsyncOpenAI: 'nvidia/nemotron-3.5-embed-1b' (timeout=20.0s)...
+[PREFLIGHT OK]   NVIDIA embedding model responds live via AsyncOpenAI. Vector dimension: 2048
+[PREFLIGHT INFO] Connecting to Pinecone via Pinecone SDK (timeout=20.0s) for index 'disastermind'...
+[PREFLIGHT INFO] Control host-blocked routing Pinecone control/data plane to 'https://blocked-pinecone-host.invalid'...
+--- STDERR ---
+[PREFLIGHT FAIL] Pinecone control/connection error: PineconeConnectionError: [Errno 11001] getaddrinfo failed; request to https://blocked-pinecone-host.invalid
+
+=== CONTROL: timeout ===
+CMD: python scripts/preflight.py --control timeout
+EXIT_CODE: 1
+--- STDOUT ---
+======================================================================
+DisasterMind AI — Task 1P Preflight Check (control=timeout)
+======================================================================
+[PREFLIGHT OK]   PINECONE_API_KEY and NVIDIA_API_KEY are configured.
+[PREFLIGHT INFO] Testing live NVIDIA chat model via AsyncOpenAI: 'nvidia/nemotron-3-ultra-550b-a55b' (timeout=0.001s)...
+--- STDERR ---
+[PREFLIGHT FAIL] NVIDIA request timed out (AsyncOpenAI timeout=0.001s): Request timed out.
+
+=== CONTROL: pinecone-timeout ===
+CMD: python scripts/preflight.py --control pinecone-timeout
+EXIT_CODE: 1
+--- STDOUT ---
+======================================================================
+DisasterMind AI — Task 1P Preflight Check (control=pinecone-timeout)
+======================================================================
+[PREFLIGHT OK]   PINECONE_API_KEY and NVIDIA_API_KEY are configured.
+[PREFLIGHT INFO] Testing live NVIDIA chat model via AsyncOpenAI: 'nvidia/nemotron-3-ultra-550b-a55b' (timeout=20.0s)...
+[PREFLIGHT OK]   NVIDIA chat model responds live via AsyncOpenAI. Snippet: 'pong'
+[PREFLIGHT INFO] Testing live NVIDIA embedding model via AsyncOpenAI: 'nvidia/nemotron-3.5-embed-1b' (timeout=20.0s)...
+[PREFLIGHT OK]   NVIDIA embedding model responds live via AsyncOpenAI. Vector dimension: 2048
+[PREFLIGHT INFO] Connecting to Pinecone via Pinecone SDK (timeout=0.001s) for index 'disastermind'...
+--- STDERR ---
+[PREFLIGHT FAIL] Pinecone control/connection error: PineconeTimeoutError: timed out; request to https://api.pinecone.io

@@ -1,0 +1,98 @@
+$ git ls-tree -r -l 6dcd360 | grep -E 'data/|embeddings/'
+100644 blob 1b95b6fbc01db5ef1076e659da430a76d5b1d59f 12641170	data/disastermind_curated_dataset.json
+100644 blob 6943322f56abb3665f45390803ab298a2e895da9 6207869	data/public_emdat_custom_request_2026-06-09_9221c56d-9867-40b3-9b51-cef53eda41e3.xlsx
+100644 blob 46518f6a6395c26f6f18b7ff9bdebd406269560f    1737	embeddings/build_search_text.py
+100644 blob c3514e69d0e864a1bc1c1962183fd7fe89f0b78e    5667	embeddings/generate_embeddings.py
+
+$ git log --all --diff-filter=A --name-only -- data embeddings
+EXIT: 0
+commit eeab3eaa4ac18b76bce347b2fdb2366721402f84
+Author: Karthik Tatineni <karthiktatineni34@gmail.com>
+Date:   Tue Jun 9 16:58:57 2026 +0530
+
+    first commit
+
+embeddings/build_search_text.py
+embeddings/generate_embeddings.py
+
+commit 6dcd36049c97ecf7da8af7fb259994dde52f4797
+Author: Karthik Tatineni <karthiktatineni34@gmail.com>
+Date:   Tue Jun 9 16:58:57 2026 +0530
+
+    first commit
+
+data/disastermind_curated_dataset.json
+data/public_emdat_custom_request_2026-06-09_9221c56d-9867-40b3-9b51-cef53eda41e3.xlsx
+embeddings/build_search_text.py
+embeddings/generate_embeddings.py
+
+
+$ git count-objects -vH
+EXIT: 0
+count: 58
+size: 72.19 KiB
+in-pack: 455
+packs: 2
+size-pack: 8.12 MiB
+prune-packable: 0
+garbage: 0
+size-garbage: 0 bytes
+
+
+$ git rev-list --all --objects | grep -E 'data/|embeddings/'
+46518f6a6395c26f6f18b7ff9bdebd406269560f embeddings/build_search_text.py
+ffd7354f41a0f0a34ab662065606ac19eaaa38f0 embeddings/generate_embeddings.py
+1b95b6fbc01db5ef1076e659da430a76d5b1d59f data/disastermind_curated_dataset.json
+6943322f56abb3665f45390803ab298a2e895da9 data/public_emdat_custom_request_2026-06-09_9221c56d-9867-40b3-9b51-cef53eda41e3.xlsx
+c3514e69d0e864a1bc1c1962183fd7fe89f0b78e embeddings/generate_embeddings.py
+
+$ git reflog
+EXIT: 0
+c8f033c HEAD@{0}: commit: Audit response: Revert xgboost models to pristine state, enforce required input_type, add holdout to gitattributes
+3c17128 HEAD@{1}: commit: Task 1P: Eliminate Supabase/pgvector, integrate Pinecone serverless vector index, add preflight suite
+
+
+=== .git/filter-repo/ ===
+--- already_ran ---
+This file exists to allow you to filter again without --force,
+and to specify that metadata files should be updated instead
+of rewritten
+--- changed-refs ---
+refs/heads/fix/adversarial-qa
+refs/heads/main
+refs/tags/holdout-sealed
+
+--- commit-map ---
+old                                      new
+3cc39ab4ddfd30aea32dfe72ca08798807e687bd 0a032c92d765cc136a14c281480ff106484a61cb
+4897dde8f01558d965dbb77821ba608dfe41bcc7 a9085e116f92ad435872c1941c165b231dafa817
+6dcd36049c97ecf7da8af7fb259994dde52f4797 eeab3eaa4ac18b76bce347b2fdb2366721402f84
+7b74924525ddc1542c32bfa90d61383faf0be8a1 7c37ee5a403065066b468052fc94bab9a89d9896
+83dc5336e21387c5c2148313c9b8710f97e81109 0046b8abc2346563cfc6d9f2d7399537f95fe899
+9c1cb4b1fd79dafecd064c3fa2a89923511283f9 0163a2c87fc76d0950a1c2c2255472e2660109b3
+ace0bbb253e46251cbfc89c10a6af0b6233a2c8f 4a9385a0921e5d5b68856feac8415df0cc11371c
+
+--- first-changed-commits ---
+6dcd36049c97ecf7da8af7fb259994dde52f4797 eeab3eaa4ac18b76bce347b2fdb2366721402f84
+
+--- ref-map ---
+old                                      new                                      ref
+3cc39ab4ddfd30aea32dfe72ca08798807e687bd 0a032c92d765cc136a14c281480ff106484a61cb refs/heads/fix/adversarial-qa
+83dc5336e21387c5c2148313c9b8710f97e81109 0046b8abc2346563cfc6d9f2d7399537f95fe899 refs/heads/main
+3cc39ab4ddfd30aea32dfe72ca08798807e687bd 0a032c92d765cc136a14c281480ff106484a61cb refs/tags/holdout-sealed
+
+--- suboptimal-issues ---
+No filtering problems encountered.
+
+=== origin/main ===
+$ git show-ref
+EXIT: 0
+c8f033ccc4f732f9331ae64bd637633d9f36e25d refs/heads/fix/adversarial-qa
+0046b8abc2346563cfc6d9f2d7399537f95fe899 refs/heads/main
+83dc5336e21387c5c2148313c9b8710f97e81109 refs/remotes/origin/HEAD
+83dc5336e21387c5c2148313c9b8710f97e81109 refs/remotes/origin/main
+0a032c92d765cc136a14c281480ff106484a61cb refs/tags/holdout-sealed
+
+
+origin/main total tree size: 19329771 bytes (18.43 MiB)
+origin/main data/+embeddings/ size: 18856980 bytes (17.98 MiB)

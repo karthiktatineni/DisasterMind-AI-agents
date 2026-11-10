@@ -1,0 +1,172 @@
+{
+  "pinecone_describe_index": {
+    "name": "disastermind",
+    "status": {
+      "ready": true,
+      "state": "Ready"
+    },
+    "schema": {
+      "fields": {
+        "_sparse_values": {
+          "type": "sparse_vector",
+          "description": null
+        },
+        "_values": {
+          "type": "dense_vector",
+          "dimension": 2048,
+          "metric": "cosine",
+          "description": null
+        }
+      }
+    },
+    "deployment": {
+      "deployment_type": "managed",
+      "cloud": "aws",
+      "region": "us-east-1",
+      "environment": "aped-4627-b74a"
+    },
+    "deletion_protection": "disabled",
+    "host": "https://disastermind-nu066ad.svc.aped-4627-b74a.pinecone.io",
+    "read_capacity": {
+      "mode": "OnDemand",
+      "status": {
+        "state": "Ready",
+        "current_shards": null,
+        "current_replicas": null,
+        "error_message": null
+      }
+    },
+    "tags": null,
+    "private_host": null,
+    "source_collection": null,
+    "source_backup_id": null,
+    "cmek_id": null,
+    "dimension": 2048,
+    "metric": "cosine",
+    "vector_type": "dense",
+    "spec": {
+      "serverless": {
+        "cloud": "aws",
+        "region": "us-east-1",
+        "read_capacity": {
+          "mode": "OnDemand",
+          "status": {
+            "state": "Ready",
+            "current_shards": null,
+            "current_replicas": null,
+            "error_message": null
+          }
+        },
+        "source_collection": null,
+        "schema": {
+          "fields": {
+            "_sparse_values": {
+              "type": "sparse_vector",
+              "description": null
+            },
+            "_values": {
+              "type": "dense_vector",
+              "dimension": 2048,
+              "metric": "cosine",
+              "description": null
+            }
+          }
+        }
+      },
+      "pod": null,
+      "byoc": null
+    },
+    "embed": null
+  },
+  "pinecone_rest_status": 200,
+  "pinecone_rest_body": {
+    "name": "disastermind",
+    "vector_type": "dense",
+    "metric": "cosine",
+    "dimension": 2048,
+    "status": {
+      "ready": true,
+      "state": "Ready"
+    },
+    "host": "disastermind-nu066ad.svc.aped-4627-b74a.pinecone.io",
+    "spec": {
+      "serverless": {
+        "region": "us-east-1",
+        "cloud": "aws"
+      }
+    },
+    "deletion_protection": "disabled",
+    "tags": null
+  },
+  "pinecone_rest_plan_headers": {
+    "x-pinecone-api-version": "2025-04"
+  },
+  "pinecone_inference_models": [
+    "ModelInfo(model='gemini-embedding-2', short_description=\"Google's dense embedding model for English and multilingual text. It handles inputs of up to 8,192 tokens, can produce embeddings with any number of dimensions from 128 to 3,072, and accepts an optional task_type that tunes embeddings for a use case such as question answering, code retrieval, or classification.\", type='embed', supported_parameters=[ModelInfoSupportedParameter(parameter='input_type', type='one_of', value_type='string', required=True, allowed_values=['query', 'passage'], min=None, max=None, default=None), ModelInfoSupportedParameter(parameter='task_type', type='one_of', value_type='string', required=False, allowed_values=['retrieval_document', 'retrieval_query', 'question_answering', 'fact_verification', 'code_retrieval_query', 'classification', 'clustering', 'sentence_similarity'], min=None, max=None, default=None), ModelInfoSupportedParameter(parameter='truncate', type='one_of', value_type='string', required=False, allowed_values=['END', 'NONE'], min=None, max=None, default='END'), ModelInfoSupportedParameter(parameter='processing_location', type='one_of', value_type='string', required=False, allowed_values=['global'], min=None, max=None, default='global'), ModelInfoSupportedParameter(parameter='dimension', type='numeric_range', value_type='integer', required=False, allowed_values=None, min=128, max=3072, default=3072)], vector_type='dense', default_dimension=3072, supported_dimensions=None, modality='text', max_sequence_length=8192, max_batch_size=96, provider_name='Google', supported_metrics=['cosine'])",
+    "ModelInfo(model='llama-text-embed-v2', short_description='A high performance dense embedding model optimized for multilingual and cross-lingual text question-answering retrieval with support for long documents (up to 2048 tokens) and dynamic embedding size (Matryoshka Embeddings).', type='embed', supported_parameters=[ModelInfoSupportedParameter(parameter='input_type', type='one_of', value_type='string', required=True, allowed_values=['query', 'passage'], min=None, max=None, default=None), ModelInfoSupportedParameter(parameter='truncate', type='one_of', value_type='string', required=False, allowed_values=['END', 'NONE', 'START'], min=None, max=None, default='END'), ModelInfoSupportedParameter(parameter='dimension', type='one_of', value_type='integer', required=False, allowed_values=[384, 512, 768, 1024, 2048], min=None, max=None, default=1024)], vector_type='dense', default_dimension=1024, supported_dimensions=[384, 512, 768, 1024, 2048], modality='text', max_sequence_length=2048, max_batch_size=96, provider_name='NVIDIA', supported_metrics=['cosine', 'dotproduct'])",
+    "ModelInfo(model='multilingual-e5-large', short_description='A high-performance dense embedding model trained on a mixture of multilingual datasets. It works well on messy data and short queries expected to return medium-length passages of text (1-2 paragraphs)', type='embed', supported_parameters=[ModelInfoSupportedParameter(parameter='input_type', type='one_of', value_type='string', required=True, allowed_values=['query', 'passage'], min=None, max=None, default=None), ModelInfoSupportedParameter(parameter='truncate', type='one_of', value_type='string', required=False, allowed_values=['END', 'NONE'], min=None, max=None, default='END')], vector_type='dense', default_dimension=1024, supported_dimensions=[1024], modality='text', max_sequence_length=507, max_batch_size=96, provider_name='Microsoft', supported_metrics=['cosine', 'euclidean'])",
+    "ModelInfo(model='pinecone-sparse-english-v0', short_description='A sparse embedding model for converting text to sparse vectors for keyword or hybrid semantic/keyword search. Built on the innovations of the DeepImpact architecture.', type='embed', supported_parameters=[ModelInfoSupportedParameter(parameter='input_type', type='one_of', value_type='string', required=True, allowed_values=['query', 'passage'], min=None, max=None, default=None), ModelInfoSupportedParameter(parameter='truncate', type='one_of', value_type='string', required=False, allowed_values=['END', 'NONE'], min=None, max=None, default='END'), ModelInfoSupportedParameter(parameter='return_tokens', type='any', value_type='boolean', required=False, allowed_values=None, min=None, max=None, default=False), ModelInfoSupportedParameter(parameter='max_tokens_per_sequence', type='one_of', value_type='integer', required=False, allowed_values=[512, 2048], min=None, max=None, default=512)], vector_type='sparse', default_dimension=None, supported_dimensions=None, modality='text', max_sequence_length=512, max_batch_size=96, provider_name='Pinecone', supported_metrics=['dotproduct'])",
+    "ModelInfo(model='text-embedding-3-large', short_description=\"OpenAI's larger, higher-accuracy dense embedding model for English and multilingual text, for tasks where quality matters most. It handles inputs of up to 8,192 tokens and can produce embeddings with any integer number of dimensions from 1 to 3,072.\", type='embed', supported_parameters=[ModelInfoSupportedParameter(parameter='dimension', type='numeric_range', value_type='integer', required=False, allowed_values=None, min=1, max=3072, default=3072), ModelInfoSupportedParameter(parameter='input_type', type='one_of', value_type='string', required=True, allowed_values=['query', 'passage'], min=None, max=None, default=None), ModelInfoSupportedParameter(parameter='truncate', type='one_of', value_type='string', required=False, allowed_values=['END', 'NONE'], min=None, max=None, default='END'), ModelInfoSupportedParameter(parameter='processing_location', type='one_of', value_type='string', required=False, allowed_values=['global', 'us'], min=None, max=None, default='global')], vector_type='dense', default_dimension=3072, supported_dimensions=None, modality='text', max_sequence_length=8192, max_batch_size=96, provider_name='OpenAI', supported_metrics=['cosine', 'dotproduct', 'euclidean'])",
+    "ModelInfo(model='text-embedding-3-small', short_description=\"OpenAI's compact dense embedding model, balancing quality and cost for English and multilingual text. It handles inputs of up to 8,192 tokens and can produce embeddings with any integer number of dimensions from 1 to 1,536.\", type='embed', supported_parameters=[ModelInfoSupportedParameter(parameter='dimension', type='numeric_range', value_type='integer', required=False, allowed_values=None, min=1, max=1536, default=1536), ModelInfoSupportedParameter(parameter='input_type', type='one_of', value_type='string', required=True, allowed_values=['query', 'passage'], min=None, max=None, default=None), ModelInfoSupportedParameter(parameter='truncate', type='one_of', value_type='string', required=False, allowed_values=['END', 'NONE'], min=None, max=None, default='END'), ModelInfoSupportedParameter(parameter='processing_location', type='one_of', value_type='string', required=False, allowed_values=['global', 'us'], min=None, max=None, default='global')], vector_type='dense', default_dimension=1536, supported_dimensions=None, modality='text', max_sequence_length=8192, max_batch_size=96, provider_name='OpenAI', supported_metrics=['cosine', 'dotproduct', 'euclidean'])",
+    "ModelInfo(model='bge-reranker-v2-m3', short_description='A high-performance, multilingual reranking model that works well on messy data and short queries expected to return medium-length passages of text (1-2 paragraphs)', type='rerank', supported_parameters=[ModelInfoSupportedParameter(parameter='truncate', type='one_of', value_type='string', required=False, allowed_values=['END', 'NONE'], min=None, max=None, default='NONE')], vector_type=None, default_dimension=None, supported_dimensions=None, modality='text', max_sequence_length=1024, max_batch_size=100, provider_name='BAAI', supported_metrics=None)",
+    "ModelInfo(model='cohere-rerank-3.5', short_description=\"Cohere's previous-generation reranking model, balancing performance and latency for a wide range of enterprise search applications. Deprecated: please migrate to cohere-rerank-4-fast.\", type='rerank', supported_parameters=[ModelInfoSupportedParameter(parameter='max_chunks_per_doc', type='numeric_range', value_type='integer', required=False, allowed_values=None, min=1, max=3072, default=3072)], vector_type=None, default_dimension=None, supported_dimensions=None, modality='text', max_sequence_length=40000, max_batch_size=200, provider_name='Cohere', supported_metrics=None)",
+    "ModelInfo(model='cohere-rerank-4-fast', short_description=\"Cohere's latest reranking model (Cohere Rerank 4.0 Fast), improving relevance quality for a wide range of enterprise search applications.\", type='rerank', supported_parameters=[ModelInfoSupportedParameter(parameter='max_tokens_per_doc', type='numeric_range', value_type='integer', required=False, allowed_values=None, min=1, max=4096, default=1024)], vector_type=None, default_dimension=None, supported_dimensions=None, modality='text', max_sequence_length=4096, max_batch_size=250, provider_name='Cohere', supported_metrics=None)",
+    "ModelInfo(model='pinecone-rerank-v0', short_description='A state of the art reranking model that out-performs competitors on widely accepted benchmarks. It can handle chunks up to 512 tokens (1-2 paragraphs)', type='rerank', supported_parameters=[ModelInfoSupportedParameter(parameter='truncate', type='one_of', value_type='string', required=False, allowed_values=['END', 'NONE'], min=None, max=None, default='END')], vector_type=None, default_dimension=None, supported_dimensions=None, modality='text', max_sequence_length=512, max_batch_size=100, provider_name='Pinecone', supported_metrics=None)"
+  ],
+  "nvidia_embedding_models_live": [
+    {
+      "id": "nvidia/embed-qa-4",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "nvidia"
+    },
+    {
+      "id": "nvidia/llama-3.2-nemoretriever-1b-vlm-embed-v1",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "nvidia"
+    },
+    {
+      "id": "nvidia/llama-3.2-nv-embedqa-1b-v1",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "nvidia"
+    },
+    {
+      "id": "nvidia/llama-nemotron-embed-vl-1b-v2",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "nvidia"
+    },
+    {
+      "id": "nvidia/nemotron-3-embed-1b",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "nvidia"
+    },
+    {
+      "id": "nvidia/nemotron-3.5-embed-1b",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "nvidia"
+    },
+    {
+      "id": "nvidia/nemotron-3.5-embed-8b",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "nvidia"
+    },
+    {
+      "id": "nvidia/nv-embedqa-mistral-7b-v2",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "nvidia"
+    },
+    {
+      "id": "snowflake/arctic-embed-l",
+      "object": "model",
+      "created": 735790403,
+      "owned_by": "snowflake"
+    }
+  ]
+}

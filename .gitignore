@@ -38,3 +38,5 @@ logs/
 # Deployment specific ignores
 embeddings/*.json
 data/
+eval/.cache/
+.cache/
