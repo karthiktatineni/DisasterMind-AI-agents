@@ -1,0 +1,165 @@
+=== 1. OFFLINE PYTEST SUITE ===
+============================= test session starts =============================
+platform win32 -- Python 3.14.6, pytest-9.2.0, pluggy-1.7.0 -- C:\Users\karth\Documents\desktop\projects\Disastermind-Agent\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\karth\Documents\desktop\projects\Disastermind-Agent
+configfile: pyproject.toml
+testpaths: tests
+plugins: anyio-4.16.0, asyncio-1.4.1.post1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 20 items / 5 errors
+
+=================================== ERRORS ====================================
+________________ ERROR collecting tests/test_data_pipeline.py _________________
+ImportError while importing test module 'C:\Users\karth\Documents\desktop\projects\Disastermind-Agent\tests\test_data_pipeline.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\..\AppData\Local\Programs\Python\Python314\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_data_pipeline.py:8: in <module>
+    from backend.app.services.data_pipeline import (
+backend\app\services\data_pipeline.py:20: in <module>
+    from backend.app.services.embedding_service import count_tokens_approx
+backend\app\services\embedding_service.py:9: in <module>
+    import tiktoken
+E   ModuleNotFoundError: No module named 'tiktoken'
+_____________ ERROR collecting tests/test_task4_orchestration.py ______________
+ImportError while importing test module 'C:\Users\karth\Documents\desktop\projects\Disastermind-Agent\tests\test_task4_orchestration.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\..\AppData\Local\Programs\Python\Python314\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_task4_orchestration.py:14: in <module>
+    from backend.app.main import app
+backend\app\main.py:20: in <module>
+    from backend.app.orchestration.orchestrator import DisasterMindOrchestrator
+backend\app\orchestration\orchestrator.py:13: in <module>
+    from backend.app.orchestration.agent_runner import AgentSpec, run_agent_loop
+backend\app\orchestration\agent_runner.py:28: in <module>
+    from backend.app.tools.registry import (
+backend\app\tools\__init__.py:3: in <module>
+    from backend.app.tools.domain_tools import build_domain_tools
+backend\app\tools\domain_tools.py:16: in <module>
+    from backend.app.services.retrieval_service import RetrievalService
+backend\app\services\retrieval_service.py:9: in <module>
+    from backend.app.services.embedding_service import EmbeddingConfigError, EmbeddingService
+backend\app\services\embedding_service.py:9: in <module>
+    import tiktoken
+E   ModuleNotFoundError: No module named 'tiktoken'
+_______________ ERROR collecting tests/test_task5_grounding.py ________________
+ImportError while importing test module 'C:\Users\karth\Documents\desktop\projects\Disastermind-Agent\tests\test_task5_grounding.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\..\AppData\Local\Programs\Python\Python314\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_task5_grounding.py:18: in <module>
+    from backend.app.orchestration.orchestrator import DisasterMindOrchestrator
+backend\app\orchestration\orchestrator.py:13: in <module>
+    from backend.app.orchestration.agent_runner import AgentSpec, run_agent_loop
+backend\app\orchestration\agent_runner.py:28: in <module>
+    from backend.app.tools.registry import (
+backend\app\tools\__init__.py:3: in <module>
+    from backend.app.tools.domain_tools import build_domain_tools
+backend\app\tools\domain_tools.py:16: in <module>
+    from backend.app.services.retrieval_service import RetrievalService
+backend\app\services\retrieval_service.py:9: in <module>
+    from backend.app.services.embedding_service import EmbeddingConfigError, EmbeddingService
+backend\app\services\embedding_service.py:9: in <module>
+    import tiktoken
+E   ModuleNotFoundError: No module named 'tiktoken'
+_______________ ERROR collecting tests/test_task6_injection.py ________________
+ImportError while importing test module 'C:\Users\karth\Documents\desktop\projects\Disastermind-Agent\tests\test_task6_injection.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\..\AppData\Local\Programs\Python\Python314\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_task6_injection.py:12: in <module>
+    from backend.app.main import app
+backend\app\main.py:20: in <module>
+    from backend.app.orchestration.orchestrator import DisasterMindOrchestrator
+backend\app\orchestration\orchestrator.py:13: in <module>
+    from backend.app.orchestration.agent_runner import AgentSpec, run_agent_loop
+backend\app\orchestration\agent_runner.py:28: in <module>
+    from backend.app.tools.registry import (
+backend\app\tools\__init__.py:3: in <module>
+    from backend.app.tools.domain_tools import build_domain_tools
+backend\app\tools\domain_tools.py:16: in <module>
+    from backend.app.services.retrieval_service import RetrievalService
+backend\app\services\retrieval_service.py:9: in <module>
+    from backend.app.services.embedding_service import EmbeddingConfigError, EmbeddingService
+backend\app\services\embedding_service.py:9: in <module>
+    import tiktoken
+E   ModuleNotFoundError: No module named 'tiktoken'
+_______________ ERROR collecting tests/test_task7_resilience.py _______________
+ImportError while importing test module 'C:\Users\karth\Documents\desktop\projects\Disastermind-Agent\tests\test_task7_resilience.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\..\AppData\Local\Programs\Python\Python314\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_task7_resilience.py:17: in <module>
+    from backend.app.main import app
+backend\app\main.py:20: in <module>
+    from backend.app.orchestration.orchestrator import DisasterMindOrchestrator
+backend\app\orchestration\orchestrator.py:13: in <module>
+    from backend.app.orchestration.agent_runner import AgentSpec, run_agent_loop
+backend\app\orchestration\agent_runner.py:28: in <module>
+    from backend.app.tools.registry import (
+backend\app\tools\__init__.py:3: in <module>
+    from backend.app.tools.domain_tools import build_domain_tools
+backend\app\tools\domain_tools.py:16: in <module>
+    from backend.app.services.retrieval_service import RetrievalService
+backend\app\services\retrieval_service.py:9: in <module>
+    from backend.app.services.embedding_service import EmbeddingConfigError, EmbeddingService
+backend\app\services\embedding_service.py:9: in <module>
+    import tiktoken
+E   ModuleNotFoundError: No module named 'tiktoken'
+=========================== short test summary info ===========================
+ERROR tests/test_data_pipeline.py
+ERROR tests/test_task4_orchestration.py
+ERROR tests/test_task5_grounding.py
+ERROR tests/test_task6_injection.py
+ERROR tests/test_task7_resilience.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 5 errors during collection !!!!!!!!!!!!!!!!!!!
+============================== 5 errors in 5.40s ==============================
+C:\Users\karth\Documents\desktop\projects\Disastermind-Agent\.venv\Lib\site-packages\pytest_asyncio\plugin.py:300: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+The event loop scope for asynchronous fixtures will default to the "fixture" caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to "function" scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
+STEP_EXIT=2
+
+=== 2. SUPABASE / PGVECTOR / NVIDIA_EMBEDDING / STALE CLAIMS GREP GATES ===
+[PASS] supabase_pgvector: 0 matches (git grep exit=1)
+[PASS] nvidia_embedding_var: 0 matches (git grep exit=1)
+[PASS] stale_claims_docs_ui: 0 matches (git grep exit=1)
+[PASS] local .env: 0 NVIDIA_EMBEDDING* keys
+GREP_GATES_PASS=True
+
+=== 3. SECRET SCAN WITH ALLOWLIST ===
+[ALLOWLISTED] scripts/preflight.py:127:        nvidia_key = "nvapi-invalid-control-key"
+[ALLOWLISTED] scripts/preflight.py:129:        pinecone_key = "pcsk_invalid_control_key"
+[UNEXPECTED SECRET HIT] verification/task_8/gates_output.txt:89:[ALLOWLISTED] scripts/preflight.py:127:        nvidia_key = "nvapi-invalid-control-key"
+[UNEXPECTED SECRET HIT] verification/task_8/gates_output.txt:90:[ALLOWLISTED] scripts/preflight.py:129:        pinecone_key = "pcsk_invalid_control_key"
+SECRET_SCAN_EXIT=1 (allowlisted=2, unexpected=2)
+
+=== 4. GIT STATUS & TRACKED SENSITIVE-PATH HYGIENE ===
+bad_tracked=[], bad_staged=[]
+GIT_HYGIENE_PASS=True
+
+=== 5. SEALED HOLDOUT HASH VERIFICATION (HASHLIB) ===
+holdout-sealed tag SHA-256 = ac086af95630a0626c80aff1c3a35e4f60017ea9a4ec7e37605b8d6393506285
+working file SHA-256       = ac086af95630a0626c80aff1c3a35e4f60017ea9a4ec7e37605b8d6393506285
+expected SHA-256           = ac086af95630a0626c80aff1c3a35e4f60017ea9a4ec7e37605b8d6393506285
+HOLDOUT_HASH_PASS=True
+
+=== SUMMARY ===
+  offline_pytest: FAIL
+  grep_gates: PASS
+  secret_scan: FAIL
+  git_hygiene: PASS
+  holdout_hash: PASS
+FINAL_EXIT=1

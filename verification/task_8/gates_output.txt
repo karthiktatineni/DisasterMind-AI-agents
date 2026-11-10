@@ -75,7 +75,7 @@ tests/test_task7_resilience.py::test_concurrent_enrichment_uses_asyncio_gather P
     from starlette.testclient import TestClient as TestClient  # noqa
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-================= 59 passed, 1 deselected, 1 warning in 6.56s =================
+================= 59 passed, 1 deselected, 1 warning in 4.36s =================
 STEP_EXIT=0
 
 === 2. SUPABASE / PGVECTOR / NVIDIA_EMBEDDING / STALE CLAIMS GREP GATES ===
@@ -86,8 +86,8 @@ STEP_EXIT=0
 GREP_GATES_PASS=True
 
 === 3. SECRET SCAN WITH ALLOWLIST ===
-[ALLOWLISTED] scripts/preflight.py:127:        nvidia_key = "nvapi-invalid-control-key"
-[ALLOWLISTED] scripts/preflight.py:129:        pinecone_key = "pcsk_invalid_control_key"
+[ALLOWLISTED] scripts/preflight.py:127:        nvidia_key = "[redacted allowlisted test key]"
+[ALLOWLISTED] scripts/preflight.py:129:        pinecone_key = "[redacted allowlisted test key]"
 SECRET_SCAN_EXIT=0 (allowlisted=2, unexpected=0)
 
 === 4. GIT STATUS & TRACKED SENSITIVE-PATH HYGIENE ===
