@@ -1,0 +1,10 @@
+# git_commit=8ef9e2423b6991efbf63bafa252a566e0489dc5c
+backend/app/agents/fallbacks.py:123:    historical_score = top_similarity(rag) * 20
+backend/app/agents/fallbacks.py:219:        "rescue_teams": max(1, math.ceil(max(affected, 1) / 5000)) if affected else 0,
+backend/app/agents/fallbacks.py:220:        "medical_kits": max(1, math.ceil(max(affected * 0.1, deaths * 3) / 100)) if affected or deaths else 0,
+backend/app/agents/fallbacks.py:221:        "water_units": safe_int(affected * 3),
+backend/app/agents/fallbacks.py:222:        "food_packets": safe_int(affected * 2),
+backend/app/agents/fallbacks.py:301:            "status": "warning" if affected and water_units < affected * 2 else "passed",
+backend/app/agents/fallbacks.py:302:            "delta": "Increase water staging for a 24-hour buffer." if affected and water_units < affected * 2 else "Water staging meets initial response target.",
+backend/app/services/data_pipeline.py:94:        idx = idx * 26 + (ord(c.upper()) - ord("A") + 1)
+config/secret_allowlist.json:13:      "token_sha256": "cd21e00ea1307bbab60d42fb55b7e050de24200098ec3366b21d63b529cfc862",

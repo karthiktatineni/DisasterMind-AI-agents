@@ -1,5 +1,5 @@
 {
-  "git_commit": "b683e4a66696928d02ae010024e1554e3ff9ef03",
+  "git_commit": "8ef9e2423b6991efbf63bafa252a566e0489dc5c",
   "rejection_precondition_conflict_case": {
     "briefing_status": "complete",
     "conflicts": [
@@ -31,7 +31,7 @@
           "call_id": "c1"
         },
         "error": "Precondition failed: Risk agent must complete and be verified before Evacuation agent runs.",
-        "latency_ms": 0.1
+        "latency_ms": 0.06
       }
     ],
     "risk_rejections": [

@@ -17,3 +17,4 @@
   },
   "conclusion": "Keep default thinking enabled for Task 4 agent loops; enable_thinking=False broke complex Pydantic tool submission (tool_calls=null) while default thinking + inlined JSON schema + forced named tool_choice produced valid submit_risk_report cleanly. Report latencies honestly as measured."
 }
+

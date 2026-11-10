@@ -1,4 +1,4 @@
-# git_commit=b683e4a66696928d02ae010024e1554e3ff9ef03
+# git_commit=8ef9e2423b6991efbf63bafa252a566e0489dc5c
 backend/app/agents/fallbacks.py:21:        parsed = json.loads(content)
 backend/app/agents/fallbacks.py:27:        parsed = json.loads(content[start : end + 1])
 backend/app/services/data_pipeline.py:79:_CTRL_RE = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
@@ -15,5 +15,5 @@ backend/app/services/data_pipeline.py:542:    raw_records = json.loads(curated_p
 backend/app/services/snapshot_guard.py:115:        manifest = json.loads(man_p.read_text(encoding="utf-8"))
 backend/app/services/snapshot_guard.py:161:            ledger = json.loads(led_p.read_text(encoding="utf-8"))
 backend/app/services/snapshot_guard.py:204:    ledger = json.loads(led_p.read_text(encoding="utf-8"))
-backend/app/tools/domain_tools.py:59:    return json.loads(target.read_text(encoding="utf-8"))
-backend/app/tools/registry.py:28:    parsed = json.loads(raw_arguments)
+backend/app/tools/domain_tools.py:58:    return json.loads(target.read_text(encoding="utf-8"))
+backend/app/tools/registry.py:113:    parsed = json.loads(raw_arguments)
