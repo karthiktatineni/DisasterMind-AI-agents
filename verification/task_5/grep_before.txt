@@ -1,0 +1,72 @@
+agents/coordinator/description.md:17:* Track agent status, retry failures, and record fallback decisions.
+agents/coordinator/description.md:68:If a downstream agent fails, the Coordinator retries once with the same structured input and records the failure. If the retry fails, it produces a fallback task result with `status: "failed"` and sends it to the Validation Agent for explicit handling.
+agents/coordinator/description.md:91:018. Declare deterministic fallback behavior when it is used.
+agents/coordinator/description.md:148:075. Keep fallback model names visible when fallbacks are used.
+agents/coordinator/description.md:150:077. Keep fallback provider visible when NVIDIA output is unavailable.
+agents/decision/description.md:84:018. Declare deterministic fallback behavior when it is used.
+agents/decision/description.md:141:075. Keep fallback model names visible when fallbacks are used.
+agents/decision/description.md:143:077. Keep fallback provider visible when NVIDIA output is unavailable.
+agents/evacuation/description.md:84:018. Declare deterministic fallback behavior when it is used.
+agents/evacuation/description.md:141:075. Keep fallback model names visible when fallbacks are used.
+agents/evacuation/description.md:143:077. Keep fallback provider visible when NVIDIA output is unavailable.
+agents/intelligence/description.md:82:018. Declare deterministic fallback behavior when it is used.
+agents/intelligence/description.md:139:075. Keep fallback model names visible when fallbacks are used.
+agents/intelligence/description.md:141:077. Keep fallback provider visible when NVIDIA output is unavailable.
+agents/logistics/description.md:83:018. Declare deterministic fallback behavior when it is used.
+agents/logistics/description.md:140:075. Keep fallback model names visible when fallbacks are used.
+agents/logistics/description.md:142:077. Keep fallback provider visible when NVIDIA output is unavailable.
+agents/planner/description.md:85:018. Declare deterministic fallback behavior when it is used.
+agents/planner/description.md:142:075. Keep fallback model names visible when fallbacks are used.
+agents/planner/description.md:144:077. Keep fallback provider visible when NVIDIA output is unavailable.
+agents/prediction/description.md:48:* LightGBM fallback model when configured.
+agents/prediction/description.md:84:018. Declare deterministic fallback behavior when it is used.
+agents/prediction/description.md:141:075. Keep fallback model names visible when fallbacks are used.
+agents/prediction/description.md:143:077. Keep fallback provider visible when NVIDIA output is unavailable.
+agents/reporting/description.md:90:018. Declare deterministic fallback behavior when it is used.
+agents/reporting/description.md:147:075. Keep fallback model names visible when fallbacks are used.
+agents/reporting/description.md:149:077. Keep fallback provider visible when NVIDIA output is unavailable.
+agents/risk/description.md:82:018. Declare deterministic fallback behavior when it is used.
+agents/risk/description.md:139:075. Keep fallback model names visible when fallbacks are used.
+agents/risk/description.md:141:077. Keep fallback provider visible when NVIDIA output is unavailable.
+agents/simulation/description.md:81:018. Declare deterministic fallback behavior when it is used.
+agents/simulation/description.md:138:075. Keep fallback model names visible when fallbacks are used.
+agents/simulation/description.md:140:077. Keep fallback provider visible when NVIDIA output is unavailable.
+agents/validation/description.md:87:018. Declare deterministic fallback behavior when it is used.
+agents/validation/description.md:144:075. Keep fallback model names visible when fallbacks are used.
+agents/validation/description.md:146:077. Keep fallback provider visible when NVIDIA output is unavailable.
+backend/app/agents/fallbacks.py:162:        "generation_mode": "deterministic_fallback",
+backend/app/agents/fallbacks.py:206:        "generation_mode": "deterministic_fallback",
+backend/app/agents/fallbacks.py:219:        "rescue_teams": max(1, math.ceil(max(affected, 1) / 5000)) if affected else 0,
+backend/app/agents/fallbacks.py:220:        "medical_kits": max(1, math.ceil(max(affected * 0.1, deaths * 3) / 100)) if affected or deaths else 0,
+backend/app/agents/fallbacks.py:221:        "water_units": safe_int(affected * 3),
+backend/app/agents/fallbacks.py:222:        "food_packets": safe_int(affected * 2),
+backend/app/agents/fallbacks.py:239:        "generation_mode": "deterministic_fallback",
+backend/app/agents/fallbacks.py:273:        "generation_mode": "deterministic_fallback",
+backend/app/agents/fallbacks.py:301:            "status": "warning" if affected and water_units < affected * 2 else "passed",
+backend/app/agents/fallbacks.py:302:            "delta": "Increase water staging for a 24-hour buffer." if affected and water_units < affected * 2 else "Water staging meets initial response target.",
+backend/app/agents/fallbacks.py:309:        "generation_mode": "deterministic_fallback",
+backend/app/agents/fallbacks.py:356:        "generation_mode": "deterministic_fallback",
+backend/app/agents/fallbacks.py:400:        "generation_mode": "deterministic_fallback",
+backend/app/services/data_enrichment.py:12:SEVERITY_SCALE = {
+backend/app/services/data_enrichment.py:114:            sources.append(_source("Open-Meteo Geocoding", "fallback", "Could not resolve region live."))
+backend/app/services/data_enrichment.py:137:                sources.append(_source("Nominatim", "fallback", "OSM place metadata unavailable."))
+backend/app/services/data_enrichment.py:158:                sources.append(_source("Open-Meteo Forecast", "fallback", "Weather service unavailable."))
+backend/app/services/data_enrichment.py:170:                sources.append(_source("Open-Meteo Elevation", "fallback", "Elevation service unavailable."))
+backend/app/services/data_enrichment.py:221:                sources.append(_source("OpenStreetMap Overpass", "fallback", "Facility lookup unavailable."))
+backend/app/services/data_enrichment.py:238:                sources.append(_source("REST Countries", "fallback", "Country population API unavailable."))
+backend/app/services/data_enrichment.py:251:                sources.append(_source("World Bank", "fallback", "Hospital bed density API unavailable."))
+backend/app/services/llm_client.py:212:    def _parse_completion(completion: Any, fallback_model: str, elapsed_ms: float) -> LLMToolResponse:
+backend/app/services/llm_client.py:234:            model=str(getattr(completion, "model", None) or fallback_model),
+backend/app/services/similarity_service.py:1:"""Real similarity search via Pinecone vector index. No local fallback."""
+backend/app/services/snapshot_guard.py:202:    # Legacy fallback when manifest is omitted in local dev tests only
+backend/app/tools/domain_tools.py:175:            fallback_results = await _query_open_meteo_geo(place, 10)
+backend/app/tools/domain_tools.py:176:            top = _pick_country_match(fallback_results, country_filter)
+backend/app/tools/registry.py:98:    fallback = {
+backend/app/tools/registry.py:105:    return json.dumps(fallback, ensure_ascii=False)[:max_chars]
+config/secret_allowlist.json:13:      "token_sha256": "cd21e00ea1307bbab60d42fb55b7e050de24200098ec3366b21d63b529cfc862",
+frontend/app/page.tsx:122:function asNumber(value: unknown, fallback = 0) {
+frontend/app/page.tsx:123:  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+frontend/app/page.tsx:133:function fallbackReport(scenario: Scenario) {
+frontend/app/page.tsx:168:  const [report, setReport] = useState(fallbackReport(initialScenario));
+scripts/verify_task4_live.py:380:        ["git", "grep", "-n", "-E", r"/ 5000|\* 3|\* 2|186000|4200|132000|_fallback_population", "--", "backend/", "config/"],
+tests/test_task4_orchestration.py:456:    """Verify FastAPI /orchestrate/stream emits real SSE transitions without 500 or fallback."""

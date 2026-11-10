@@ -1,0 +1,95 @@
+# commit=ae4503274a41d4c62618470919f35e03c99e1b5b
+=== 1. OFFLINE PYTEST SUITE ===
+============================= test session starts =============================
+platform win32 -- Python 3.14.6, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\karth\AppData\Local\Programs\Python\Python314\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\karth\Documents\desktop\projects\Disastermind-Agent
+configfile: pyproject.toml
+testpaths: tests
+plugins: anyio-4.14.2, asyncio-1.4.0, cov-7.1.0, mock-3.15.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 44 items / 1 deselected / 43 selected
+
+tests/test_data_pipeline.py::test_filler_literals_and_name_unknown_location_stripped PASSED [  2%]
+tests/test_data_pipeline.py::test_nfc_normalization_applied PASSED       [  4%]
+tests/test_data_pipeline.py::test_quarantines_temporal_inversion_and_invalid_physics PASSED [  6%]
+tests/test_data_pipeline.py::test_exact_content_hash_detects_duplicates PASSED [  9%]
+tests/test_data_pipeline.py::test_d4_startup_guard_refuses_mismatch PASSED [ 11%]
+tests/test_data_pipeline.py::test_d4_fastapi_app_refuses_startup_on_mismatch PASSED [ 13%]
+tests/test_data_pipeline.py::test_a3_deployment_manifest_guard_all_failure_modes PASSED [ 16%]
+tests/test_data_pipeline.py::test_a8_quarantine_source_1988_0424_ven_regression PASSED [ 18%]
+tests/test_historical_stats.py::test_n_below_5_returns_no_data[0] PASSED [ 20%]
+tests/test_historical_stats.py::test_n_below_5_returns_no_data[1] PASSED [ 23%]
+tests/test_historical_stats.py::test_n_below_5_returns_no_data[2] PASSED [ 25%]
+tests/test_historical_stats.py::test_n_below_5_returns_no_data[3] PASSED [ 27%]
+tests/test_historical_stats.py::test_n_below_5_returns_no_data[4] PASSED [ 30%]
+tests/test_historical_stats.py::test_per_metric_guardrail_when_record_count_ok_but_metric_sparse PASSED [ 32%]
+tests/test_historical_stats.py::test_equivalence_against_pure_python_reference PASSED [ 34%]
+tests/test_historical_stats.py::test_properties_permutation_scaling_and_monotonicity PASSED [ 37%]
+tests/test_historical_stats.py::test_mutation_resistance PASSED          [ 39%]
+tests/test_nvidia_generation.py::test_generate_uses_nvidia_chat_completion_contract PASSED [ 41%]
+tests/test_nvidia_generation.py::test_missing_api_key_requires_env_configuration PASSED [ 44%]
+tests/test_pinecone.py::test_pinecone_config_error_when_missing_key PASSED [ 46%]
+tests/test_pinecone.py::test_pinecone_config_error_when_missing_index_name PASSED [ 48%]
+tests/test_pinecone.py::test_pinecone_query_maps_matches_with_metadata PASSED [ 51%]
+tests/test_pinecone.py::test_pinecone_health_check_reports_stats PASSED  [ 53%]
+tests/test_pinecone.py::test_pinecone_scores_direct_descending_no_inversion PASSED [ 55%]
+tests/test_pinecone.py::test_similarity_and_rag_preserve_pinecone_scores_and_query_input_type PASSED [ 58%]
+tests/test_pinecone.py::test_embed_text_requires_input_type_and_retries_5xx PASSED [ 60%]
+tests/test_pinecone.py::test_embedding_service_pinecone_inference_provider PASSED [ 62%]
+tests/test_pinecone.py::test_retrieval_service_filters_threshold_no_data_and_record_ids PASSED [ 65%]
+tests/test_task4_orchestration.py::test_task4_full_orchestration_happy_path_and_schema_export PASSED [ 67%]
+tests/test_task4_orchestration.py::test_task4_scripted_rejection_cases_and_precondition_and_conflict PASSED [ 69%]
+tests/test_task4_orchestration.py::test_task4_bounded_termination_returns_partial_briefing PASSED [ 72%]
+tests/test_task4_orchestration.py::test_task4_fastapi_sse_endpoint_streams_real_events PASSED [ 74%]
+tests/test_task4_orchestration.py::test_task4_looping_risk_forced_to_submit_and_deduped PASSED [ 76%]
+tests/test_task4_orchestration.py::test_task4_budget_exhaustion_abstained_and_no_redelegation PASSED [ 79%]
+tests/test_task4_orchestration.py::test_task4_geocode_parsing_and_compact_result_cap PASSED [ 81%]
+tests/test_task4_orchestration.py::test_task4_no_precedent_with_weather_quantities_and_impossible_premise PASSED [ 83%]
+tests/test_task5_grounding.py::test_allowed_numbers_and_provenance_source_matching PASSED [ 86%]
+tests/test_task5_grounding.py::test_narrative_prose_number_and_off_by_one_rejection PASSED [ 88%]
+tests/test_task5_grounding.py::test_citation_claim_support_and_premise_guards PASSED [ 90%]
+tests/test_task5_grounding.py::test_requires_human_approval_always_overridden_true_by_code[mandatory_evacuation] PASSED [ 93%]
+tests/test_task5_grounding.py::test_requires_human_approval_always_overridden_true_by_code[no_evacuation] PASSED [ 95%]
+tests/test_task5_grounding.py::test_abstention_runs_on_llm_unavailable_and_tool_error PASSED [ 97%]
+tests/test_task5_grounding.py::test_task5_verifier_mutations_must_all_be_caught PASSED [100%]
+
+============================== warnings summary ===============================
+..\..\..\..\AppData\Local\Programs\Python\Python314\Lib\site-packages\fastapi\testclient.py:1
+  C:\Users\karth\AppData\Local\Programs\Python\Python314\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================= 43 passed, 1 deselected, 1 warning in 5.35s =================
+STEP_EXIT=0
+
+=== 2. SUPABASE / PGVECTOR / NVIDIA_EMBEDDING / STALE CLAIMS GREP GATES ===
+[PASS] supabase_pgvector: 0 matches (git grep exit=1)
+[PASS] nvidia_embedding_var: 0 matches (git grep exit=1)
+[PASS] stale_claims_docs_ui: 0 matches (git grep exit=1)
+[PASS] local .env: 0 NVIDIA_EMBEDDING* keys
+GREP_GATES_PASS=True
+
+=== 3. SECRET SCAN WITH ALLOWLIST ===
+[ALLOWLISTED] scripts/preflight.py:127: [REDACTED_ALLOWLISTED_DUMMY_NVIDIA_KEY]
+[ALLOWLISTED] scripts/preflight.py:129: [REDACTED_ALLOWLISTED_DUMMY_PINECONE_KEY]
+SECRET_SCAN_EXIT=0 (allowlisted=2, unexpected=0)
+
+=== 4. GIT STATUS & TRACKED SENSITIVE-PATH HYGIENE ===
+bad_tracked=[], bad_staged=[]
+GIT_HYGIENE_PASS=True
+
+=== 5. SEALED HOLDOUT HASH VERIFICATION (HASHLIB) ===
+holdout-sealed tag SHA-256 = ac086af95630a0626c80aff1c3a35e4f60017ea9a4ec7e37605b8d6393506285
+working file SHA-256       = ac086af95630a0626c80aff1c3a35e4f60017ea9a4ec7e37605b8d6393506285
+expected SHA-256           = ac086af95630a0626c80aff1c3a35e4f60017ea9a4ec7e37605b8d6393506285
+HOLDOUT_HASH_PASS=True
+
+=== SUMMARY ===
+  offline_pytest: PASS
+  grep_gates: PASS
+  secret_scan: PASS
+  git_hygiene: PASS
+  holdout_hash: PASS
+FINAL_EXIT=0
+

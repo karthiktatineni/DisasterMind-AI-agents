@@ -1,0 +1,11 @@
+# commit=ae4503274a41d4c62618470919f35e03c99e1b5b
+=== backend + config + docs/briefing_schema.json ===
+backend/app/services/similarity_service.py:1:"""Real similarity search via Pinecone vector index. No local fallback."""
+config/secret_allowlist.json:13:      "token_sha256": "cd21e00ea1307bbab60d42fb55b7e050de24200098ec3366b21d63b529cfc862",
+
+=== repo excl docs/archive, verification, run_gates, frontend (Task 8) ===
+backend/app/services/similarity_service.py:1:"""Real similarity search via Pinecone vector index. No local fallback."""
+config/secret_allowlist.json:13:      "token_sha256": "cd21e00ea1307bbab60d42fb55b7e050de24200098ec3366b21d63b529cfc862",
+scripts/verify_task4_live.py:380:        ["git", "grep", "-n", "-E", r"/ 5000|\* 3|\* 2|186000|4200|132000|_fallback_population", "--", "backend/", "config/"],
+tests/test_task4_orchestration.py:456:    """Verify FastAPI /orchestrate/stream emits real SSE transitions without 500 or fallback."""
+tests/test_task5_grounding.py:1:"""Task 5 tests: fallback removal, strict numeric/prose provenance grounding, citation claim-support, premise checks, human approval override, abstentions, and verifier mutation suite."""
