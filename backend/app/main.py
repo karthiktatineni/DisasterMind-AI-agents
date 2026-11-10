@@ -21,6 +21,7 @@ from backend.app.security import (
 )
 from backend.app.services.keepalive import KeepAliveService
 from backend.app.services.orchestration import DisasterMindOrchestrator
+from backend.app.services.snapshot_guard import verify_runtime_alignment
 from backend.app.schemas import AgentResult
 
 def _normalize_agent_results(results: list[AgentResult]) -> None:
@@ -92,6 +93,7 @@ app.add_middleware(SecurityHeadersMiddleware, settings=settings)
 
 @app.on_event("startup")
 async def start_keepalive() -> None:
+    verify_runtime_alignment(get_settings())
     await keepalive_service.start()
 
 

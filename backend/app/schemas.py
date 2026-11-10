@@ -124,3 +124,33 @@ class AgentQuestionResponse(BaseModel):
     model: str | None = None
     cited_agents: list[str]
     confidence: float = Field(ge=0, le=1)
+
+
+class RetrievalMatch(BaseModel):
+    id: str
+    event_name: str
+    display_label: str | None = None
+    disaster_type: str | None = None
+    disaster_subtype: str | None = None
+    category_tag: str | None = None
+    country: str | None = None
+    region: str | None = None
+    location: str | None = None
+    start_year: int | None = None
+    total_deaths: float | None = None
+    total_affected: float | None = None
+    total_damage: float | None = None
+    similarity: float
+    search_text: str | None = None
+
+
+class RetrievalResult(BaseModel):
+    status: Literal["ok", "no_data", "error"]
+    record_ids: list[str] = Field(default_factory=list)
+    matches: list[RetrievalMatch] = Field(default_factory=list)
+    threshold_used: float
+    top_score: float | None = None
+    namespace: str
+    dataset_version: str | None = None
+    filters_applied: dict[str, Any] = Field(default_factory=dict)
+    reason: str | None = None

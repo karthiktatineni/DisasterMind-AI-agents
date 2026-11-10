@@ -82,6 +82,8 @@ async def test_pinecone_query_maps_matches_with_metadata():
 async def test_pinecone_health_check_reports_stats():
     settings = Settings(
         nvidia_api_key="test-key",
+        nvidia_embedding_model="nvidia/nemotron-3-embed-1b",
+        nvidia_embedding_dimension=2048,
         pinecone_api_key="pcsk_test",
         pinecone_index_name="disastermind",
     )
@@ -110,6 +112,8 @@ async def test_pinecone_scores_direct_descending_no_inversion():
     """Verify similarity scores come straight from Pinecone scores in descending order (no 1 - score inversion)."""
     settings = Settings(
         nvidia_api_key="test-key",
+        nvidia_embedding_model="nvidia/nemotron-3-embed-1b",
+        nvidia_embedding_dimension=2048,
         pinecone_api_key="pcsk_test",
         pinecone_index_name="disastermind",
     )
@@ -158,6 +162,8 @@ async def test_similarity_and_rag_preserve_pinecone_scores_and_query_input_type(
     fake_openai = SimpleNamespace(embeddings=FakeEmbeddingsAPI())
     settings = Settings(
         nvidia_api_key="test-key",
+        nvidia_embedding_model="nvidia/nemotron-3-embed-1b",
+        nvidia_embedding_dimension=2048,
         pinecone_api_key="pcsk_test",
         pinecone_index_name="disastermind",
     )
@@ -219,7 +225,11 @@ async def test_embed_text_requires_input_type_and_retries_5xx(monkeypatch):
             return SimpleNamespace(data=[SimpleNamespace(embedding=[0.02] * 2048)])
 
     fake_openai = SimpleNamespace(embeddings=FlakyEmbeddingsAPI())
-    settings = Settings(nvidia_api_key="test-key")
+    settings = Settings(
+        nvidia_api_key="test-key",
+        nvidia_embedding_model="nvidia/nemotron-3-embed-1b",
+        nvidia_embedding_dimension=2048,
+    )
     emb = EmbeddingService(settings=settings, client=fake_openai)
 
     with pytest.raises(TypeError):
@@ -233,5 +243,128 @@ async def test_embed_text_requires_input_type_and_retries_5xx(monkeypatch):
     assert len(vecs[0]) == 2048
     assert len(sleep_delays) == 2
     assert recorded_calls[-1]["extra_body"]["input_type"] == "passage"
+
+
+@pytest.mark.asyncio
+async def test_embedding_service_pinecone_inference_provider(monkeypatch):
+    """Verify Pinecone-hosted models route to Pinecone Inference with input_type and retry on transient errors."""
+    from types import SimpleNamespace
+    from backend.app.services.embedding_service import EmbeddingService
+
+    sleep_delays = []
+
+    async def fake_sleep(delay):
+        sleep_delays.append(delay)
+
+    monkeypatch.setattr("backend.app.services.embedding_service.asyncio.sleep", fake_sleep)
+
+    recorded = []
+    attempts = {"n": 0}
+
+    class FakeInference:
+        async def embed(self, *, model, inputs, parameters=None):
+            recorded.append({"model": model, "inputs": inputs, "parameters": parameters})
+            attempts["n"] += 1
+            if attempts["n"] == 1:
+                raise RuntimeError("transient 503")
+            return SimpleNamespace(data=[SimpleNamespace(values=[0.25] * 1024) for _ in inputs])
+
+    fake_pc = SimpleNamespace(inference=FakeInference())
+    settings = Settings(
+        nvidia_api_key="test-key",
+        nvidia_embedding_model="llama-text-embed-v2",
+        nvidia_embedding_dimension=1024,
+        pinecone_api_key="pcsk_test",
+    )
+    emb = EmbeddingService(settings=settings, pinecone_client=fake_pc)
+    assert emb.provider == "pinecone-inference"
+
+    qvec = await emb.embed_text("cyclone Odisha", input_type="query")
+    assert len(qvec) == 1024
+    assert len(sleep_delays) == 1
+    assert recorded[-1]["model"] == "llama-text-embed-v2"
+    assert recorded[-1]["parameters"]["input_type"] == "query"
+
+    pvecs = await emb.embed_texts(["record one"], input_type="passage")
+    assert len(pvecs) == 1
+    assert recorded[-1]["parameters"]["input_type"] == "passage"
+
+
+@pytest.mark.asyncio
+async def test_retrieval_service_filters_threshold_no_data_and_record_ids():
+    """Verify RetrievalService metadata filter construction, calibrated threshold reject (no_data), and record_ids."""
+    from types import SimpleNamespace
+    from backend.app.services.embedding_service import EmbeddingService
+    from backend.app.services.rag_service import RAGService
+    from backend.app.services.retrieval_service import RetrievalService
+    from backend.app.services.similarity_service import SimilarityService
+    from backend.app.schemas import DisasterScenario
+
+    class FakeInference:
+        async def embed(self, *, model, inputs, parameters=None):
+            return SimpleNamespace(data=[SimpleNamespace(values=[0.1] * 1024) for _ in inputs])
+
+    settings = Settings(
+        nvidia_api_key="test-key",
+        nvidia_embedding_model="llama-text-embed-v2",
+        nvidia_embedding_dimension=1024,
+        pinecone_api_key="pcsk_test",
+        pinecone_index_name="disastermind",
+        pinecone_namespace="v2-test",
+        similarity_threshold=0.35,
+    )
+    emb = EmbeddingService(settings=settings, pinecone_client=SimpleNamespace(inference=FakeInference()))
+
+    mock_pc = MagicMock()
+    mock_index = MagicMock()
+    mock_pc.Index.return_value = mock_index
+    mock_index.query.return_value = {
+        "matches": [
+            {"id": "2019-1", "score": 0.62, "metadata": {"event_name": "Cyclone Fani", "disaster_type": "Storm", "country": "India", "start_year": 2019}},
+            {"id": "1999-2", "score": 0.28, "metadata": {"event_name": "Below Threshold", "disaster_type": "Storm", "country": "India", "start_year": 1999}},
+        ]
+    }
+    pc_client = PineconeVectorClient(settings=settings, pc=mock_pc)
+    retrieval = RetrievalService(settings=settings, embedding_service=emb, pinecone_client=pc_client)
+
+    res = await retrieval.search(
+        "Storm in India",
+        top_k=5,
+        disaster_type="Storm",
+        country="India",
+        year_min=2000,
+        year_max=2024,
+    )
+    assert res.status == "ok"
+    assert res.record_ids == ["2019-1"]
+    assert res.top_score == pytest.approx(0.62)
+    assert res.threshold_used == pytest.approx(0.35)
+    assert mock_index.query.call_args.kwargs["filter"] == {
+        "$and": [
+            {"disaster_type": {"$eq": "Storm"}},
+            {"country": {"$eq": "India"}},
+            {"start_year": {"$gte": 2000}},
+            {"start_year": {"$lte": 2024}},
+        ]
+    }
+
+    # Out-of-domain / low-similarity score triggers explicit no_data
+    mock_index.query.return_value = {
+        "matches": [
+            {"id": "2010-9", "score": 0.21, "metadata": {"event_name": "Weak Match", "start_year": 2010}},
+        ]
+    }
+    ood = await retrieval.search("chocolate cake recipe", top_k=5)
+    assert ood.status == "no_data"
+    assert ood.record_ids == []
+
+    sim = SimilarityService(embedding_service=emb, pinecone_client=pc_client, settings=settings)
+    rag = RAGService(embedding_service=emb, pinecone_client=pc_client, settings=settings)
+    scenario = DisasterScenario(disaster_type="Storm", region="Odisha", country="India", severity="High")
+    sim_ood = await sim.search_scenario(scenario, top_k=5)
+    rag_ood = await rag.retrieve(scenario, top_k=5)
+    assert sim_ood["status"] == "insufficient_data" and sim_ood["no_data"] is True
+    assert rag_ood["status"] == "insufficient_data" and rag_ood["no_data"] is True
+
 
 

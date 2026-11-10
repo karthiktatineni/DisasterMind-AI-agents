@@ -1,0 +1,71 @@
+{
+  "dataset_version": "3d35e5131d79a79d",
+  "model_id": "llama-text-embed-v2",
+  "dimension": 1024,
+  "namespace": "v2-3d35e5131d79a79d-llama-text-embed-v2",
+  "snapshot_count": 16833,
+  "pinecone_namespace_count": 16833,
+  "ledger_count": 16833,
+  "id_sets_equal": true,
+  "fetched_checked": 16833,
+  "metadata_mismatches": 0,
+  "vector_mismatches": 0,
+  "unknown_literal_hits": 0,
+  "d1": {
+    "pass": true,
+    "snapshot_count": 16833,
+    "pinecone_namespace_count": 16833,
+    "ledger_count": 16833,
+    "id_sets_equal": true,
+    "fetched_checked": 16833,
+    "metadata_mismatches": 0,
+    "vector_mismatches": 0
+  },
+  "d2": {
+    "pass": true,
+    "empty_search_text_count": 0,
+    "unknown_literal_hits": 0,
+    "duplicate_id_count": 0,
+    "duplicate_content_hash_count": 0
+  },
+  "d3": {
+    "pass": true,
+    "positive_control_http_requests": 4,
+    "positive_control_upsert_calls": 1,
+    "second_run_result": {
+      "dataset_version": "3d35e5131d79a79d",
+      "model_id": "llama-text-embed-v2",
+      "provider": "pinecone",
+      "dimension": 1024,
+      "namespace": "v2-3d35e5131d79a79d-llama-text-embed-v2",
+      "embedded_count": 0,
+      "upserted_count": 0,
+      "total_in_ledger": 16833
+    },
+    "second_run_total_http_calls": 0,
+    "second_run_embedding_http_calls": 0,
+    "second_run_upsert_http_calls": 0
+  },
+  "d4": {
+    "pass": true,
+    "live_alignment": {
+      "status": "ok",
+      "dataset_version": "3d35e5131d79a79d",
+      "embedding_model": "llama-text-embed-v2",
+      "pinecone_namespace": "v2-3d35e5131d79a79d-llama-text-embed-v2",
+      "embedding_dimension": "1024"
+    },
+    "refused_mismatches": [
+      "embedding_model: embedding_model mismatch: config='wrong-model' != ledger='llama-text-embed-v2'",
+      "pinecone_namespace: pinecone_namespace mismatch: config='wrong-ns' != ledger='v2-3d35e5131d79a79d-llama-text-embed-v2'",
+      "dataset_version: dataset_version mismatch: snapshot='3d35e5131d79a79d' != ledger='0000000000000000'"
+    ]
+  },
+  "d5": {
+    "pass": true,
+    "empty_metadata_match_skipped": true,
+    "historical_stats_n_below_5_no_data": true,
+    "live_metadata_parity_checked": 16833
+  },
+  "all_d1_d5_pass": true
+}

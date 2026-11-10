@@ -14,13 +14,13 @@ load_dotenv(PROJECT_ROOT / ".env", override=False)
 @dataclass(frozen=True)
 class Settings:
     nvidia_api_key: str
-    nvidia_embedding_model: str = "nvidia/nemotron-3.5-embed-1b"
-    nvidia_embedding_dimension: int = 2048
-    similarity_threshold: float = 0.2
+    nvidia_embedding_model: str = "llama-text-embed-v2"
+    nvidia_embedding_dimension: int = 1024
+    similarity_threshold: float = 0.3211
     pinecone_api_key: str = ""
     pinecone_index_name: str = "disastermind"
     pinecone_environment: str = ""
-    pinecone_namespace: str = "v1-nemotron-3.5-embed-1b"
+    pinecone_namespace: str = "v2-3d35e5131d79a79d-llama-text-embed-v2"
     nvidia_base_url: str = "https://integrate.api.nvidia.com/v1"
     nvidia_model: str = "nvidia/nemotron-3-ultra-550b-a55b"
     nvidia_max_tokens: int = 1024
@@ -91,13 +91,13 @@ def get_settings() -> Settings:
     ).strip()
     return Settings(
         nvidia_api_key=os.getenv("NVIDIA_API_KEY", "").strip(),
-        nvidia_embedding_model=os.getenv("NVIDIA_EMBEDDING_MODEL", "nvidia/nemotron-3.5-embed-1b").strip(),
-        nvidia_embedding_dimension=_get_int("NVIDIA_EMBEDDING_DIMENSION", 2048),
-        similarity_threshold=_get_float("SIMILARITY_THRESHOLD", 0.2),
+        nvidia_embedding_model=os.getenv("NVIDIA_EMBEDDING_MODEL", "llama-text-embed-v2").strip(),
+        nvidia_embedding_dimension=_get_int("NVIDIA_EMBEDDING_DIMENSION", 1024),
+        similarity_threshold=_get_float("SIMILARITY_THRESHOLD", 0.3211),
         pinecone_api_key=os.getenv("PINECONE_API_KEY", "").strip(),
         pinecone_index_name=os.getenv("PINECONE_INDEX_NAME", "disastermind").strip(),
         pinecone_environment=os.getenv("PINECONE_ENVIRONMENT", "").strip(),
-        pinecone_namespace=os.getenv("PINECONE_NAMESPACE", "v1-nemotron-3.5-embed-1b").strip(),
+        pinecone_namespace=os.getenv("PINECONE_NAMESPACE", "v2-3d35e5131d79a79d-llama-text-embed-v2").strip(),
         nvidia_base_url=os.getenv(
             "NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1"
         ).strip(),

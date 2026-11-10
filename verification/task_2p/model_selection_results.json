@@ -1,0 +1,1708 @@
+{
+  "dataset_version": "3d35e5131d79a79d",
+  "snapshot_count": 16833,
+  "dev_answerable_queries": 35,
+  "dev_ood_queries": 5,
+  "results": [
+    {
+      "model_id": "nvidia/nemotron-3.5-embed-1b",
+      "provider": "nvidia",
+      "dimension": 2048,
+      "answerable_count": 35,
+      "ood_count": 5,
+      "recall@1": 0.8571,
+      "recall@5": 0.9143,
+      "recall@10": 0.9429,
+      "mrr": 0.8857,
+      "mrr_ci_95": [
+        0.781,
+        0.9714
+      ],
+      "calibrated_threshold": 0.3067,
+      "ood_max_top1_score": 0.2967,
+      "ans_min_top1_score": 0.1674,
+      "ood_false_positives_at_threshold": 0,
+      "ans_rejected_at_threshold": 4,
+      "mean_query_latency_ms": 1753.79,
+      "p95_query_latency_ms": 1765.57,
+      "per_query": [
+        {
+          "id": "DEV-RET-01",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.334,
+          "top1_id": "2000-0656-JPN"
+        },
+        {
+          "id": "DEV-RET-02",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.6728,
+          "top1_id": "2007-0556-BGD"
+        },
+        {
+          "id": "DEV-RET-03",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.4426,
+          "top1_id": "2018-0250-CHN"
+        },
+        {
+          "id": "DEV-RET-04",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5957,
+          "top1_id": "2018-0409-USA"
+        },
+        {
+          "id": "DEV-RET-05",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5883,
+          "top1_id": "2010-0372-RUS"
+        },
+        {
+          "id": "DEV-RET-06",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.4366,
+          "top1_id": "2022-9254-NER"
+        },
+        {
+          "id": "DEV-RET-07",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5533,
+          "top1_id": "2005-0575-PAK"
+        },
+        {
+          "id": "DEV-RET-08",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.6516,
+          "top1_id": "2019-0110-MOZ"
+        },
+        {
+          "id": "DEV-RET-09",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.4969,
+          "top1_id": "2018-0295-IND"
+        },
+        {
+          "id": "DEV-RET-10",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.6091,
+          "top1_id": "2016-0172-CAN"
+        },
+        {
+          "id": "DEV-RET-11",
+          "category": "relevant",
+          "rank": 3,
+          "rr": 0.3333,
+          "top1_score": 0.3573,
+          "top1_id": "2001-0596-PHL"
+        },
+        {
+          "id": "DEV-RET-12",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.6388,
+          "top1_id": "2010-0557-HTI"
+        },
+        {
+          "id": "DEV-RET-13",
+          "category": "relevant",
+          "rank": 6,
+          "rr": 0.1667,
+          "top1_score": 0.4624,
+          "top1_id": "2018-0374-HND"
+        },
+        {
+          "id": "DEV-RET-14",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5259,
+          "top1_id": "2003-0630-IRN"
+        },
+        {
+          "id": "DEV-RET-15",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5374,
+          "top1_id": "2020-0110-ZMB"
+        },
+        {
+          "id": "DEV-RET-16",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5662,
+          "top1_id": "2013-0433-PHL"
+        },
+        {
+          "id": "DEV-RET-17",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5556,
+          "top1_id": "2017-0382-MEX"
+        },
+        {
+          "id": "DEV-RET-18",
+          "category": "relevant",
+          "rank": 2,
+          "rr": 0.5,
+          "top1_score": 0.6184,
+          "top1_id": "2012-0019-ROU"
+        },
+        {
+          "id": "DEV-RET-19",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.6176,
+          "top1_id": "2006-0096-PHL"
+        },
+        {
+          "id": "DEV-RET-20",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.6266,
+          "top1_id": "2010-0170-ISL"
+        },
+        {
+          "id": "DEV-RET-21",
+          "category": "typo",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.6077,
+          "top1_id": "2005-0575-PAK"
+        },
+        {
+          "id": "DEV-RET-22",
+          "category": "typo",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.6013,
+          "top1_id": "2008-0184-MMR"
+        },
+        {
+          "id": "DEV-RET-23",
+          "category": "typo",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.4448,
+          "top1_id": "2011-0082-JPN"
+        },
+        {
+          "id": "DEV-RET-24",
+          "category": "typo",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5029,
+          "top1_id": "2021-0411-DEU"
+        },
+        {
+          "id": "DEV-RET-25",
+          "category": "typo",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.4072,
+          "top1_id": "2005-0467-USA"
+        },
+        {
+          "id": "DEV-RET-26",
+          "category": "vague",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.2743,
+          "top1_id": "2024-0073-MHL"
+        },
+        {
+          "id": "DEV-RET-27",
+          "category": "vague",
+          "rank": null,
+          "rr": 0.0,
+          "top1_score": 0.3372,
+          "top1_id": "2003-0241-EGY"
+        },
+        {
+          "id": "DEV-RET-28",
+          "category": "vague",
+          "rank": null,
+          "rr": 0.0,
+          "top1_score": 0.1674,
+          "top1_id": "2002-0862-TZA"
+        },
+        {
+          "id": "DEV-RET-29",
+          "category": "vague",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.2094,
+          "top1_id": "2024-0403-USA"
+        },
+        {
+          "id": "DEV-RET-30",
+          "category": "vague",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.285,
+          "top1_id": "2019-0217-IND"
+        },
+        {
+          "id": "DEV-RET-31",
+          "category": "multilingual",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.6374,
+          "top1_id": "2010-0091-CHL"
+        },
+        {
+          "id": "DEV-RET-32",
+          "category": "multilingual",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5086,
+          "top1_id": "2003-0641-COD"
+        },
+        {
+          "id": "DEV-RET-33",
+          "category": "multilingual",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.4103,
+          "top1_id": "2000-0853-ARG"
+        },
+        {
+          "id": "DEV-RET-34",
+          "category": "multilingual",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.607,
+          "top1_id": "2009-0136-ITA"
+        },
+        {
+          "id": "DEV-RET-35",
+          "category": "multilingual",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5627,
+          "top1_id": "2003-0391-FRA"
+        },
+        {
+          "id": "DEV-RET-36",
+          "category": "out_of_domain",
+          "top1_score": 0.2804
+        },
+        {
+          "id": "DEV-RET-37",
+          "category": "out_of_domain",
+          "top1_score": 0.1832
+        },
+        {
+          "id": "DEV-RET-38",
+          "category": "out_of_domain",
+          "top1_score": 0.1337
+        },
+        {
+          "id": "DEV-RET-39",
+          "category": "out_of_domain",
+          "top1_score": 0.2967
+        },
+        {
+          "id": "DEV-RET-40",
+          "category": "out_of_domain",
+          "top1_score": 0.0888
+        }
+      ]
+    },
+    {
+      "model_id": "nvidia/nemotron-3-embed-1b",
+      "provider": "nvidia",
+      "dimension": 2048,
+      "answerable_count": 35,
+      "ood_count": 5,
+      "recall@1": 0.8571,
+      "recall@5": 0.9429,
+      "recall@10": 0.9429,
+      "mrr": 0.8867,
+      "mrr_ci_95": [
+        0.7819,
+        0.9714
+      ],
+      "calibrated_threshold": 0.3065,
+      "ood_max_top1_score": 0.2965,
+      "ans_min_top1_score": 0.1676,
+      "ood_false_positives_at_threshold": 0,
+      "ans_rejected_at_threshold": 4,
+      "mean_query_latency_ms": 280.06,
+      "p95_query_latency_ms": 323.87,
+      "per_query": [
+        {
+          "id": "DEV-RET-01",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.3342,
+          "top1_id": "2000-0656-JPN"
+        },
+        {
+          "id": "DEV-RET-02",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.6734,
+          "top1_id": "2007-0556-BGD"
+        },
+        {
+          "id": "DEV-RET-03",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.4422,
+          "top1_id": "2018-0250-CHN"
+        },
+        {
+          "id": "DEV-RET-04",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5954,
+          "top1_id": "2018-0409-USA"
+        },
+        {
+          "id": "DEV-RET-05",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5882,
+          "top1_id": "2010-0372-RUS"
+        },
+        {
+          "id": "DEV-RET-06",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.4367,
+          "top1_id": "2022-9254-NER"
+        },
+        {
+          "id": "DEV-RET-07",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5538,
+          "top1_id": "2005-0575-PAK"
+        },
+        {
+          "id": "DEV-RET-08",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.6512,
+          "top1_id": "2019-0110-MOZ"
+        },
+        {
+          "id": "DEV-RET-09",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.4974,
+          "top1_id": "2018-0295-IND"
+        },
+        {
+          "id": "DEV-RET-10",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.6097,
+          "top1_id": "2016-0172-CAN"
+        },
+        {
+          "id": "DEV-RET-11",
+          "category": "relevant",
+          "rank": 3,
+          "rr": 0.3333,
+          "top1_score": 0.3566,
+          "top1_id": "2001-0596-PHL"
+        },
+        {
+          "id": "DEV-RET-12",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.6397,
+          "top1_id": "2010-0557-HTI"
+        },
+        {
+          "id": "DEV-RET-13",
+          "category": "relevant",
+          "rank": 5,
+          "rr": 0.2,
+          "top1_score": 0.4622,
+          "top1_id": "2018-0374-HND"
+        },
+        {
+          "id": "DEV-RET-14",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5259,
+          "top1_id": "2003-0630-IRN"
+        },
+        {
+          "id": "DEV-RET-15",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.538,
+          "top1_id": "2020-0110-ZMB"
+        },
+        {
+          "id": "DEV-RET-16",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5674,
+          "top1_id": "2013-0433-PHL"
+        },
+        {
+          "id": "DEV-RET-17",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.556,
+          "top1_id": "2017-0382-MEX"
+        },
+        {
+          "id": "DEV-RET-18",
+          "category": "relevant",
+          "rank": 2,
+          "rr": 0.5,
+          "top1_score": 0.6181,
+          "top1_id": "2012-0019-ROU"
+        },
+        {
+          "id": "DEV-RET-19",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.6177,
+          "top1_id": "2006-0096-PHL"
+        },
+        {
+          "id": "DEV-RET-20",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.6268,
+          "top1_id": "2010-0170-ISL"
+        },
+        {
+          "id": "DEV-RET-21",
+          "category": "typo",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.6094,
+          "top1_id": "2005-0575-PAK"
+        },
+        {
+          "id": "DEV-RET-22",
+          "category": "typo",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.6011,
+          "top1_id": "2008-0184-MMR"
+        },
+        {
+          "id": "DEV-RET-23",
+          "category": "typo",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.4442,
+          "top1_id": "2011-0082-JPN"
+        },
+        {
+          "id": "DEV-RET-24",
+          "category": "typo",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5047,
+          "top1_id": "2021-0411-DEU"
+        },
+        {
+          "id": "DEV-RET-25",
+          "category": "typo",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.4067,
+          "top1_id": "2005-0467-USA"
+        },
+        {
+          "id": "DEV-RET-26",
+          "category": "vague",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.275,
+          "top1_id": "2024-0073-MHL"
+        },
+        {
+          "id": "DEV-RET-27",
+          "category": "vague",
+          "rank": null,
+          "rr": 0.0,
+          "top1_score": 0.3367,
+          "top1_id": "2003-0241-EGY"
+        },
+        {
+          "id": "DEV-RET-28",
+          "category": "vague",
+          "rank": null,
+          "rr": 0.0,
+          "top1_score": 0.1676,
+          "top1_id": "2002-0862-TZA"
+        },
+        {
+          "id": "DEV-RET-29",
+          "category": "vague",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.2097,
+          "top1_id": "2024-0403-USA"
+        },
+        {
+          "id": "DEV-RET-30",
+          "category": "vague",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.2845,
+          "top1_id": "2019-0217-IND"
+        },
+        {
+          "id": "DEV-RET-31",
+          "category": "multilingual",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.6372,
+          "top1_id": "2010-0091-CHL"
+        },
+        {
+          "id": "DEV-RET-32",
+          "category": "multilingual",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5087,
+          "top1_id": "2003-0641-COD"
+        },
+        {
+          "id": "DEV-RET-33",
+          "category": "multilingual",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.4101,
+          "top1_id": "2000-0853-ARG"
+        },
+        {
+          "id": "DEV-RET-34",
+          "category": "multilingual",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.6072,
+          "top1_id": "2009-0136-ITA"
+        },
+        {
+          "id": "DEV-RET-35",
+          "category": "multilingual",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5615,
+          "top1_id": "2003-0391-FRA"
+        },
+        {
+          "id": "DEV-RET-36",
+          "category": "out_of_domain",
+          "top1_score": 0.2801
+        },
+        {
+          "id": "DEV-RET-37",
+          "category": "out_of_domain",
+          "top1_score": 0.1835
+        },
+        {
+          "id": "DEV-RET-38",
+          "category": "out_of_domain",
+          "top1_score": 0.1332
+        },
+        {
+          "id": "DEV-RET-39",
+          "category": "out_of_domain",
+          "top1_score": 0.2965
+        },
+        {
+          "id": "DEV-RET-40",
+          "category": "out_of_domain",
+          "top1_score": 0.0881
+        }
+      ]
+    },
+    {
+      "model_id": "nvidia/nemotron-3.5-embed-8b",
+      "provider": "nvidia",
+      "dimension": 4096,
+      "answerable_count": 35,
+      "ood_count": 5,
+      "recall@1": 0.8571,
+      "recall@5": 0.8857,
+      "recall@10": 0.8857,
+      "mrr": 0.8714,
+      "mrr_ci_95": [
+        0.7571,
+        0.9714
+      ],
+      "calibrated_threshold": 0.291,
+      "ood_max_top1_score": 0.281,
+      "ans_min_top1_score": 0.183,
+      "ood_false_positives_at_threshold": 0,
+      "ans_rejected_at_threshold": 5,
+      "mean_query_latency_ms": 301.31,
+      "p95_query_latency_ms": 458.36,
+      "per_query": [
+        {
+          "id": "DEV-RET-01",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.2904,
+          "top1_id": "2018-0183-JPN"
+        },
+        {
+          "id": "DEV-RET-02",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.661,
+          "top1_id": "2007-0556-BGD"
+        },
+        {
+          "id": "DEV-RET-03",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.3738,
+          "top1_id": "2003-0315-CHN"
+        },
+        {
+          "id": "DEV-RET-04",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5998,
+          "top1_id": "2018-0409-USA"
+        },
+        {
+          "id": "DEV-RET-05",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.4928,
+          "top1_id": "2010-0372-RUS"
+        },
+        {
+          "id": "DEV-RET-06",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.4176,
+          "top1_id": "2022-9254-NER"
+        },
+        {
+          "id": "DEV-RET-07",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5301,
+          "top1_id": "2005-0575-PAK"
+        },
+        {
+          "id": "DEV-RET-08",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.596,
+          "top1_id": "2019-0110-MOZ"
+        },
+        {
+          "id": "DEV-RET-09",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.495,
+          "top1_id": "2018-0295-IND"
+        },
+        {
+          "id": "DEV-RET-10",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.6031,
+          "top1_id": "2016-0172-CAN"
+        },
+        {
+          "id": "DEV-RET-11",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.3332,
+          "top1_id": "2011-0564-PHL"
+        },
+        {
+          "id": "DEV-RET-12",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5684,
+          "top1_id": "2010-0557-HTI"
+        },
+        {
+          "id": "DEV-RET-13",
+          "category": "relevant",
+          "rank": null,
+          "rr": 0.0,
+          "top1_score": 0.4273,
+          "top1_id": "2018-0374-HND"
+        },
+        {
+          "id": "DEV-RET-14",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.4469,
+          "top1_id": "2003-0630-IRN"
+        },
+        {
+          "id": "DEV-RET-15",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5122,
+          "top1_id": "2020-0110-ZMB"
+        },
+        {
+          "id": "DEV-RET-16",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.4644,
+          "top1_id": "2013-0433-PHL"
+        },
+        {
+          "id": "DEV-RET-17",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5404,
+          "top1_id": "2017-0382-MEX"
+        },
+        {
+          "id": "DEV-RET-18",
+          "category": "relevant",
+          "rank": 2,
+          "rr": 0.5,
+          "top1_score": 0.5421,
+          "top1_id": "2012-0019-ROU"
+        },
+        {
+          "id": "DEV-RET-19",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.6336,
+          "top1_id": "2006-0096-PHL"
+        },
+        {
+          "id": "DEV-RET-20",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.6142,
+          "top1_id": "2010-0170-ISL"
+        },
+        {
+          "id": "DEV-RET-21",
+          "category": "typo",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5485,
+          "top1_id": "2005-0575-PAK"
+        },
+        {
+          "id": "DEV-RET-22",
+          "category": "typo",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5759,
+          "top1_id": "2008-0184-MMR"
+        },
+        {
+          "id": "DEV-RET-23",
+          "category": "typo",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.4218,
+          "top1_id": "2011-0082-JPN"
+        },
+        {
+          "id": "DEV-RET-24",
+          "category": "typo",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.4408,
+          "top1_id": "2021-0411-DEU"
+        },
+        {
+          "id": "DEV-RET-25",
+          "category": "typo",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.2948,
+          "top1_id": "2005-0467-USA"
+        },
+        {
+          "id": "DEV-RET-26",
+          "category": "vague",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.2966,
+          "top1_id": "2024-0073-MHL"
+        },
+        {
+          "id": "DEV-RET-27",
+          "category": "vague",
+          "rank": null,
+          "rr": 0.0,
+          "top1_score": 0.2818,
+          "top1_id": "2004-0296-BGD"
+        },
+        {
+          "id": "DEV-RET-28",
+          "category": "vague",
+          "rank": null,
+          "rr": 0.0,
+          "top1_score": 0.2454,
+          "top1_id": "2017-0090-COL"
+        },
+        {
+          "id": "DEV-RET-29",
+          "category": "vague",
+          "rank": null,
+          "rr": 0.0,
+          "top1_score": 0.183,
+          "top1_id": "2023-0438-GRC"
+        },
+        {
+          "id": "DEV-RET-30",
+          "category": "vague",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.2761,
+          "top1_id": "2021-0390-USA"
+        },
+        {
+          "id": "DEV-RET-31",
+          "category": "multilingual",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5049,
+          "top1_id": "2010-0091-CHL"
+        },
+        {
+          "id": "DEV-RET-32",
+          "category": "multilingual",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.4134,
+          "top1_id": "2012-0046-COD"
+        },
+        {
+          "id": "DEV-RET-33",
+          "category": "multilingual",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.3437,
+          "top1_id": "2000-0853-ARG"
+        },
+        {
+          "id": "DEV-RET-34",
+          "category": "multilingual",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.4978,
+          "top1_id": "2009-0136-ITA"
+        },
+        {
+          "id": "DEV-RET-35",
+          "category": "multilingual",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.4562,
+          "top1_id": "2003-0391-FRA"
+        },
+        {
+          "id": "DEV-RET-36",
+          "category": "out_of_domain",
+          "top1_score": 0.2209
+        },
+        {
+          "id": "DEV-RET-37",
+          "category": "out_of_domain",
+          "top1_score": 0.1361
+        },
+        {
+          "id": "DEV-RET-38",
+          "category": "out_of_domain",
+          "top1_score": 0.1065
+        },
+        {
+          "id": "DEV-RET-39",
+          "category": "out_of_domain",
+          "top1_score": 0.281
+        },
+        {
+          "id": "DEV-RET-40",
+          "category": "out_of_domain",
+          "top1_score": 0.0988
+        }
+      ]
+    },
+    {
+      "model_id": "llama-text-embed-v2",
+      "provider": "pinecone",
+      "dimension": 1024,
+      "answerable_count": 35,
+      "ood_count": 5,
+      "recall@1": 0.8571,
+      "recall@5": 0.9143,
+      "recall@10": 0.9429,
+      "mrr": 0.8905,
+      "mrr_ci_95": [
+        0.7857,
+        0.9714
+      ],
+      "calibrated_threshold": 0.3211,
+      "ood_max_top1_score": 0.3111,
+      "ans_min_top1_score": 0.2163,
+      "ood_false_positives_at_threshold": 0,
+      "ans_rejected_at_threshold": 5,
+      "mean_query_latency_ms": 391.26,
+      "p95_query_latency_ms": 450.95,
+      "per_query": [
+        {
+          "id": "DEV-RET-01",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.4001,
+          "top1_id": "2005-0129-JPN"
+        },
+        {
+          "id": "DEV-RET-02",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.6259,
+          "top1_id": "2007-0556-BGD"
+        },
+        {
+          "id": "DEV-RET-03",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.3902,
+          "top1_id": "2008-0263-CHN"
+        },
+        {
+          "id": "DEV-RET-04",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.6759,
+          "top1_id": "2018-0409-USA"
+        },
+        {
+          "id": "DEV-RET-05",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5035,
+          "top1_id": "2010-0372-RUS"
+        },
+        {
+          "id": "DEV-RET-06",
+          "category": "relevant",
+          "rank": 2,
+          "rr": 0.5,
+          "top1_score": 0.4454,
+          "top1_id": "2024-0569-TCD"
+        },
+        {
+          "id": "DEV-RET-07",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5609,
+          "top1_id": "2005-0575-PAK"
+        },
+        {
+          "id": "DEV-RET-08",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5644,
+          "top1_id": "2019-0110-MOZ"
+        },
+        {
+          "id": "DEV-RET-09",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5052,
+          "top1_id": "2018-0295-IND"
+        },
+        {
+          "id": "DEV-RET-10",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.6049,
+          "top1_id": "2016-0172-CAN"
+        },
+        {
+          "id": "DEV-RET-11",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.4176,
+          "top1_id": "2011-0564-PHL"
+        },
+        {
+          "id": "DEV-RET-12",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5434,
+          "top1_id": "2010-0557-HTI"
+        },
+        {
+          "id": "DEV-RET-13",
+          "category": "relevant",
+          "rank": null,
+          "rr": 0.0,
+          "top1_score": 0.3838,
+          "top1_id": "2002-0583-GTM"
+        },
+        {
+          "id": "DEV-RET-14",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.417,
+          "top1_id": "2003-0630-IRN"
+        },
+        {
+          "id": "DEV-RET-15",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5481,
+          "top1_id": "2020-0110-ZMB"
+        },
+        {
+          "id": "DEV-RET-16",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5254,
+          "top1_id": "2013-0433-PHL"
+        },
+        {
+          "id": "DEV-RET-17",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5573,
+          "top1_id": "2017-0382-MEX"
+        },
+        {
+          "id": "DEV-RET-18",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.4894,
+          "top1_id": "2012-0485-POL"
+        },
+        {
+          "id": "DEV-RET-19",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.6034,
+          "top1_id": "2006-0096-PHL"
+        },
+        {
+          "id": "DEV-RET-20",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5752,
+          "top1_id": "2010-0170-ISL"
+        },
+        {
+          "id": "DEV-RET-21",
+          "category": "typo",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.54,
+          "top1_id": "2005-0575-PAK"
+        },
+        {
+          "id": "DEV-RET-22",
+          "category": "typo",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5896,
+          "top1_id": "2008-0184-MMR"
+        },
+        {
+          "id": "DEV-RET-23",
+          "category": "typo",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.3607,
+          "top1_id": "2011-0082-JPN"
+        },
+        {
+          "id": "DEV-RET-24",
+          "category": "typo",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.4666,
+          "top1_id": "2021-0411-DEU"
+        },
+        {
+          "id": "DEV-RET-25",
+          "category": "typo",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.2979,
+          "top1_id": "2005-0467-USA"
+        },
+        {
+          "id": "DEV-RET-26",
+          "category": "vague",
+          "rank": 2,
+          "rr": 0.5,
+          "top1_score": 0.2779,
+          "top1_id": "2001-0004-USA"
+        },
+        {
+          "id": "DEV-RET-27",
+          "category": "vague",
+          "rank": null,
+          "rr": 0.0,
+          "top1_score": 0.3711,
+          "top1_id": "2003-0241-EGY"
+        },
+        {
+          "id": "DEV-RET-28",
+          "category": "vague",
+          "rank": 6,
+          "rr": 0.1667,
+          "top1_score": 0.2407,
+          "top1_id": "2003-0633-USA"
+        },
+        {
+          "id": "DEV-RET-29",
+          "category": "vague",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.2163,
+          "top1_id": "2017-0271-CAN"
+        },
+        {
+          "id": "DEV-RET-30",
+          "category": "vague",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.3019,
+          "top1_id": "2021-0390-USA"
+        },
+        {
+          "id": "DEV-RET-31",
+          "category": "multilingual",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5579,
+          "top1_id": "2010-0091-CHL"
+        },
+        {
+          "id": "DEV-RET-32",
+          "category": "multilingual",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5194,
+          "top1_id": "2006-0673-COD"
+        },
+        {
+          "id": "DEV-RET-33",
+          "category": "multilingual",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.456,
+          "top1_id": "2021-0129-ARG"
+        },
+        {
+          "id": "DEV-RET-34",
+          "category": "multilingual",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.5199,
+          "top1_id": "2009-0136-ITA"
+        },
+        {
+          "id": "DEV-RET-35",
+          "category": "multilingual",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.4028,
+          "top1_id": "2003-0391-FRA"
+        },
+        {
+          "id": "DEV-RET-36",
+          "category": "out_of_domain",
+          "top1_score": 0.3111
+        },
+        {
+          "id": "DEV-RET-37",
+          "category": "out_of_domain",
+          "top1_score": 0.1569
+        },
+        {
+          "id": "DEV-RET-38",
+          "category": "out_of_domain",
+          "top1_score": 0.1934
+        },
+        {
+          "id": "DEV-RET-39",
+          "category": "out_of_domain",
+          "top1_score": 0.2704
+        },
+        {
+          "id": "DEV-RET-40",
+          "category": "out_of_domain",
+          "top1_score": 0.1289
+        }
+      ]
+    },
+    {
+      "model_id": "multilingual-e5-large",
+      "provider": "pinecone",
+      "dimension": 1024,
+      "answerable_count": 35,
+      "ood_count": 5,
+      "recall@1": 0.6857,
+      "recall@5": 0.9429,
+      "recall@10": 0.9714,
+      "mrr": 0.7948,
+      "mrr_ci_95": [
+        0.6781,
+        0.8971
+      ],
+      "calibrated_threshold": 0.8351,
+      "ood_max_top1_score": 0.8251,
+      "ans_min_top1_score": 0.7634,
+      "ood_false_positives_at_threshold": 0,
+      "ans_rejected_at_threshold": 12,
+      "mean_query_latency_ms": 411.72,
+      "p95_query_latency_ms": 466.89,
+      "per_query": [
+        {
+          "id": "DEV-RET-01",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.8236,
+          "top1_id": "2025-0619-JPN"
+        },
+        {
+          "id": "DEV-RET-02",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.8901,
+          "top1_id": "2007-0556-BGD"
+        },
+        {
+          "id": "DEV-RET-03",
+          "category": "relevant",
+          "rank": 2,
+          "rr": 0.5,
+          "top1_score": 0.84,
+          "top1_id": "2000-0400-CHN"
+        },
+        {
+          "id": "DEV-RET-04",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.8763,
+          "top1_id": "2018-0409-USA"
+        },
+        {
+          "id": "DEV-RET-05",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.8434,
+          "top1_id": "2010-0372-RUS"
+        },
+        {
+          "id": "DEV-RET-06",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.8287,
+          "top1_id": "2001-9044-NER"
+        },
+        {
+          "id": "DEV-RET-07",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.8518,
+          "top1_id": "2015-0476-PAK"
+        },
+        {
+          "id": "DEV-RET-08",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.8897,
+          "top1_id": "2019-0110-MOZ"
+        },
+        {
+          "id": "DEV-RET-09",
+          "category": "relevant",
+          "rank": 2,
+          "rr": 0.5,
+          "top1_score": 0.86,
+          "top1_id": "2024-0547-IND"
+        },
+        {
+          "id": "DEV-RET-10",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.8732,
+          "top1_id": "2016-0172-CAN"
+        },
+        {
+          "id": "DEV-RET-11",
+          "category": "relevant",
+          "rank": 2,
+          "rr": 0.5,
+          "top1_score": 0.8143,
+          "top1_id": "2001-0445-PHL"
+        },
+        {
+          "id": "DEV-RET-12",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.8956,
+          "top1_id": "2010-0557-HTI"
+        },
+        {
+          "id": "DEV-RET-13",
+          "category": "relevant",
+          "rank": 5,
+          "rr": 0.2,
+          "top1_score": 0.8297,
+          "top1_id": "2006-0338-HND"
+        },
+        {
+          "id": "DEV-RET-14",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.8593,
+          "top1_id": "2003-0630-IRN"
+        },
+        {
+          "id": "DEV-RET-15",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.8426,
+          "top1_id": "2020-0110-ZMB"
+        },
+        {
+          "id": "DEV-RET-16",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.8742,
+          "top1_id": "2013-0433-PHL"
+        },
+        {
+          "id": "DEV-RET-17",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.8638,
+          "top1_id": "2017-0382-MEX"
+        },
+        {
+          "id": "DEV-RET-18",
+          "category": "relevant",
+          "rank": 2,
+          "rr": 0.5,
+          "top1_score": 0.8532,
+          "top1_id": "2012-0019-ROU"
+        },
+        {
+          "id": "DEV-RET-19",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.8702,
+          "top1_id": "2006-0096-PHL"
+        },
+        {
+          "id": "DEV-RET-20",
+          "category": "relevant",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.8529,
+          "top1_id": "2010-0170-ISL"
+        },
+        {
+          "id": "DEV-RET-21",
+          "category": "typo",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.8675,
+          "top1_id": "2005-0575-PAK"
+        },
+        {
+          "id": "DEV-RET-22",
+          "category": "typo",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.8754,
+          "top1_id": "2008-0184-MMR"
+        },
+        {
+          "id": "DEV-RET-23",
+          "category": "typo",
+          "rank": 5,
+          "rr": 0.2,
+          "top1_score": 0.8281,
+          "top1_id": "2004-0524-JPN"
+        },
+        {
+          "id": "DEV-RET-24",
+          "category": "typo",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.864,
+          "top1_id": "2021-0411-DEU"
+        },
+        {
+          "id": "DEV-RET-25",
+          "category": "typo",
+          "rank": 4,
+          "rr": 0.25,
+          "top1_score": 0.8289,
+          "top1_id": "2000-0395-USA"
+        },
+        {
+          "id": "DEV-RET-26",
+          "category": "vague",
+          "rank": 2,
+          "rr": 0.5,
+          "top1_score": 0.8096,
+          "top1_id": "2020-0292-PHL"
+        },
+        {
+          "id": "DEV-RET-27",
+          "category": "vague",
+          "rank": null,
+          "rr": 0.0,
+          "top1_score": 0.8335,
+          "top1_id": "2004-0700-EGY"
+        },
+        {
+          "id": "DEV-RET-28",
+          "category": "vague",
+          "rank": 6,
+          "rr": 0.1667,
+          "top1_score": 0.7634,
+          "top1_id": "2025-0651-IND"
+        },
+        {
+          "id": "DEV-RET-29",
+          "category": "vague",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.8009,
+          "top1_id": "2022-0246-USA"
+        },
+        {
+          "id": "DEV-RET-30",
+          "category": "vague",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.8106,
+          "top1_id": "2021-0390-USA"
+        },
+        {
+          "id": "DEV-RET-31",
+          "category": "multilingual",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.863,
+          "top1_id": "2010-0091-CHL"
+        },
+        {
+          "id": "DEV-RET-32",
+          "category": "multilingual",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.86,
+          "top1_id": "2012-0046-COD"
+        },
+        {
+          "id": "DEV-RET-33",
+          "category": "multilingual",
+          "rank": 2,
+          "rr": 0.5,
+          "top1_score": 0.8295,
+          "top1_id": "2018-9075-ARG"
+        },
+        {
+          "id": "DEV-RET-34",
+          "category": "multilingual",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.8493,
+          "top1_id": "2009-0136-ITA"
+        },
+        {
+          "id": "DEV-RET-35",
+          "category": "multilingual",
+          "rank": 1,
+          "rr": 1.0,
+          "top1_score": 0.8566,
+          "top1_id": "2003-0391-FRA"
+        },
+        {
+          "id": "DEV-RET-36",
+          "category": "out_of_domain",
+          "top1_score": 0.7982
+        },
+        {
+          "id": "DEV-RET-37",
+          "category": "out_of_domain",
+          "top1_score": 0.7728
+        },
+        {
+          "id": "DEV-RET-38",
+          "category": "out_of_domain",
+          "top1_score": 0.7893
+        },
+        {
+          "id": "DEV-RET-39",
+          "category": "out_of_domain",
+          "top1_score": 0.8251
+        },
+        {
+          "id": "DEV-RET-40",
+          "category": "out_of_domain",
+          "top1_score": 0.7802
+        }
+      ]
+    }
+  ],
+  "skipped": [],
+  "selection": {
+    "winner": "llama-text-embed-v2",
+    "winner_provider": "pinecone",
+    "winner_dimension": 1024,
+    "winner_mrr": 0.8905,
+    "tied_top_models": [
+      "llama-text-embed-v2",
+      "nvidia/nemotron-3-embed-1b",
+      "nvidia/nemotron-3.5-embed-1b"
+    ],
+    "pairwise_deltas_vs_top_mrr": [
+      {
+        "best_model": "llama-text-embed-v2",
+        "other_model": "nvidia/nemotron-3-embed-1b",
+        "delta_mrr": 0.0038,
+        "delta_ci_95": [
+          -0.0581,
+          0.0695
+        ],
+        "statistically_significant": false
+      },
+      {
+        "best_model": "llama-text-embed-v2",
+        "other_model": "nvidia/nemotron-3.5-embed-1b",
+        "delta_mrr": 0.0048,
+        "delta_ci_95": [
+          -0.0571,
+          0.0714
+        ],
+        "statistically_significant": false
+      },
+      {
+        "best_model": "llama-text-embed-v2",
+        "other_model": "nvidia/nemotron-3.5-embed-8b",
+        "delta_mrr": 0.019,
+        "delta_ci_95": [
+          -0.0524,
+          0.1
+        ],
+        "statistically_significant": false
+      },
+      {
+        "best_model": "llama-text-embed-v2",
+        "other_model": "multilingual-e5-large",
+        "delta_mrr": 0.0957,
+        "delta_ci_95": [
+          0.0114,
+          0.1857
+        ],
+        "statistically_significant": true
+      }
+    ],
+    "requires_index_recreate": true
+  }
+}

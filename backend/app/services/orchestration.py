@@ -68,7 +68,7 @@ class DisasterMindOrchestrator:
             logger.warning("RAG retrieval failed: %s", ctx.rag.get("reason", "Unknown"))
             return self._insufficient_data_response(scenario, ctx.rag.get("reason", "Retrieval failed"))
             
-        if ctx.similarity.get("status") == "insufficient_data":
+        if ctx.similarity.get("status") != "ok":
             logger.warning("Similarity search returned insufficient data: %s", ctx.similarity.get("reason", "Unknown"))
             return self._insufficient_data_response(scenario, ctx.similarity.get("reason", "Insufficient historical similarity data"))
 

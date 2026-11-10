@@ -1,0 +1,17 @@
+{
+  "curated_count": 16834,
+  "xlsx_count": 16834,
+  "curated_unique_ids": 16834,
+  "xlsx_unique_ids": 16834,
+  "curated_duplicate_ids": [],
+  "xlsx_duplicate_ids": [],
+  "shared_id_count": 16834,
+  "only_in_xlsx_count": 0,
+  "only_in_xlsx_sample": [],
+  "only_in_curated_count": 0,
+  "only_in_curated_sample": [],
+  "mapped_fields_checked": 25,
+  "field_disagreements": {},
+  "disagreement_examples": {},
+  "total_field_disagreements": 0
+}

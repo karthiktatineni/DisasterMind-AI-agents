@@ -1,0 +1,33 @@
+{
+  "note": "Positive-control wire capture using httpx HTTPTransport/AsyncHTTPTransport spy on a temporary namespace (cleaned via delete_all). Original 16,833-record ingest (task-680) logged stdout progress without enabling this HTTP transport capture hook.",
+  "control_namespace": "__d3_positive_control_tmp",
+  "total_http_requests": 4,
+  "embedding_calls": 1,
+  "upsert_calls": 1,
+  "requests": [
+    {
+      "transport": "sync",
+      "method": "GET",
+      "url": "https://api.pinecone.io/indexes/disastermind",
+      "status_code": 200
+    },
+    {
+      "transport": "sync",
+      "method": "POST",
+      "url": "https://api.pinecone.io/embed",
+      "status_code": 200
+    },
+    {
+      "transport": "sync",
+      "method": "POST",
+      "url": "https://disastermind-nu066ad.svc.aped-4627-b74a.pinecone.io/vectors/upsert",
+      "status_code": 200
+    },
+    {
+      "transport": "sync",
+      "method": "POST",
+      "url": "https://disastermind-nu066ad.svc.aped-4627-b74a.pinecone.io/vectors/delete",
+      "status_code": 200
+    }
+  ]
+}

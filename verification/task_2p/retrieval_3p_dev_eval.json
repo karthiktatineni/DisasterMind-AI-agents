@@ -1,0 +1,585 @@
+{
+  "dataset_version": "3d35e5131d79a79d",
+  "model": "llama-text-embed-v2",
+  "provider": "pinecone-inference",
+  "dimension": 1024,
+  "pinecone_index_name": "disastermind",
+  "pinecone_namespace": "v2-3d35e5131d79a79d-llama-text-embed-v2",
+  "calibrated_threshold": 0.3211,
+  "dev_answerable_count": 35,
+  "dev_ood_count": 5,
+  "live_metrics": {
+    "recall@1": 0.8571,
+    "recall@5": 0.9143,
+    "recall@10": 0.9429,
+    "mrr": 0.8905,
+    "mrr_ci_95": [
+      0.7857,
+      0.9714
+    ],
+    "ans_rejected_at_threshold": 5,
+    "ood_false_positives": 0,
+    "mean_latency_ms": 696.03,
+    "p95_latency_ms": 883.94
+  },
+  "baseline_metrics": {
+    "recall@1": 0.5714,
+    "recall@5": 0.619,
+    "recall@10": 0.7143,
+    "mrr": 0.6012
+  },
+  "metadata_filter_check": {
+    "passed": true,
+    "filters": {
+      "disaster_type": "Storm",
+      "country": "India",
+      "year_min": 2010,
+      "year_max": 2024
+    },
+    "returned_count": 5,
+    "record_ids": [
+      "2018-0385-IND",
+      "2013-0401-IND",
+      "2020-0211-IND",
+      "2024-0778-IND",
+      "2018-0473-IND"
+    ],
+    "top_score": 0.4877
+  },
+  "no_data_check": {
+    "passed": true,
+    "unrelated_query_status": "no_data",
+    "unrelated_top_score": 0.1458,
+    "infeasible_filter_status": "no_data",
+    "threshold_used": 0.3211
+  },
+  "ood_results": [
+    {
+      "id": "DEV-RET-36",
+      "status": "no_data",
+      "top_score": 0.3111,
+      "threshold_used": 0.3211,
+      "returned_count": 0
+    },
+    {
+      "id": "DEV-RET-37",
+      "status": "no_data",
+      "top_score": 0.157,
+      "threshold_used": 0.3211,
+      "returned_count": 0
+    },
+    {
+      "id": "DEV-RET-38",
+      "status": "no_data",
+      "top_score": 0.1936,
+      "threshold_used": 0.3211,
+      "returned_count": 0
+    },
+    {
+      "id": "DEV-RET-39",
+      "status": "no_data",
+      "top_score": 0.2706,
+      "threshold_used": 0.3211,
+      "returned_count": 0
+    },
+    {
+      "id": "DEV-RET-40",
+      "status": "no_data",
+      "top_score": 0.1289,
+      "threshold_used": 0.3211,
+      "returned_count": 0
+    }
+  ],
+  "per_query": [
+    {
+      "id": "DEV-RET-01",
+      "category": "relevant",
+      "rank": 1,
+      "rr": 1.0,
+      "top_score": 0.4003,
+      "above_calibrated_threshold": true,
+      "record_ids_top3": [
+        "2005-0129-JPN",
+        "2001-0123-JPN",
+        "2000-0656-JPN"
+      ],
+      "latency_ms": 2831.94
+    },
+    {
+      "id": "DEV-RET-02",
+      "category": "relevant",
+      "rank": 1,
+      "rr": 1.0,
+      "top_score": 0.6259,
+      "above_calibrated_threshold": true,
+      "record_ids_top3": [
+        "2007-0556-BGD",
+        "2007-0556-IND",
+        "2007-0227-BGD"
+      ],
+      "latency_ms": 867.78
+    },
+    {
+      "id": "DEV-RET-03",
+      "category": "relevant",
+      "rank": 1,
+      "rr": 1.0,
+      "top_score": 0.3904,
+      "above_calibrated_threshold": true,
+      "record_ids_top3": [
+        "2008-0263-CHN",
+        "2008-0598-CHN",
+        "2008-0243-CHN"
+      ],
+      "latency_ms": 607.34
+    },
+    {
+      "id": "DEV-RET-04",
+      "category": "relevant",
+      "rank": 1,
+      "rr": 1.0,
+      "top_score": 0.6759,
+      "above_calibrated_threshold": true,
+      "record_ids_top3": [
+        "2018-0409-USA",
+        "2018-0258-USA",
+        "2021-0526-USA"
+      ],
+      "latency_ms": 613.11
+    },
+    {
+      "id": "DEV-RET-05",
+      "category": "relevant",
+      "rank": 1,
+      "rr": 1.0,
+      "top_score": 0.5036,
+      "above_calibrated_threshold": true,
+      "record_ids_top3": [
+        "2010-0372-RUS",
+        "2010-9318-RUS",
+        "2010-0352-RUS"
+      ],
+      "latency_ms": 884.46
+    },
+    {
+      "id": "DEV-RET-06",
+      "category": "relevant",
+      "rank": 2,
+      "rr": 0.5,
+      "top_score": 0.4453,
+      "above_calibrated_threshold": true,
+      "record_ids_top3": [
+        "2024-0569-TCD",
+        "2001-9044-NER",
+        "2014-9196-BFA"
+      ],
+      "latency_ms": 883.91
+    },
+    {
+      "id": "DEV-RET-07",
+      "category": "relevant",
+      "rank": 1,
+      "rr": 1.0,
+      "top_score": 0.5611,
+      "above_calibrated_threshold": true,
+      "record_ids_top3": [
+        "2005-0575-PAK",
+        "2005-0575-IND",
+        "2015-0476-PAK"
+      ],
+      "latency_ms": 603.54
+    },
+    {
+      "id": "DEV-RET-08",
+      "category": "relevant",
+      "rank": 1,
+      "rr": 1.0,
+      "top_score": 0.5643,
+      "above_calibrated_threshold": true,
+      "record_ids_top3": [
+        "2019-0110-MOZ",
+        "2019-0110-ZWE",
+        "2021-0036-MOZ"
+      ],
+      "latency_ms": 641.37
+    },
+    {
+      "id": "DEV-RET-09",
+      "category": "relevant",
+      "rank": 1,
+      "rr": 1.0,
+      "top_score": 0.5052,
+      "above_calibrated_threshold": true,
+      "record_ids_top3": [
+        "2018-0295-IND",
+        "2020-0332-IND",
+        "2008-0062-IND"
+      ],
+      "latency_ms": 605.73
+    },
+    {
+      "id": "DEV-RET-10",
+      "category": "relevant",
+      "rank": 1,
+      "rr": 1.0,
+      "top_score": 0.6051,
+      "above_calibrated_threshold": true,
+      "record_ids_top3": [
+        "2016-0172-CAN",
+        "2018-0299-CAN",
+        "2015-0275-CAN"
+      ],
+      "latency_ms": 608.32
+    },
+    {
+      "id": "DEV-RET-11",
+      "category": "relevant",
+      "rank": 1,
+      "rr": 1.0,
+      "top_score": 0.4175,
+      "above_calibrated_threshold": true,
+      "record_ids_top3": [
+        "2011-0564-PHL",
+        "2021-0376-PHL",
+        "2001-0297-PHL"
+      ],
+      "latency_ms": 602.76
+    },
+    {
+      "id": "DEV-RET-12",
+      "category": "relevant",
+      "rank": 1,
+      "rr": 1.0,
+      "top_score": 0.5437,
+      "above_calibrated_threshold": true,
+      "record_ids_top3": [
+        "2010-0557-HTI",
+        "2010-0017-HTI",
+        "2010-0557-DOM"
+      ],
+      "latency_ms": 733.66
+    },
+    {
+      "id": "DEV-RET-13",
+      "category": "relevant",
+      "rank": null,
+      "rr": 0.0,
+      "top_score": 0.3841,
+      "above_calibrated_threshold": true,
+      "record_ids_top3": [
+        "2002-0583-GTM",
+        "2002-0329-HND",
+        "2018-0374-HND"
+      ],
+      "latency_ms": 603.53
+    },
+    {
+      "id": "DEV-RET-14",
+      "category": "relevant",
+      "rank": 1,
+      "rr": 1.0,
+      "top_score": 0.417,
+      "above_calibrated_threshold": true,
+      "record_ids_top3": [
+        "2003-0630-IRN",
+        "2003-0649-IRN",
+        "2003-0068-IRN"
+      ],
+      "latency_ms": 605.66
+    },
+    {
+      "id": "DEV-RET-15",
+      "category": "relevant",
+      "rank": 1,
+      "rr": 1.0,
+      "top_score": 0.5481,
+      "above_calibrated_threshold": true,
+      "record_ids_top3": [
+        "2020-0110-ZMB",
+        "2020-0031-ZMB",
+        "2011-0092-ZMB"
+      ],
+      "latency_ms": 655.64
+    },
+    {
+      "id": "DEV-RET-16",
+      "category": "relevant",
+      "rank": 1,
+      "rr": 1.0,
+      "top_score": 0.5252,
+      "above_calibrated_threshold": true,
+      "record_ids_top3": [
+        "2013-0433-PHL",
+        "2013-0433-VNM",
+        "2013-0433-CHN"
+      ],
+      "latency_ms": 600.97
+    },
+    {
+      "id": "DEV-RET-17",
+      "category": "relevant",
+      "rank": 1,
+      "rr": 1.0,
+      "top_score": 0.5571,
+      "above_calibrated_threshold": true,
+      "record_ids_top3": [
+        "2017-0382-MEX",
+        "2017-0387-MEX",
+        "2022-0623-MEX"
+      ],
+      "latency_ms": 603.79
+    },
+    {
+      "id": "DEV-RET-18",
+      "category": "relevant",
+      "rank": 1,
+      "rr": 1.0,
+      "top_score": 0.4896,
+      "above_calibrated_threshold": true,
+      "record_ids_top3": [
+        "2012-0485-POL",
+        "2012-0413-POL",
+        "2012-0019-ROU"
+      ],
+      "latency_ms": 598.66
+    },
+    {
+      "id": "DEV-RET-19",
+      "category": "relevant",
+      "rank": 1,
+      "rr": 1.0,
+      "top_score": 0.6033,
+      "above_calibrated_threshold": true,
+      "record_ids_top3": [
+        "2006-0096-PHL",
+        "2006-0087-PHL",
+        "2003-0610-PHL"
+      ],
+      "latency_ms": 616.43
+    },
+    {
+      "id": "DEV-RET-20",
+      "category": "relevant",
+      "rank": 1,
+      "rr": 1.0,
+      "top_score": 0.5752,
+      "above_calibrated_threshold": true,
+      "record_ids_top3": [
+        "2010-0170-ISL",
+        "2010-0274-ECU",
+        "2010-0220-GTM"
+      ],
+      "latency_ms": 633.05
+    },
+    {
+      "id": "DEV-RET-21",
+      "category": "typo",
+      "rank": 1,
+      "rr": 1.0,
+      "top_score": 0.5401,
+      "above_calibrated_threshold": true,
+      "record_ids_top3": [
+        "2005-0575-PAK",
+        "2005-0575-IND",
+        "2002-0692-PAK"
+      ],
+      "latency_ms": 687.53
+    },
+    {
+      "id": "DEV-RET-22",
+      "category": "typo",
+      "rank": 1,
+      "rr": 1.0,
+      "top_score": 0.5896,
+      "above_calibrated_threshold": true,
+      "record_ids_top3": [
+        "2008-0184-MMR",
+        "2008-0184-THA",
+        "2008-0270-MMR"
+      ],
+      "latency_ms": 602.02
+    },
+    {
+      "id": "DEV-RET-23",
+      "category": "typo",
+      "rank": 1,
+      "rr": 1.0,
+      "top_score": 0.3607,
+      "above_calibrated_threshold": true,
+      "record_ids_top3": [
+        "2011-0082-JPN",
+        "2025-0619-JPN",
+        "2003-0354-JPN"
+      ],
+      "latency_ms": 601.27
+    },
+    {
+      "id": "DEV-RET-24",
+      "category": "typo",
+      "rank": 1,
+      "rr": 1.0,
+      "top_score": 0.4666,
+      "above_calibrated_threshold": true,
+      "record_ids_top3": [
+        "2021-0411-DEU",
+        "2021-0411-FRA",
+        "2021-0318-FRA"
+      ],
+      "latency_ms": 628.81
+    },
+    {
+      "id": "DEV-RET-25",
+      "category": "typo",
+      "rank": 1,
+      "rr": 1.0,
+      "top_score": 0.2979,
+      "above_calibrated_threshold": false,
+      "record_ids_top3": [
+        "2005-0467-USA",
+        "2017-0392-MEX",
+        "2016-0319-MEX"
+      ],
+      "latency_ms": 608.08
+    },
+    {
+      "id": "DEV-RET-26",
+      "category": "vague",
+      "rank": 2,
+      "rr": 0.5,
+      "top_score": 0.2778,
+      "above_calibrated_threshold": false,
+      "record_ids_top3": [
+        "2001-0004-USA",
+        "2015-0198-SLV",
+        "2012-0410-USA"
+      ],
+      "latency_ms": 603.9
+    },
+    {
+      "id": "DEV-RET-27",
+      "category": "vague",
+      "rank": null,
+      "rr": 0.0,
+      "top_score": 0.3713,
+      "above_calibrated_threshold": true,
+      "record_ids_top3": [
+        "2003-0241-EGY",
+        "2004-0700-EGY",
+        "2003-0082-CHN"
+      ],
+      "latency_ms": 632.67
+    },
+    {
+      "id": "DEV-RET-28",
+      "category": "vague",
+      "rank": 6,
+      "rr": 0.1667,
+      "top_score": 0.2407,
+      "above_calibrated_threshold": false,
+      "record_ids_top3": [
+        "2003-0633-USA",
+        "2018-0010-USA",
+        "2017-0090-COL"
+      ],
+      "latency_ms": 611.22
+    },
+    {
+      "id": "DEV-RET-29",
+      "category": "vague",
+      "rank": 1,
+      "rr": 1.0,
+      "top_score": 0.2161,
+      "above_calibrated_threshold": false,
+      "record_ids_top3": [
+        "2017-0271-CAN",
+        "2025-0700-USA",
+        "2015-0010-AUS"
+      ],
+      "latency_ms": 722.8
+    },
+    {
+      "id": "DEV-RET-30",
+      "category": "vague",
+      "rank": 1,
+      "rr": 1.0,
+      "top_score": 0.3015,
+      "above_calibrated_threshold": false,
+      "record_ids_top3": [
+        "2021-0390-USA",
+        "2023-0364-USA",
+        "2018-0195-CAN"
+      ],
+      "latency_ms": 598.76
+    },
+    {
+      "id": "DEV-RET-31",
+      "category": "multilingual",
+      "rank": 1,
+      "rr": 1.0,
+      "top_score": 0.5579,
+      "above_calibrated_threshold": true,
+      "record_ids_top3": [
+        "2010-0091-CHL",
+        "2010-0563-IDN",
+        "2007-0158-CHL"
+      ],
+      "latency_ms": 609.63
+    },
+    {
+      "id": "DEV-RET-32",
+      "category": "multilingual",
+      "rank": 1,
+      "rr": 1.0,
+      "top_score": 0.5195,
+      "above_calibrated_threshold": true,
+      "record_ids_top3": [
+        "2006-0673-COD",
+        "2011-0517-COD",
+        "2003-0566-COD"
+      ],
+      "latency_ms": 609.26
+    },
+    {
+      "id": "DEV-RET-33",
+      "category": "multilingual",
+      "rank": 1,
+      "rr": 1.0,
+      "top_score": 0.4561,
+      "above_calibrated_threshold": true,
+      "record_ids_top3": [
+        "2021-0129-ARG",
+        "2000-0853-ARG",
+        "2001-0442-ARG"
+      ],
+      "latency_ms": 608.68
+    },
+    {
+      "id": "DEV-RET-34",
+      "category": "multilingual",
+      "rank": 1,
+      "rr": 1.0,
+      "top_score": 0.52,
+      "above_calibrated_threshold": true,
+      "record_ids_top3": [
+        "2009-0136-ITA",
+        "2009-0428-ITA",
+        "2012-0142-ITA"
+      ],
+      "latency_ms": 597.39
+    },
+    {
+      "id": "DEV-RET-35",
+      "category": "multilingual",
+      "rank": 1,
+      "rr": 1.0,
+      "top_score": 0.4029,
+      "above_calibrated_threshold": true,
+      "record_ids_top3": [
+        "2003-0391-FRA",
+        "2023-0438-FRA",
+        "2003-0391-ITA"
+      ],
+      "latency_ms": 606.96
+    }
+  ]
+}
