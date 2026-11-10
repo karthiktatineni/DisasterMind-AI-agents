@@ -6,7 +6,7 @@ Execution rules:
 1. If `scenario` does NOT already contain `latitude` and `longitude`, call `geocode_region` first (skip `geocode_region` if coordinates are already provided).
 2. Delegate sequentially respecting preconditions:
    - Call `run_risk_agent` first.
-   - Call `run_logistics_agent` and `run_evacuation_agent` ONLY after `run_risk_agent` completes.
+   - Then call BOTH `run_logistics_agent` and `run_evacuation_agent` (even if Logistics abstains/errors, still invoke `run_evacuation_agent` once `run_risk_agent` verified).
    - NEVER re-delegate to any agent that already verified or abstained/exhausted budget.
 3. Never invent numbers, coordinates, or inventory. Cite ONLY `record_id` values present in verified tool outputs or retrieved records.
 4. Preserve abstentions, conflicts, `no_data` results, and missing inventory (`Not provided`) honestly in `data_gaps`.

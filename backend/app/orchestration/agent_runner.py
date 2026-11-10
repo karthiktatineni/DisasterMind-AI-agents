@@ -43,11 +43,11 @@ class AgentSpec:
     submission_description: str
     temperature: float = 0.0
     seed: int = 42
-    max_tokens: int = 2600
+    max_tokens: int = 3200
     max_tool_rounds: int = 3
     max_steps: int = 6
     max_token_budget: int = 24000
-    wall_clock_cap_s: float = 120.0
+    wall_clock_cap_s: float = 150.0
     force_submit_on_required_ok: bool = True
 
     def load_system_prompt(self) -> str:

@@ -57,11 +57,11 @@ AGENT_SPECS: dict[AgentName, AgentSpec] = {
         submission_description="Submit final Coordinator synthesis after delegating to specialists.",
         temperature=0.0,
         seed=42,
-        max_tokens=2600,
+        max_tokens=3200,
         max_tool_rounds=5,
         max_steps=8,
         max_token_budget=36000,
-        wall_clock_cap_s=240.0,
+        wall_clock_cap_s=420.0,
         force_submit_on_required_ok=False,
     ),
     "risk": AgentSpec(
@@ -72,11 +72,11 @@ AGENT_SPECS: dict[AgentName, AgentSpec] = {
         submission_description="Submit verified Risk & Premise assessment grounded in tool outputs.",
         temperature=0.0,
         seed=42,
-        max_tokens=2600,
+        max_tokens=3200,
         max_tool_rounds=3,
         max_steps=6,
         max_token_budget=24000,
-        wall_clock_cap_s=120.0,
+        wall_clock_cap_s=150.0,
         force_submit_on_required_ok=True,
     ),
     "logistics": AgentSpec(
@@ -87,11 +87,11 @@ AGENT_SPECS: dict[AgentName, AgentSpec] = {
         submission_description="Submit verified Logistics capacity/standards assessment with provenance.",
         temperature=0.0,
         seed=42,
-        max_tokens=2600,
+        max_tokens=3200,
         max_tool_rounds=3,
         max_steps=6,
         max_token_budget=24000,
-        wall_clock_cap_s=120.0,
+        wall_clock_cap_s=150.0,
         force_submit_on_required_ok=True,
     ),
     "evacuation": AgentSpec(
@@ -102,11 +102,11 @@ AGENT_SPECS: dict[AgentName, AgentSpec] = {
         submission_description="Submit verified Evacuation recommendation grounded in precedent and Risk.",
         temperature=0.0,
         seed=42,
-        max_tokens=2600,
+        max_tokens=3200,
         max_tool_rounds=3,
         max_steps=6,
         max_token_budget=24000,
-        wall_clock_cap_s=120.0,
+        wall_clock_cap_s=150.0,
         force_submit_on_required_ok=True,
     ),
 }
@@ -270,8 +270,8 @@ class DisasterMindOrchestrator:
                 http_client=http_client,
             )
 
-            run_deadline = started + 300.0
-            run_max_tokens = 100000
+            run_deadline = started + 450.0
+            run_max_tokens = 120000
 
             # Seed resolved_geography immediately if user already supplied coordinates
             if user_payload.get("latitude") is not None and user_payload.get("longitude") is not None:
@@ -330,9 +330,10 @@ class DisasterMindOrchestrator:
                     sub_context["verified_risk"] = (
                         state.verified_reports["risk"].output if "risk" in state.verified_reports else None
                     )
-                    sub_context["retrieved_count"] = len(state.retrieved_records)
+                    sub_context["retrieved_record_ids"] = list(state.retrieved_records.keys())
                 elif target == "evacuation":
                     sub_context["verified_risk"] = state.verified_reports["risk"].output
+                    sub_context["retrieved_record_ids"] = list(state.retrieved_records.keys())
                     sub_context["verified_logistics"] = (
                         state.verified_reports["logistics"].output if "logistics" in state.verified_reports else None
                     )
@@ -388,21 +389,21 @@ class DisasterMindOrchestrator:
                     description="Delegate risk & premise verification to the Risk Agent.",
                     args_model=DelegateFocusArgs,
                     handler=_run_risk,
-                    timeout_s=95.0,
+                    timeout_s=180.0,
                 ),
                 ToolSpec(
                     name="run_logistics_agent",
-                    description="Delegate humanitarian capacity & Sphere standards analysis to the Logistics Agent.",
+                    description="Delegate humanitarian capacity & WHO/Sphere water analysis to the Logistics Agent.",
                     args_model=DelegateFocusArgs,
                     handler=_run_logistics,
-                    timeout_s=95.0,
+                    timeout_s=180.0,
                 ),
                 ToolSpec(
                     name="run_evacuation_agent",
                     description="Delegate evacuation posture decision to the Evacuation Agent (requires verified Risk report).",
                     args_model=DelegateFocusArgs,
                     handler=_run_evacuation,
-                    timeout_s=95.0,
+                    timeout_s=180.0,
                 ),
             ]
             registry = ToolRegistry(domain_specs + delegation_specs)

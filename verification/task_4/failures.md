@@ -17,6 +17,11 @@
 
 ## Attempt 2 (`task-1363`, committed code `b1bc1b5`, interrupted by server restart)
 - **Outcome:** `scripts/run_gates.py` passed (`35 passed, FINAL_EXIT=0`) and `capture_scripted_gates()` completed cleanly, then the live suite started `[LIVE RUN START] flood_strong_precedent_run1 ...` and had not emitted an output line before the host server restarted (`[Notice] All your subagents and background tasks have been stopped due to server restart`). Zero completed scenario summaries existed on disk under `verification/task_4/raw_traces/`.
-- **Fix Before Retry:** Added live timestamped `on_event` progress logging + per-scenario `--only` / incremental checkpoint saving in `scripts/verify_task4_live.py` with explicit `240s` per-scenario timeout.
+- **Fix Before Attempt 3:** Added live timestamped `on_event` progress logging + per-scenario `--only` / incremental checkpoint saving in `scripts/verify_task4_live.py` with explicit per-scenario timeout.
+
+## Attempt 3 (`task-1378`, committed code `fc99016`, partial pass revealing Logistics citation & timeout bugs)
+- **Outcome:** Single live test `flood_strong_precedent_run1` reached `status="partial"` (`risk="high"`, `citations=5`, `quantities=8`, `llm_calls=7`, `tool_calls=8`, `tokens=20589`, `wall_ms=198647.91`), proving Risk verified in 2 turns and Coordinator finished cleanly, **but** Logistics failed verification (`cited_record_ids` contained tool `call-*` IDs instead of EM-DAT IDs because `sub_context` only passed `retrieved_count` without `retrieved_record_ids`) and then hit `ToolSpec(timeout_s=95.0)` while Coordinator skipped Evacuation afterward.
+- **Fix Before Retry:** Pass `retrieved_record_ids` directly to Logistics & Evacuation; clarify `cited_record_ids` vs `provenance` in `prompts/logistics.md`; instruct Coordinator in `prompts/coordinator.md` to invoke `run_evacuation_agent` even if Logistics abstains; set specialist `max_tokens=3200`, `wall_clock_cap_s=150.0`, and delegation `ToolSpec` `timeout_s=180.0` (`run_deadline=450.0s`).
+
 
 

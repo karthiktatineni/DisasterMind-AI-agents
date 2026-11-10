@@ -351,7 +351,7 @@ def assemble_live_report(commit_hash: str) -> dict[str, Any]:
 async def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--only", default=None, help="Run a single scenario tag from SCENARIOS.")
-    parser.add_argument("--timeout", type=float, default=240.0, help="Per-scenario wall-clock timeout seconds.")
+    parser.add_argument("--timeout", type=float, default=450.0, help="Per-scenario wall-clock timeout seconds.")
     parser.add_argument("--skip-scripted", action="store_true")
     args = parser.parse_args()
 
