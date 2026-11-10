@@ -30,7 +30,7 @@ class SimilarityAgent(AgentRunner):
                 reasoning_summary="Vector similarity search unavailable.",
                 evidence_items=[],
                 recommendations=[],
-                next_actions=["Fix Supabase retrieval."],
+                next_actions=["Fix Pinecone retrieval."],
                 status="failed",
                 output={"status": "insufficient_data", "top_matches": [], "reasoning": []},
                 execution_time_ms=0,
@@ -47,7 +47,7 @@ class SimilarityAgent(AgentRunner):
             combined = round(min(0.999, vector_sim + meta_boost), 4)
             ranked.append({**match, "vector_similarity": vector_sim, "combined_score": combined})
             reasoning.append(
-                f"{match.get('event_name')}: pgvector={vector_sim:.3f}, "
+                f"{match.get('event_name')}: pinecone={vector_sim:.3f}, "
                 f"metadata_boost={meta_boost:.3f}, combined={combined:.3f}"
             )
 
@@ -63,10 +63,10 @@ class SimilarityAgent(AgentRunner):
         return self._result(
             scenario,
             confidence=confidence,
-            reasoning_summary="Ranked nearest historical disasters using pgvector similarity with location and type weighting.",
+            reasoning_summary="Ranked nearest historical disasters using Pinecone vector similarity with location and type weighting.",
             evidence_items=[
                 evidence(
-                    "supabase_pgvector",
+                    "pinecone",
                     str(row.get("event_name")),
                     f"Similarity {row.get('combined_score')}",
                     record_id=str(row.get("id")),

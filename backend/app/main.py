@@ -109,7 +109,7 @@ async def health() -> dict[str, str | bool | int]:
         "api_key_required": settings.api_key_required,
         "environment": settings.app_env,
         "backend_keepalive_configured": keepalive_service.backend_enabled,
-        "supabase_keepalive_configured": keepalive_service.supabase_enabled,
+        "pinecone_configured": bool(settings.pinecone_api_key and settings.pinecone_index_name),
     }
 
 

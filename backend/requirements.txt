@@ -12,4 +12,5 @@ scikit-learn>=1.5.0
 xgboost>=2.1.0
 joblib>=1.4.0
 
-psycopg2-binary>=2.9.9
+pinecone>=5.0.0
+pyarrow>=15.0.0

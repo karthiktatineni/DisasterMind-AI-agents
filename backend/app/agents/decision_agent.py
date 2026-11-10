@@ -79,7 +79,7 @@ class DecisionAgent(AgentRunner):
             confidence=confidence,
             reasoning_summary="Merged predictions, validation, and planning using LLM synthesis with explicit disaster citations.",
             evidence_items=[
-                evidence("supabase_pgvector", "Retrieved disasters", "; ".join(citations)),
+                evidence("pinecone", "Retrieved disasters", "; ".join(citations)),
                 evidence("validation", "Validation Status", str(validation.get("validation_status"))),
             ],
             recommendations=[data.get("executive_recommendation", "")],

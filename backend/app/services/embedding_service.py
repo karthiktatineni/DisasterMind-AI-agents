@@ -6,7 +6,7 @@ from openai import AsyncOpenAI
 
 from backend.app.config import Settings, get_settings
 
-EMBEDDING_DIM = 4096
+DEFAULT_EMBEDDING_DIM = 2048
 INPUT_TYPE_QUERY = "query"
 INPUT_TYPE_PASSAGE = "passage"
 
@@ -18,10 +18,7 @@ class EmbeddingConfigError(RuntimeError):
 class EmbeddingService:
     def __init__(self, settings: Settings | None = None, client: AsyncOpenAI | None = None):
         self.settings = settings or get_settings()
-        if self.settings.nvidia_embedding_dimension != EMBEDDING_DIM:
-            raise EmbeddingConfigError(
-                f"NVIDIA_EMBEDDING_DIMENSION must be {EMBEDDING_DIM} for nv-embed-v1."
-            )
+        self.dimension = self.settings.nvidia_embedding_dimension or DEFAULT_EMBEDDING_DIM
         if client is not None:
             self._client = client
             return
@@ -53,8 +50,8 @@ class EmbeddingService:
             },
         )
         vector = response.data[0].embedding
-        if len(vector) != EMBEDDING_DIM:
-            raise ValueError(f"Expected embedding dim {EMBEDDING_DIM}, got {len(vector)}")
+        if len(vector) != self.dimension:
+            raise ValueError(f"Expected embedding dim {self.dimension}, got {len(vector)}")
         return vector
 
     @staticmethod

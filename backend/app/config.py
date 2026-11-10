@@ -14,13 +14,15 @@ load_dotenv(PROJECT_ROOT / ".env", override=False)
 @dataclass(frozen=True)
 class Settings:
     nvidia_api_key: str
-    nvidia_embedding_model: str = "nvidia/nv-embed-v1"
-    nvidia_embedding_dimension: int = 4096
+    nvidia_embedding_model: str = "nvidia/nemotron-3.5-embed-1b"
+    nvidia_embedding_dimension: int = 2048
     similarity_threshold: float = 0.2
-    supabase_url: str = ""
-    supabase_service_role_key: str = ""
+    pinecone_api_key: str = ""
+    pinecone_index_name: str = "disastermind"
+    pinecone_environment: str = ""
+    pinecone_namespace: str = "v1-nemotron-3.5-embed-1b"
     nvidia_base_url: str = "https://integrate.api.nvidia.com/v1"
-    nvidia_model: str = "nvidia/llama-3.3-nemotron-super-49b-v1"
+    nvidia_model: str = "nvidia/nemotron-3-ultra-550b-a55b"
     nvidia_max_tokens: int = 1024
     nvidia_temperature: float = 0.2
     nvidia_top_p: float = 0.95
@@ -38,8 +40,6 @@ class Settings:
     enable_backend_keepalive: bool = True
     backend_keepalive_url: str = ""
     backend_keepalive_interval_seconds: int = 300
-    enable_supabase_keepalive: bool = True
-    supabase_keepalive_interval_seconds: int = 86400
 
     @property
     def production(self) -> bool:
@@ -91,16 +91,18 @@ def get_settings() -> Settings:
     ).strip()
     return Settings(
         nvidia_api_key=os.getenv("NVIDIA_API_KEY", "").strip(),
-        nvidia_embedding_model=os.getenv("NVIDIA_EMBEDDING_MODEL", "nvidia/nv-embed-v1").strip(),
-        nvidia_embedding_dimension=_get_int("NVIDIA_EMBEDDING_DIMENSION", 4096),
+        nvidia_embedding_model=os.getenv("NVIDIA_EMBEDDING_MODEL", "nvidia/nemotron-3.5-embed-1b").strip(),
+        nvidia_embedding_dimension=_get_int("NVIDIA_EMBEDDING_DIMENSION", 2048),
         similarity_threshold=_get_float("SIMILARITY_THRESHOLD", 0.2),
-        supabase_url=os.getenv("SUPABASE_URL", "").strip(),
-        supabase_service_role_key=os.getenv("SUPABASE_SERVICE_ROLE_KEY", "").strip(),
+        pinecone_api_key=os.getenv("PINECONE_API_KEY", "").strip(),
+        pinecone_index_name=os.getenv("PINECONE_INDEX_NAME", "disastermind").strip(),
+        pinecone_environment=os.getenv("PINECONE_ENVIRONMENT", "").strip(),
+        pinecone_namespace=os.getenv("PINECONE_NAMESPACE", "v1-nemotron-3.5-embed-1b").strip(),
         nvidia_base_url=os.getenv(
             "NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1"
         ).strip(),
         nvidia_model=os.getenv(
-            "NVIDIA_MODEL", "nvidia/llama-3.3-nemotron-super-49b-v1"
+            "NVIDIA_MODEL", "nvidia/nemotron-3-ultra-550b-a55b"
         ).strip(),
         nvidia_max_tokens=_get_int("NVIDIA_MAX_TOKENS", 1024),
         nvidia_temperature=_get_float("NVIDIA_TEMPERATURE", 0.2),
@@ -114,6 +116,4 @@ def get_settings() -> Settings:
         enable_backend_keepalive=_get_bool("ENABLE_BACKEND_KEEPALIVE", True),
         backend_keepalive_url=backend_keepalive_url.rstrip("/"),
         backend_keepalive_interval_seconds=_get_int("BACKEND_KEEPALIVE_INTERVAL_SECONDS", 300),
-        enable_supabase_keepalive=_get_bool("ENABLE_SUPABASE_KEEPALIVE", True),
-        supabase_keepalive_interval_seconds=_get_int("SUPABASE_KEEPALIVE_INTERVAL_SECONDS", 86400),
     )

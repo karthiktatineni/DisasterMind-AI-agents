@@ -52,7 +52,7 @@ EMBED_MATRIX = np.array([r["embedding"] for r in EMBEDDED_DATA], dtype=np.float3
 print(f"[INIT] Embed matrix shape: {EMBED_MATRIX.shape}")
 
 # ---------------------------------------------------------------------------
-# Retrieval Service Simulator (Exact Cosine Distance like pgvector <=>)
+# Retrieval Service Simulator (Exact Cosine Distance Simulator)
 # ---------------------------------------------------------------------------
 class ExactCosineRAGService:
     def __init__(self, records: list[dict[str, Any]], matrix: np.ndarray):
@@ -125,7 +125,7 @@ class ExactCosineSimService:
             "status": "ok",
             "matches": ret.get("retrieved_disasters", []),
             "execution_time_ms": 4.5,
-            "source": "exact_cosine_pgvector",
+            "source": "exact_cosine_simulator",
         }
 
 # ---------------------------------------------------------------------------

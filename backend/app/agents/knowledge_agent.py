@@ -27,7 +27,7 @@ class KnowledgeAgent(AgentRunner):
                 confidence=0.0,
                 reasoning_summary="Historical knowledge retrieval failed; no fabricated events returned.",
                 evidence_items=[],
-                recommendations=["Configure Supabase pgvector and upload embeddings before planning."],
+                recommendations=["Configure Pinecone vector index and build snapshot before planning."],
                 next_actions=["Resolve retrieval configuration."],
                 status="failed",
                 output={"status": "insufficient_data", "historical_events": [], "sources": []},
@@ -57,7 +57,7 @@ class KnowledgeAgent(AgentRunner):
 
         evidence_items = [
             evidence(
-                "supabase_pgvector",
+                "pinecone",
                 f"Historical match: {item.get('event_name')}",
                 f"Similarity {item.get('similarity')} | {item.get('country')} {item.get('start_year')}",
                 record_id=str(item.get("id")),
@@ -69,7 +69,7 @@ class KnowledgeAgent(AgentRunner):
             ctx.scenario,
             confidence=confidence,
             reasoning_summary=(
-                f"Retrieved {len(retrieved)} comparable disasters from Supabase pgvector "
+                f"Retrieved {len(retrieved)} comparable disasters from Pinecone vector index "
                 "with traceable source IDs and similarity scores."
             ),
             evidence_items=evidence_items,

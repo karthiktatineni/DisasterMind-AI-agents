@@ -1,4 +1,4 @@
-"""RAG layer: scenario → embedding → vector search → context builder."""
+"""RAG layer: scenario → embedding → Pinecone vector search → context builder."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from typing import Any
 
 from backend.app.schemas import DisasterScenario
 from backend.app.services.embedding_service import EmbeddingConfigError, EmbeddingService
-from backend.app.services.supabase_client import SupabaseConfigError, SupabaseVectorClient
+from backend.app.services.pinecone_client import PineconeConfigError, PineconeVectorClient
 
 
 def _format_event_label(row: dict[str, Any]) -> str:
@@ -33,26 +33,33 @@ class RAGService:
     def __init__(
         self,
         embedding_service: EmbeddingService | None = None,
-        supabase_client: SupabaseVectorClient | None = None,
+        pinecone_client: PineconeVectorClient | None = None,
     ):
         self._embedding_service = embedding_service
-        self._supabase_client = supabase_client
+        self._pinecone_client = pinecone_client
 
     async def retrieve(self, scenario: DisasterScenario, top_k: int = 10) -> dict[str, Any]:
         try:
             embedding_service = self._embedding_service or EmbeddingService()
-            supabase = self._supabase_client or SupabaseVectorClient()
-        except (EmbeddingConfigError, SupabaseConfigError) as exc:
+            pinecone = self._pinecone_client or PineconeVectorClient()
+        except (EmbeddingConfigError, PineconeConfigError) as exc:
             return {"status": "insufficient_data", "reason": str(exc)}
 
         query_text = EmbeddingService.build_scenario_query(scenario.model_dump())
         try:
             query_embedding = await embedding_service.embed_text(query_text)
-            rows = await supabase.rpc_match_disasters(
-                query_embedding=query_embedding,
-                match_count=top_k,
-                filter_disaster_type=scenario.disaster_type or None,
-                filter_country=scenario.country or None,
+            
+            filter_conditions = {}
+            if scenario.disaster_type:
+                filter_conditions["disaster_type"] = {"$eq": scenario.disaster_type}
+            if scenario.country:
+                filter_conditions["country"] = {"$eq": scenario.country}
+            filter_metadata = filter_conditions if filter_conditions else None
+
+            rows = await pinecone.query(
+                vector=query_embedding,
+                top_k=top_k,
+                filter_metadata=filter_metadata,
             )
         except Exception as exc:
             return {"status": "insufficient_data", "reason": str(exc)}

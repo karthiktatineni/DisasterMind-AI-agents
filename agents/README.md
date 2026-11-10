@@ -5,7 +5,7 @@ This folder contains the canonical agent descriptions for the DisasterMind AI mu
 ## Execution Order
 
 1. Coordinator
-2. Knowledge (Supabase pgvector retrieval)
+2. Knowledge (Pinecone vector retrieval)
 3. Similarity (ranked vector matches)
 4. Risk (transparent contributors)
 5. Prediction (XGBoost models)

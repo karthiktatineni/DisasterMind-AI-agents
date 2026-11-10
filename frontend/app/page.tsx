@@ -269,7 +269,7 @@ export default function Home() {
       setOrchestration(response);
       if (response.insufficient_data) {
         setReport(
-          `Insufficient data: ${response.insufficient_data.reason ?? "Configure Supabase pgvector and embeddings."}`,
+          `Insufficient data: ${response.insufficient_data.reason ?? "Configure Pinecone vector index and embeddings."}`,
         );
         setServiceState("offline");
       } else {
@@ -601,7 +601,7 @@ export default function Home() {
                   <h3 className="font-bold">Retrieved historical disasters</h3>
                   <span className="status-pill">
                     <DatabaseZap size={14} aria-hidden="true" />
-                    Supabase pgvector
+                    Pinecone Vector Index
                   </span>
                 </div>
                 <div className="panel-body">

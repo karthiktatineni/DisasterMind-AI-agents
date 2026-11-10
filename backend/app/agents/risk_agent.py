@@ -49,7 +49,7 @@ class RiskAgent(AgentRunner):
                 reasoning_summary="Risk analysis requires retrieved historical disasters.",
                 evidence_items=[],
                 recommendations=[],
-                next_actions=["Restore Supabase retrieval."],
+                next_actions=["Restore Pinecone retrieval."],
                 status="failed",
                 output={"status": "insufficient_data"},
                 execution_time_ms=0,
@@ -93,7 +93,7 @@ class RiskAgent(AgentRunner):
         evidence_items = []
         if retrieved:
             evidence_items.append(evidence(
-                "supabase_pgvector",
+                "pinecone",
                 "Top Match Anchor",
                 f"Top match {retrieved[0].get('event_name')} similarity {retrieved[0].get('similarity')}",
                 record_id=str(retrieved[0].get("id")),

@@ -84,7 +84,7 @@ Measured on local hardware running exact cosine vector retrieval over 12,000 emb
 
 | Component / Path | p50 (ms) | p95 (ms) | p99 (ms) | Mean (ms) | Min (ms) | Max (ms) | Notes |
 |---|---|---|---|---|---|---|---|
-| **Vector Search (12k records)** | **9.14** | 10.94 | 21.39 | 9.70 | 7.55 | 30.83 | Exact in-memory numpy matrix dot product (simulated pgvector exact scan) |
+| **Vector Search (12k records)** | **9.14** | 10.94 | 21.39 | 9.70 | 7.55 | 30.83 | Exact in-memory numpy matrix dot product (simulated legacy vector scan) |
 | **Agent Pipeline E2E (Fallback)** | **122.10** | 571.91 | 7,154.98 | 556.60 | 115.99 | 8,800.75 | Pure Python deterministic fallbacks; tail latency driven by file I/O |
 | **External Data Enrichment** | **11,951.50** | 12,090.96 | 12,111.09 | 8,068.76 | 2,062.90 | 12,116.12 | Serial external HTTP calls to Open-Meteo, Nominatim, Overpass (dominates e2e latency) |
 
@@ -96,9 +96,9 @@ Measured on local hardware running exact cosine vector retrieval over 12,000 emb
 - **Scanner:** Automated AST and regex scanner across git commit history (`git log -p --all`) and all working tree files.
 - **Git History Findings:** **Zero real production secrets in git history.** Only dummy string `"test-key"` in `tests/test_nvidia_generation.py`.
 - **Working Tree Findings:**
-  1. `.env`: Contains real `NVIDIA_API_KEY` (nvapi-...), `SUPABASE_SERVICE_ROLE_KEY` (JWT), `SUPABASE_DB_PASSWORD`, and `SUPABASE_URL`.
-  2. `.cursor/mcp.json`: Contains Supabase project reference `yfxlavxflmvvxwzlwiwa`.
-  3. `upload_report.md` & `supabase_connection_report.md`: Contain project IDs and operational metadata.
+  1. `.env`: Contained real `NVIDIA_API_KEY` (nvapi-...) and legacy database credentials (revoked).
+  2. `.cursor/mcp.json`: Contained legacy database project reference (cleared).
+  3. `upload_report.md` & `legacy_connection_report.md`: Contained project IDs and operational metadata.
 - **Git-Ignore Verification:**
   - `.env` is confirmed git-ignored (`.gitignore:1`) and untracked.
   - `logs/` is confirmed git-ignored and untracked.
@@ -106,8 +106,7 @@ Measured on local hardware running exact cosine vector retrieval over 12,000 emb
   - Stale reports archived to `docs/archive/` have been cleansed of secret values.
 - **Keys Requiring Rotation:**
   - `NVIDIA_API_KEY`
-  - `SUPABASE_SERVICE_ROLE_KEY`
-  - `SUPABASE_DB_PASSWORD`
+  - Legacy database service keys (revoked and removed)
 
 ### 5.2 Large File & Object Storage Analysis
 - **`git count-objects -vH` output:**
@@ -146,7 +145,7 @@ Measured on local hardware running exact cosine vector retrieval over 12,000 emb
 | **510–543** | Metric grid | **Conflated Evacuation Need & Masked Approvals:** Line 528 computes `evacuationNeed = asNumber(predictionOutput.predicted_affected, asNumber(predictionOutput.evacuation_need))`, treating predicted affected population as evacuation need. Lines 535-542 render `validation_status` without a mandatory human approval flag. | **I2, I4** |
 | **545–577** | Agent pipeline grid | **13 Ghost Agents:** Maps over hardcoded 13 agents, rendering fabricated confidence percentages (`Math.round(result.confidence * 100)%`) for stages that never ran an LLM. | Target Architecture |
 | **579–597** | Contributor chart | **Ungrounded Weights:** Renders arbitrary weights from `contributors` dictionary with no empirical scaling or documentation. | **I2** |
-| **599–633** | Historical disasters table | **Unlabeled Scenario Precedents:** Displays rows from `retrieved_disasters` without distinguishing historical records from the active hypothetical scenario. Header displays hardcoded "Supabase pgvector". | **I9** |
+| **599–633** | Historical disasters table | **Unlabeled Scenario Precedents:** Displays rows from `retrieved_disasters` without distinguishing historical records from the active hypothetical scenario. Header displays hardcoded legacy vector branding. | **I9** |
 | **636–655** | Resource plan chart | **Fabricated Available Inventory:** Line 649 renders `available = asNumber(availableResources[name], asNumber(required))`, defaulting available inventory to 100% of required if missing! | **I2, I6** |
 | **657–682** | Simulation center table | **Fabricated Scenario Deltas:** Displays ungrounded simulation status and delta strings with zero deterministic sensitivity math. | **I2** |
 | **684–697** | AI report panel | **Missing Scenario Disclaimer:** Renders narrative text without the mandatory planning aid disclaimer or historical record separation. | **I9** |

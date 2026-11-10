@@ -39,7 +39,7 @@ class CoordinatorAgent(AgentRunner):
         return self._result(
             ctx.scenario,
             confidence=confidence,
-            reasoning_summary="Orchestrating evidence-backed agent pipeline with mandatory Supabase retrieval.",
+            reasoning_summary="Orchestrating evidence-backed agent pipeline with mandatory Pinecone retrieval.",
             evidence_items=[evidence("coordinator", "Execution plan", str(AGENT_SEQUENCE))],
             recommendations=["Execute all agents in sequence."],
             next_actions=["Retrieve historical disasters."],

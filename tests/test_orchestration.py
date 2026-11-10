@@ -45,7 +45,7 @@ MOCK_SIMILARITY = {
         {"id": "2014-0002-IND", "event_name": "Cyclone Hudhud", "country": "India", "start_year": 2014, "similarity": 0.88},
     ],
     "execution_time_ms": 12.0,
-    "source": "supabase_pgvector",
+    "source": "pinecone",
 }
 
 

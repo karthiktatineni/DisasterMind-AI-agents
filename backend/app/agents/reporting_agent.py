@@ -71,7 +71,7 @@ class ReportingAgent(AgentRunner):
                 confidence=confidence,
                 reasoning_summary="Generated evidence-backed report sections with disaster citations and model outputs.",
                 evidence_items=[
-                    evidence("supabase_pgvector", "Evidence used", citation_block),
+                    evidence("pinecone", "Evidence used", citation_block),
                 ],
                 recommendations=["Export report with evidence appendix for judge verification."],
                 next_actions=["Deliver to dashboard."],
