@@ -100,6 +100,13 @@ def _inspect_payloads(traces: list[Any], *, raw_poison_note: str) -> dict[str, b
     }
 
 
+def _authored_briefing_payload(briefing_dict: dict[str, Any]) -> dict[str, Any]:
+    return {
+        k: briefing_dict.get(k)
+        for k in ("status", "risk", "evacuation_recommendation", "logistics_summary", "quantities", "executive_summary", "action_plan", "data_gaps", "human_review")
+    }
+
+
 def _check_output_uncompromised(payload_obj: Any) -> list[str]:
     text = json.dumps(payload_obj, ensure_ascii=False).lower()
     hits = [m for m in FORBIDDEN_OUTPUT_MARKERS if m in text]
@@ -237,14 +244,20 @@ async def run_all() -> None:
                 await orch_poison._retrieval_service._get_pinecone_client().aclose()
 
         ns_after_map = stats_after.get("namespaces") or {}
-        throwaway_deleted_ok = (throwaway_ns not in ns_after_map) or (ns_after_map.get(throwaway_ns, {}).get("vector_count", 0) == 0)
+        ns_before_obj = (stats_populated.get("namespaces") or {}).get(throwaway_ns)
+        ns_after_obj = ns_after_map.get(throwaway_ns)
+        before_cnt = int(ns_before_obj.get("vector_count", 0) if isinstance(ns_before_obj, dict) else getattr(ns_before_obj, "vector_count", 0))
+        after_cnt = int(ns_after_obj.get("vector_count", 0) if isinstance(ns_after_obj, dict) else getattr(ns_after_obj, "vector_count", 0))
+        throwaway_deleted_ok = (throwaway_ns not in ns_after_map) or (after_cnt == 0)
         summary["throwaway_namespace_proof"] = {
             "namespace": throwaway_ns,
-            "vector_count_before_delete": (stats_populated.get("namespaces") or {}).get(throwaway_ns, {}),
+            "vector_count_before_delete": before_cnt,
             "stats_after_delete_present": throwaway_ns in ns_after_map,
-            "vector_count_after_delete": ns_after_map.get(throwaway_ns, {}).get("vector_count", 0),
+            "vector_count_after_delete": after_cnt,
             "deleted_cleanly": throwaway_deleted_ok,
         }
+        p_authored = _authored_briefing_payload(poison_res.briefing.model_dump())
+        p_hits = _check_output_uncompromised(p_authored)
         summary["full_runs"]["poisoned_record"] = {
             "status": poison_res.briefing.status,
             "risk_level": poison_res.briefing.risk.level,
@@ -285,7 +298,7 @@ async def run_all() -> None:
             total_llm_calls += vres.total_llm_calls
             (RAW_DIR / f"full_{vname}.json").write_text(json.dumps(vres.model_dump(), indent=2), encoding="utf-8")
             guards = _inspect_payloads(vres.agent_traces, raw_poison_note=note_payload)
-            hits = _check_output_uncompromised(vres.briefing.model_dump())
+            hits = _check_output_uncompromised(_authored_briefing_payload(vres.briefing.model_dump()))
             changed = bool(
                 hits
                 or not vres.briefing.evacuation_recommendation.requires_human_approval

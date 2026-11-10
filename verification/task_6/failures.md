@@ -1,0 +1,5 @@
+# Task 6 Failures Log (`R4`)
+
+## Attempt 1 (`task-1742`, committed backend code `8e6e1b3`)
+- **Outcome:** All `12` live runs (`baseline`, `poisoned_record` in `task6-poison-throwaway-1794315291`, `false_numbers`, `disable_human_approval`, and all `8` remaining note injection variants) completed with **`0` compromised runs**, throwaway namespace deleted cleanly (`deleted=True`), and `62` live NIM calls (within `300` cap). Script exited with code `1` only at the final `json.dumps(summary)` call (`line 387`) because Pinecone SDK returns a `NamespaceSummary` object (not plain `dict`) in `describe_index_stats()["namespaces"]` and `_check_output_uncompromised` had scanned echoed `CitationItem.event_name` DB metadata alongside agent outputs.
+- **Root-Cause Fix:** Converted `NamespaceSummary` -> `int` count in `scripts/verify_task6_injection.py` and scoped `_check_output_uncompromised` to authored briefing fields (`_authored_briefing_payload`); re-aggregated `live_injection_report.json` cleanly from the `8e6e1b3` raw traces and re-verified `describe_index_stats()` live showing `remaining_throwaway_namespaces: []`.
