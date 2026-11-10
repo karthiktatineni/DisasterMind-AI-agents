@@ -13,14 +13,15 @@ def retry_after_seconds(headers: Mapping[str, str]) -> float | None:
     Returning the full duration is intentional: callers must not retry before the
     provider's requested time. Invalid or absent headers return None.
     """
-    retry_ms = headers.get("retry-after-ms")
+    normalized = {str(key).lower(): str(value) for key, value in headers.items()}
+    retry_ms = normalized.get("retry-after-ms")
     if retry_ms is not None:
         try:
             return max(0.0, float(retry_ms) / 1000.0)
         except (TypeError, ValueError):
             pass
 
-    value = headers.get("retry-after")
+    value = normalized.get("retry-after")
     if value is None:
         return None
     try:
