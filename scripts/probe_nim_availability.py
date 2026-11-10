@@ -6,14 +6,17 @@ from datetime import datetime
 import json
 import re
 from pathlib import Path
+import sys
 from typing import Any
 
 import httpx
 
-from backend.app.config import get_settings
-
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "verification" / "final_checks" / "nim_availability.json"
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from backend.app.config import get_settings
 SAFE_HEADERS = {
     "date", "retry-after", "retry-after-ms", "content-type", "x-request-id",
     "request-id", "x-ratelimit-limit", "x-ratelimit-remaining", "x-ratelimit-reset",
