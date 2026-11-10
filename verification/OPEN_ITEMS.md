@@ -31,8 +31,10 @@ Tracks external/non-code items surfaced during Tasks 0–2P that do not halt loc
 
 ---
 
-## 3. Pinecone Starter Monthly Inference Token Quota — R12
+## 3. Pinecone Starter Monthly Limits (Inference Tokens & 1 GB Egress) — R12
 
-- **Observed Usage:** Pinecone `/embed` HTTP response headers (`x-pinecone-api-version: 2025-04`) do **not** report account billing plan tier or monthly tokens remaining. Live 96-record sample measurement showed `13,476` Pinecone `usage.total_tokens` vs `6,996` `cl100k_base` tokens (`1.9262x` ratio), implying `~2.49M` inference tokens per 16,833-row `llama-text-embed-v2` pass (`~7–8M` cumulative tokens across prior Task 2P benchmarks and testing vs documented Starter plan 5M tokens/month free quota).
-- **Action Required Before Any Corpus Re-Embed:** Confirm account tier and remaining monthly inference token quota in the Pinecone Console Billing/Usage dashboard.
+- **Observed Usage & Dashboard Check (2026-11-10):**
+  - Pinecone `/embed` HTTP response headers (`x-pinecone-api-version: 2025-04`) do **not** report account billing plan tier or monthly tokens remaining. Live 96-record sample measurement showed `13,476` Pinecone `usage.total_tokens` vs `6,996` `cl100k_base` tokens (`1.9262x` ratio), implying `~2.49M` inference tokens per 16,833-row `llama-text-embed-v2` pass (`~7–8M` cumulative tokens across prior Task 2P benchmarks and testing vs documented Starter plan 5M tokens/month free quota).
+  - User inspected the live Pinecone dashboard on `2026-11-10`: `disastermind` index is on a monthly **1 GB egress limit** (`read access paused until December 1st, 2026 UTC` if exceeded), with the egress bar already past halfway (> ~55% consumed, driven by prior Task 2P D1-D5 full-namespace reads).
+- **Quota Conservation Action in Force:** Keep retrieval at small `top_k` (`<= 5`), avoid redundant full-namespace fetches/re-embeds, and use a **stratified 2,000-record sample** (not full 16,833 re-embed) for the Task 12 clean-clone namespace check per R12 unless billing upgrade / quota increase is explicitly confirmed.
 

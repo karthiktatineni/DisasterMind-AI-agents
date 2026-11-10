@@ -255,7 +255,7 @@ class RequestSizeLimitMiddleware:
                 item = chunks[idx]
                 idx += 1
                 return item
-            return {"type": "http.request", "body": b"", "more_body": False}
+            return await receive()
 
         await self.app(scope, _replay_receive, send)
 
