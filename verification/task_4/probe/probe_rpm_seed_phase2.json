@@ -1,0 +1,35 @@
+{
+  "phase2_calls": 48,
+  "seed_at_temp_0_7": {
+    "seed424242_run1_content": "{\"city\": \"Mumbai\", \"hazard\": \"cyclone\", \"score\": 73}",
+    "seed424242_run2_content": "{\"city\": \"Mumbai\", \"hazard\": \"cyclone\", \"score\": 73}",
+    "seed999999_run3_content": "{\"city\": \"Mumbai\", \"hazard\": \"cyclone\", \"score\": 73}",
+    "same_seed_content_identical": true,
+    "same_seed_reasoning_identical": true
+  },
+  "rpm_45_wave": {
+    "concurrency": 45,
+    "wall_seconds": 3.375,
+    "status_counts": {
+      "200": 25,
+      "429": 20
+    },
+    "ratelimit_headers_seen": [],
+    "sample_429": {
+      "status_code": 429,
+      "headers": {
+        "date": "Tue, 10 Nov 2026 09:19:44 GMT",
+        "content-type": "application/problem+json",
+        "content-length": "42",
+        "connection": "keep-alive",
+        "nvcf-error-source": "upstream_status",
+        "vary": "Origin",
+        "x-request-id": "2f6a40bb-47ad-46d9-872e-cad9d6dac917"
+      },
+      "body": {
+        "status": 429,
+        "title": "Too Many Requests"
+      }
+    }
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "list_status": 200,
+  "list_headers": {
+    "date": "Tue, 10 Nov 2026 09:14:28 GMT",
+    "content-type": "application/json",
+    "transfer-encoding": "chunked",
+    "connection": "keep-alive",
+    "vary": "Origin",
+    "x-request-id": "fb0cc3b9-19f0-4764-8524-4cf6c1ecf18f"
+  },
+  "total_models": 84,
+  "target_model_entry": {
+    "id": "nvidia/nemotron-3-ultra-550b-a55b",
+    "object": "model",
+    "created": 735790403,
+    "owned_by": "nvidia"
+  },
+  "model_detail_status": 200,
+  "model_detail_body": {
+    "id": "nvidia/nemotron-3-ultra-550b-a55b",
+    "object": "model",
+    "created": 735790403,
+    "owned_by": "nvidia"
+  },
+  "candidate_alternatives_sample": [
+    "deepseek-ai/deepseek-coder-6.7b-instruct",
+    "deepseek-ai/deepseek-v4.1-flash",
+    "mistralai/codestral-22b-instruct-v0.1",
+    "mistralai/mistral-7b-instruct-v0.3",
+    "mistralai/mistral-large",
+    "mistralai/mistral-large-2-instruct",
+    "mistralai/mistral-large-4-1t-a52b",
+    "mistralai/mixtral-8x22b-v0.1",
+    "nv-mistralai/mistral-nemo-12b-instruct",
+    "nvidia/llama-3.1-nemotron-51b-instruct",
+    "nvidia/llama-3.1-nemotron-70b-instruct",
+    "nvidia/llama-3.1-nemotron-safety-guard-8b-v3",
+    "nvidia/llama-3.1-nemotron-ultra-253b-v1",
+    "nvidia/llama-nemotron-embed-vl-1b-v2",
+    "nvidia/mistral-nemo-minitron-8b-8k-instruct",
+    "nvidia/nemotron-3-embed-1b",
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+    "nvidia/nemotron-3-super-120b-a12b",
+    "nvidia/nemotron-3-ultra-550b-a55b",
+    "nvidia/nemotron-3.5-bolt-e4b",
+    "nvidia/nemotron-3.5-content-safety",
+    "nvidia/nemotron-3.5-embed-1b",
+    "nvidia/nemotron-3.5-embed-8b",
+    "nvidia/nemotron-3.5-lightning-30b-a3b",
+    "nvidia/nemotron-3.5-super-vl-120b-a12b",
+    "nvidia/nemotron-4-340b-instruct",
+    "nvidia/nemotron-4-340b-reward",
+    "nvidia/nemotron-nano-3-30b-a3b",
+    "nvidia/nemotron-parse",
+    "nvidia/nemotron-parse-2.0",
+    "nvidia/nv-embedqa-mistral-7b-v2",
+    "openai/gpt-oss-20b"
+  ]
+}

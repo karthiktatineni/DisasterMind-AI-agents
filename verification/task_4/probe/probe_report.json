@@ -1,0 +1,523 @@
+{
+  "model": "nvidia/nemotron-3-ultra-550b-a55b",
+  "base_url": "https://integrate.api.nvidia.com/v1",
+  "total_live_chat_requests": 52,
+  "native_tools": {
+    "auto_valid": true,
+    "auto_choice": {
+      "status_code": 200,
+      "latency_ms": 2898.64,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "system_fingerprint": null,
+      "finish_reason": "tool_calls",
+      "content": null,
+      "reasoning_content": "The user is asking for historical flood statistics in India from 2010 to 2024. I need to use the get_historical_stats tool with disaster_type \"Flood\", country \"India\", year_min 2010, year_max 2024. Let me call that tool.",
+      "tool_calls": [
+        {
+          "id": "call-fba0b22e-f7b7-492c-a161-20f1f3fa572c",
+          "type": "function",
+          "function": {
+            "name": "get_historical_stats",
+            "arguments": "{\"disaster_type\":\"Flood\",\"country\":\"India\",\"year_min\":2010,\"year_max\":2024}"
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 911,
+        "completion_tokens": 136,
+        "total_tokens": 1047,
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": null,
+          "reasoning_tokens": 67,
+          "rejected_prediction_tokens": null
+        }
+      },
+      "ratelimit_headers": {}
+    },
+    "required_valid": true,
+    "required_choice": {
+      "status_code": 200,
+      "latency_ms": 2310.52,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "system_fingerprint": null,
+      "finish_reason": "tool_calls",
+      "content": null,
+      "reasoning_content": "The user is asking for historical Storm precedents in Bangladesh. I need to use the search_precedents tool with disaster_type \"Storm\" and country \"Bangladesh\". The query parameter is required, so I'll use a general query like \"Storm Bangladesh historical precedents\". Let me call the tool.",
+      "tool_calls": [
+        {
+          "id": "call-955c09e1-8c83-415b-82df-7a0aaebaf44e",
+          "type": "function",
+          "function": {
+            "name": "search_precedents",
+            "arguments": "{\"query\": \"Storm Bangladesh historical precedents\", \"disaster_type\": \"Storm\", \"country\": \"Bangladesh\"}"
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 891,
+        "completion_tokens": 104,
+        "total_tokens": 995,
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": null,
+          "reasoning_tokens": 62,
+          "rejected_prediction_tokens": null
+        }
+      },
+      "ratelimit_headers": {}
+    },
+    "named_valid": true,
+    "named_choice": {
+      "status_code": 200,
+      "latency_ms": 3699.46,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "system_fingerprint": null,
+      "finish_reason": "tool_calls",
+      "content": null,
+      "reasoning_content": "The user wants an analysis of flood impact in the Philippines from 2005 to 2024. I need to use the get_historical_stats tool to get aggregate disaster metrics for flood in Philippines for that period. Let me call that tool.",
+      "tool_calls": [
+        {
+          "id": "call-89fc4525-b4dc-4691-95ed-271ebc7f322d",
+          "type": "function",
+          "function": {
+            "name": "get_historical_stats",
+            "arguments": "{\"disaster_type\": \"Flood\", \"country\": \"Philippines\", \"year_min\": 2005, \"year_max\": 2024}"
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 902,
+        "completion_tokens": 93,
+        "total_tokens": 995,
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": null,
+          "reasoning_tokens": 54,
+          "rejected_prediction_tokens": null
+        }
+      },
+      "ratelimit_headers": {}
+    }
+  },
+  "parallel_tool_calls": {
+    "parallel_true_count": 2,
+    "parallel_true_valid": true,
+    "parallel_true_calls": [
+      {
+        "id": "call-fca30359-445d-4a54-a78b-327262a119c3",
+        "type": "function",
+        "function": {
+          "name": "get_historical_stats",
+          "arguments": "{\"disaster_type\":\"Storm\",\"year_max\":2024,\"country\":\"India\",\"year_min\":2010}"
+        }
+      },
+      {
+        "id": "call-31dacc5f-6b00-4cbf-8cc8-561e4c4cdc4c",
+        "type": "function",
+        "function": {
+          "name": "get_weather",
+          "arguments": "{\"latitude\":19.076,\"longitude\":72.877}"
+        }
+      }
+    ],
+    "parallel_false_count": 1,
+    "parallel_false_calls": [
+      {
+        "id": "call-c4cc7dc7-a81b-4159-b3b1-b06092d0617c",
+        "type": "function",
+        "function": {
+          "name": "get_historical_stats",
+          "arguments": "{\"year_min\":2010,\"year_max\":2024,\"disaster_type\":\"Storm\",\"country\":\"India\"}"
+        }
+      }
+    ]
+  },
+  "seed_determinism": {
+    "json_content_identical": true,
+    "json_reasoning_identical": false,
+    "json_run1": {
+      "status_code": 200,
+      "latency_ms": 8050.13,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "system_fingerprint": null,
+      "finish_reason": "stop",
+      "content": "{\"hazard\": \"Cyclone\", \"severity\": \"high\", \"requires_human_approval\": true}",
+      "reasoning_content": "The user wants me to classify a cyclone hazard in Odisha, India as JSON with specific fields: hazard, severity, and requires_human_approval. They want compact JSON only.\n\nI need to assess the severity of a cyclone in Odisha. Odisha is a state on the east coast of India that is highly prone to cyclones from the Bay of Bengal. Cyclones there can be very severe, causing massive damage, storm surges, flooding, and loss of life. Historical examples include the 1999 Odisha cyclone (super cyclone), Cyclone Phailin (2013), Cyclone Fani (2019), Cyclone Amphan (2020), etc. These are typically high severity events.\n\nSeverity classification: Could be \"high\", \"critical\", \"extreme\", etc. Since the user didn't specify a particular cyclone event, I should classify based on typical cyclone hazard in Odisha. Generally, cyclones in Odisha are considered high severity due to the vulnerability of the region.\n\nRequires human approval: Likely true for high severity hazards, as they require expert assessment and decision-making.\n\nThus, I'll output JSON with hazard: \"Cyclone\", severity: \"high\" (or \"critical\"), requires_human_approval: true.\n\nI'll choose \"high\" for severity. Could also be \"critical\". I'll go with \"high\". The user wants compact JSON only, so no extra text.",
+      "tool_calls": null,
+      "usage": {
+        "prompt_tokens": 46,
+        "completion_tokens": 328,
+        "total_tokens": 374,
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": null,
+          "reasoning_tokens": 301,
+          "rejected_prediction_tokens": null
+        }
+      },
+      "ratelimit_headers": {}
+    },
+    "json_run2": {
+      "status_code": 200,
+      "latency_ms": 8273.34,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "system_fingerprint": null,
+      "finish_reason": "stop",
+      "content": "{\"hazard\": \"Cyclone\", \"severity\": \"high\", \"requires_human_approval\": true}",
+      "reasoning_content": "The user wants me to classify a cyclone hazard in Odisha, India as JSON with three fields: hazard, severity, and requires_human_approval. They want compact JSON only.\n\nI need to determine the severity. Cyclones in Odisha can be severe - Odisha is prone to cyclones from the Bay of Bengal. Historical cyclones like 1999 Odisha cyclone (super cyclone), Cyclone Phailin (2013), Cyclone Fani (2019), Cyclone Amphan (2020) have caused massive damage. Severity could be \"high\" or \"critical\". Since it's a general classification for \"Cyclone in Odisha\", I'd say severity is \"high\" given the region's vulnerability.\n\nRequires human approval: likely true for disaster response decisions.\n\nHazard: \"Cyclone\"\n\nSo JSON: {\"hazard\":\"Cyclone\",\"severity\":\"high\",\"requires_human_approval\":true}\n\nMake it compact.",
+      "tool_calls": null,
+      "usage": {
+        "prompt_tokens": 46,
+        "completion_tokens": 233,
+        "total_tokens": 279,
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": null,
+          "reasoning_tokens": 206,
+          "rejected_prediction_tokens": null
+        }
+      },
+      "ratelimit_headers": {}
+    },
+    "tool_calls_identical": false,
+    "tool_args_identical": true,
+    "tool_run1": {
+      "status_code": 200,
+      "latency_ms": 2199.53,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "system_fingerprint": null,
+      "finish_reason": "tool_calls",
+      "content": null,
+      "reasoning_content": "The user asks: \"Query historical Earthquake stats in Nepal from 2010 to 2024.\" We need to call get_historical_stats with disaster_type \"Earthquake\", country \"Nepal\", year_min 2010, year_max 2024.",
+      "tool_calls": [
+        {
+          "id": "call-8719788b-055a-4bd4-bf9e-0b886c503dac",
+          "type": "function",
+          "function": {
+            "name": "get_historical_stats",
+            "arguments": "{\"disaster_type\": \"Earthquake\", \"country\": \"Nepal\", \"year_min\": 2010, \"year_max\": 2024}"
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 903,
+        "completion_tokens": 120,
+        "total_tokens": 1023,
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": null,
+          "reasoning_tokens": 65,
+          "rejected_prediction_tokens": null
+        }
+      },
+      "ratelimit_headers": {}
+    },
+    "tool_run2": {
+      "status_code": 200,
+      "latency_ms": 2668.23,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "system_fingerprint": null,
+      "finish_reason": "tool_calls",
+      "content": null,
+      "reasoning_content": "The user asks: \"Query historical Earthquake stats in Nepal from 2010 to 2024.\" We need to call get_historical_stats with disaster_type \"Earthquake\", country \"Nepal\", year_min 2010, year_max 2024.",
+      "tool_calls": [
+        {
+          "id": "call-2faa22fa-2287-4a31-9540-b715362c7a4b",
+          "type": "function",
+          "function": {
+            "name": "get_historical_stats",
+            "arguments": "{\"disaster_type\": \"Earthquake\", \"country\": \"Nepal\", \"year_min\": 2010, \"year_max\": 2024}"
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 903,
+        "completion_tokens": 120,
+        "total_tokens": 1023,
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": null,
+          "reasoning_tokens": 65,
+          "rejected_prediction_tokens": null
+        }
+      },
+      "ratelimit_headers": {}
+    }
+  },
+  "response_format": {
+    "json_object_status": 200,
+    "json_object_valid_json": true,
+    "json_schema_status": 200,
+    "json_schema_strict_valid": true,
+    "json_schema_error": null,
+    "json_schema_choice": {
+      "status_code": 200,
+      "latency_ms": 22690.54,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "system_fingerprint": null,
+      "finish_reason": "stop",
+      "content": "{\"hazard\": \"cyclone\", \"severity\": \"extreme\", \"requires_human_approval\": true}",
+      "reasoning_content": "The user wants me to classify a Category 4 cyclone approaching Visakhapatnam requiring mandatory evacuation. This seems like a request for a classification or categorization of a cyclone event. However, the instruction says \"Produce strictly schema-compliant output.\" But no schema is provided in the prompt. The user might be expecting a specific format, perhaps JSON or some structured data. Since no schema is given, I need to infer what the schema might be. The user mentions \"Classify a Category 4 cyclone approaching Visakhapatnam requiring mandatory evacuation.\" This could be a request to output a classification label or a structured report.\n\nGiven the ambiguity, I should produce a structured output that includes relevant details: cyclone category, location, action required (mandatory evacuation), and perhaps other metadata. Since the instruction says \"strictly schema-compliant output,\" but no schema is provided, I might need to assume a common schema for cyclone alerts. Perhaps something like:\n\n{\n  \"event\": \"cyclone\",\n  \"category\": 4,\n  \"location\": \"Visakhapatnam\",\n  \"action\": \"mandatory evacuation\",\n  \"status\": \"approaching\",\n  \"timestamp\": \"current time\"\n}\n\nBut I don't have a timestamp. I could use the current date/time. However, the user didn't ask for a timestamp. Maybe just the classification.\n\nAlternatively, the user might want a simple classification like \"Category 4 Cyclone - Mandatory Evacuation Ordered for Visakhapatnam\". But \"schema-compliant\" suggests structured data.\n\nI'll output a JSON object with relevant fields. I'll include: cyclone_category, location, evacuation_status, recommended_action, and maybe a unique identifier. Since no schema, I'll create a reasonable one.\n\nI'll produce:\n\n{\n  \"cyclone_category\": 4,\n  \"location\": \"Visakhapatnam\",\n  \"evacuation_order\": \"mandatory\",\n  \"status\": \"approaching\",\n  \"classification\": \"Category 4 Cyclone - Mandatory Evacuation Required\"\n}\n\nThat should be schema-compliant if the schema expects these fields. I'll output only JSON.",
+      "tool_calls": null,
+      "usage": {
+        "prompt_tokens": 41,
+        "completion_tokens": 473,
+        "total_tokens": 514,
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": null,
+          "reasoning_tokens": 443,
+          "rejected_prediction_tokens": null
+        }
+      },
+      "ratelimit_headers": {}
+    }
+  },
+  "context_window_probe": {
+    "status_code": 200,
+    "body": {
+      "id": "chatcmpl-7a6f9265-a623-4ad2-a0f8-7be99b4f1d02",
+      "choices": [
+        {
+          "index": 0,
+          "message": {
+            "content": "ok",
+            "role": "assistant",
+            "reasoning_content": "The user wants a one-word reply: \"ok\"."
+          },
+          "finish_reason": "stop",
+          "logprobs": null
+        }
+      ],
+      "created": 1794302130,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "service_tier": null,
+      "system_fingerprint": null,
+      "object": "chat.completion",
+      "usage": {
+        "prompt_tokens": 22,
+        "completion_tokens": 14,
+        "total_tokens": 36,
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": null,
+          "reasoning_tokens": 11,
+          "rejected_prediction_tokens": null
+        }
+      }
+    },
+    "headers": {
+      "date": "Tue, 10 Nov 2026 09:16:19 GMT",
+      "content-type": "application/json",
+      "transfer-encoding": "chunked",
+      "connection": "keep-alive",
+      "access-control-expose-headers": "nvcf-reqid",
+      "nvcf-reqid": "d2dbcc79-b01b-49b4-9a3a-2b42570e9aee",
+      "nvcf-status": "fulfilled",
+      "vary": "Origin",
+      "x-request-id": "9f37569a-d98f-41a8-aa37-e8ff2800609a"
+    }
+  },
+  "deprecated_410_probe": {
+    "model": "nvidia/llama-3.3-nemotron-super-49b-v1",
+    "status_code": 410,
+    "body": {
+      "type": "about:blank",
+      "title": "Gone",
+      "status": 410,
+      "detail": "The model 'nvidia/llama-3.3-nemotron-super-49b-v1' has reached its end of life on 2026-08-26T09:00:00Z and is no longer available."
+    },
+    "ratelimit_headers": {}
+  },
+  "required_tool_20_trials": {
+    "total": 20,
+    "valid": 20,
+    "rate": 1.0,
+    "gate_95_percent_pass": true
+  },
+  "rpm_and_429_burst": {
+    "burst_concurrency": 20,
+    "burst_wall_seconds": 3.452,
+    "status_200_count": 20,
+    "status_429_count": 0,
+    "burst_results": [
+      {
+        "i": 1,
+        "status_code": 200,
+        "latency_ms": 664.78,
+        "ratelimit_headers": {},
+        "error_body": null
+      },
+      {
+        "i": 2,
+        "status_code": 200,
+        "latency_ms": 1865.9,
+        "ratelimit_headers": {},
+        "error_body": null
+      },
+      {
+        "i": 3,
+        "status_code": 200,
+        "latency_ms": 484.49,
+        "ratelimit_headers": {},
+        "error_body": null
+      },
+      {
+        "i": 4,
+        "status_code": 200,
+        "latency_ms": 981.2,
+        "ratelimit_headers": {},
+        "error_body": null
+      },
+      {
+        "i": 5,
+        "status_code": 200,
+        "latency_ms": 439.37,
+        "ratelimit_headers": {},
+        "error_body": null
+      },
+      {
+        "i": 6,
+        "status_code": 200,
+        "latency_ms": 872.11,
+        "ratelimit_headers": {},
+        "error_body": null
+      },
+      {
+        "i": 7,
+        "status_code": 200,
+        "latency_ms": 1026.67,
+        "ratelimit_headers": {},
+        "error_body": null
+      },
+      {
+        "i": 8,
+        "status_code": 200,
+        "latency_ms": 464.23,
+        "ratelimit_headers": {},
+        "error_body": null
+      },
+      {
+        "i": 9,
+        "status_code": 200,
+        "latency_ms": 485.65,
+        "ratelimit_headers": {},
+        "error_body": null
+      },
+      {
+        "i": 10,
+        "status_code": 200,
+        "latency_ms": 1786.34,
+        "ratelimit_headers": {},
+        "error_body": null
+      },
+      {
+        "i": 11,
+        "status_code": 200,
+        "latency_ms": 1025.53,
+        "ratelimit_headers": {},
+        "error_body": null
+      },
+      {
+        "i": 12,
+        "status_code": 200,
+        "latency_ms": 1044.66,
+        "ratelimit_headers": {},
+        "error_body": null
+      },
+      {
+        "i": 13,
+        "status_code": 200,
+        "latency_ms": 484.82,
+        "ratelimit_headers": {},
+        "error_body": null
+      },
+      {
+        "i": 14,
+        "status_code": 200,
+        "latency_ms": 3450.18,
+        "ratelimit_headers": {},
+        "error_body": null
+      },
+      {
+        "i": 15,
+        "status_code": 200,
+        "latency_ms": 1146.06,
+        "ratelimit_headers": {},
+        "error_body": null
+      },
+      {
+        "i": 16,
+        "status_code": 200,
+        "latency_ms": 514.76,
+        "ratelimit_headers": {},
+        "error_body": null
+      },
+      {
+        "i": 17,
+        "status_code": 200,
+        "latency_ms": 500.03,
+        "ratelimit_headers": {},
+        "error_body": null
+      },
+      {
+        "i": 18,
+        "status_code": 200,
+        "latency_ms": 477.29,
+        "ratelimit_headers": {},
+        "error_body": null
+      },
+      {
+        "i": 19,
+        "status_code": 200,
+        "latency_ms": 473.78,
+        "ratelimit_headers": {},
+        "error_body": null
+      },
+      {
+        "i": 20,
+        "status_code": 200,
+        "latency_ms": 984.04,
+        "ratelimit_headers": {},
+        "error_body": null
+      }
+    ]
+  }
+}

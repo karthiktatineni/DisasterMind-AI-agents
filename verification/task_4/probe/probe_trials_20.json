@@ -1,0 +1,1062 @@
+[
+  {
+    "trial": 1,
+    "prompt_inputs": {
+      "hazard": "Storm",
+      "country": "India",
+      "year_min": 2010,
+      "year_max": 2024
+    },
+    "status_code": 200,
+    "latency_ms": 5258.74,
+    "finish_reason": "tool_calls",
+    "valid_tool_call": true,
+    "errors": [],
+    "parsed_tool_calls": [
+      {
+        "id": "call-03421e29-1d92-41aa-8ac6-64752edaf2fb",
+        "name": "get_historical_stats",
+        "args": {
+          "disaster_type": "Storm",
+          "country": "India",
+          "year_min": 2010,
+          "year_max": 2024
+        }
+      }
+    ],
+    "raw_tool_calls": [
+      {
+        "id": "call-03421e29-1d92-41aa-8ac6-64752edaf2fb",
+        "type": "function",
+        "function": {
+          "name": "get_historical_stats",
+          "arguments": "{\"disaster_type\": \"Storm\", \"country\": \"India\", \"year_min\": 2010, \"year_max\": 2024}"
+        }
+      }
+    ],
+    "reasoning_chars": 182,
+    "usage": {
+      "prompt_tokens": 907,
+      "completion_tokens": 107,
+      "total_tokens": 1014,
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 0
+      },
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": null,
+        "audio_tokens": null,
+        "reasoning_tokens": 56,
+        "rejected_prediction_tokens": null
+      }
+    },
+    "ratelimit_headers": {}
+  },
+  {
+    "trial": 2,
+    "prompt_inputs": {
+      "hazard": "Flood",
+      "country": "Bangladesh",
+      "year_min": 2000,
+      "year_max": 2024
+    },
+    "status_code": 200,
+    "latency_ms": 4637.32,
+    "finish_reason": "tool_calls",
+    "valid_tool_call": true,
+    "errors": [],
+    "parsed_tool_calls": [
+      {
+        "id": "call-ece1ae2a-b943-4628-9fc8-a47af2adcaac",
+        "name": "get_historical_stats",
+        "args": {
+          "disaster_type": "Flood",
+          "country": "Bangladesh",
+          "year_min": 2000,
+          "year_max": 2024
+        }
+      }
+    ],
+    "raw_tool_calls": [
+      {
+        "id": "call-ece1ae2a-b943-4628-9fc8-a47af2adcaac",
+        "type": "function",
+        "function": {
+          "name": "get_historical_stats",
+          "arguments": "{\"disaster_type\": \"Flood\", \"country\": \"Bangladesh\", \"year_min\": 2000, \"year_max\": 2024}"
+        }
+      }
+    ],
+    "reasoning_chars": 192,
+    "usage": {
+      "prompt_tokens": 907,
+      "completion_tokens": 113,
+      "total_tokens": 1020,
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 0
+      },
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": null,
+        "audio_tokens": null,
+        "reasoning_tokens": 59,
+        "rejected_prediction_tokens": null
+      }
+    },
+    "ratelimit_headers": {}
+  },
+  {
+    "trial": 3,
+    "prompt_inputs": {
+      "hazard": "Earthquake",
+      "country": "Nepal",
+      "year_min": 2005,
+      "year_max": 2024
+    },
+    "status_code": 200,
+    "latency_ms": 2654.86,
+    "finish_reason": "tool_calls",
+    "valid_tool_call": true,
+    "errors": [],
+    "parsed_tool_calls": [
+      {
+        "id": "call-2cbdaa14-0f39-47e2-bff7-47ca3260c77b",
+        "name": "get_historical_stats",
+        "args": {
+          "disaster_type": "Earthquake",
+          "country": "Nepal",
+          "year_min": 2005,
+          "year_max": 2024
+        }
+      }
+    ],
+    "raw_tool_calls": [
+      {
+        "id": "call-2cbdaa14-0f39-47e2-bff7-47ca3260c77b",
+        "type": "function",
+        "function": {
+          "name": "get_historical_stats",
+          "arguments": "{\"disaster_type\": \"Earthquake\", \"country\": \"Nepal\", \"year_min\": 2005, \"year_max\": 2024}"
+        }
+      }
+    ],
+    "reasoning_chars": 192,
+    "usage": {
+      "prompt_tokens": 909,
+      "completion_tokens": 117,
+      "total_tokens": 1026,
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 0
+      },
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": null,
+        "audio_tokens": null,
+        "reasoning_tokens": 62,
+        "rejected_prediction_tokens": null
+      }
+    },
+    "ratelimit_headers": {}
+  },
+  {
+    "trial": 4,
+    "prompt_inputs": {
+      "hazard": "Wildfire",
+      "country": "United States of America",
+      "year_min": 2015,
+      "year_max": 2024
+    },
+    "status_code": 200,
+    "latency_ms": 8293.38,
+    "finish_reason": "tool_calls",
+    "valid_tool_call": true,
+    "errors": [],
+    "parsed_tool_calls": [
+      {
+        "id": "call-27142f23-db3b-4f4b-adaf-80b204483eca",
+        "name": "get_historical_stats",
+        "args": {
+          "disaster_type": "Wildfire",
+          "country": "United States of America",
+          "year_min": 2015,
+          "year_max": 2024
+        }
+      }
+    ],
+    "raw_tool_calls": [
+      {
+        "id": "call-27142f23-db3b-4f4b-adaf-80b204483eca",
+        "type": "function",
+        "function": {
+          "name": "get_historical_stats",
+          "arguments": "{\"disaster_type\": \"Wildfire\", \"country\": \"United States of America\", \"year_min\": 2015, \"year_max\": 2024}"
+        }
+      }
+    ],
+    "reasoning_chars": 193,
+    "usage": {
+      "prompt_tokens": 911,
+      "completion_tokens": 113,
+      "total_tokens": 1024,
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 0
+      },
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": null,
+        "audio_tokens": null,
+        "reasoning_tokens": 58,
+        "rejected_prediction_tokens": null
+      }
+    },
+    "ratelimit_headers": {}
+  },
+  {
+    "trial": 5,
+    "prompt_inputs": {
+      "hazard": "Drought",
+      "country": "Kenya",
+      "year_min": 2000,
+      "year_max": 2024
+    },
+    "status_code": 200,
+    "latency_ms": 1621.4,
+    "finish_reason": "tool_calls",
+    "valid_tool_call": true,
+    "errors": [],
+    "parsed_tool_calls": [
+      {
+        "id": "call-e168137e-d476-44db-ae62-46d8a0d1b795",
+        "name": "get_historical_stats",
+        "args": {
+          "disaster_type": "Drought",
+          "country": "Kenya",
+          "year_min": 2000,
+          "year_max": 2024
+        }
+      }
+    ],
+    "raw_tool_calls": [
+      {
+        "id": "call-e168137e-d476-44db-ae62-46d8a0d1b795",
+        "type": "function",
+        "function": {
+          "name": "get_historical_stats",
+          "arguments": "{\"disaster_type\": \"Drought\", \"country\": \"Kenya\", \"year_min\": 2000, \"year_max\": 2024}"
+        }
+      }
+    ],
+    "reasoning_chars": 186,
+    "usage": {
+      "prompt_tokens": 908,
+      "completion_tokens": 111,
+      "total_tokens": 1019,
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 0
+      },
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": null,
+        "audio_tokens": null,
+        "reasoning_tokens": 58,
+        "rejected_prediction_tokens": null
+      }
+    },
+    "ratelimit_headers": {}
+  },
+  {
+    "trial": 6,
+    "prompt_inputs": {
+      "hazard": "Storm",
+      "country": "Philippines",
+      "year_min": 2008,
+      "year_max": 2024
+    },
+    "status_code": 200,
+    "latency_ms": 4167.21,
+    "finish_reason": "tool_calls",
+    "valid_tool_call": true,
+    "errors": [],
+    "parsed_tool_calls": [
+      {
+        "id": "call-c6d25ca4-0810-48b3-880e-495442193ef7",
+        "name": "get_historical_stats",
+        "args": {
+          "disaster_type": "Storm",
+          "country": "Philippines",
+          "year_min": 2008,
+          "year_max": 2024
+        }
+      }
+    ],
+    "raw_tool_calls": [
+      {
+        "id": "call-c6d25ca4-0810-48b3-880e-495442193ef7",
+        "type": "function",
+        "function": {
+          "name": "get_historical_stats",
+          "arguments": "{\"disaster_type\": \"Storm\", \"country\": \"Philippines\", \"year_min\": 2008, \"year_max\": 2024}"
+        }
+      }
+    ],
+    "reasoning_chars": 194,
+    "usage": {
+      "prompt_tokens": 907,
+      "completion_tokens": 111,
+      "total_tokens": 1018,
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 0
+      },
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": null,
+        "audio_tokens": null,
+        "reasoning_tokens": 58,
+        "rejected_prediction_tokens": null
+      }
+    },
+    "ratelimit_headers": {}
+  },
+  {
+    "trial": 7,
+    "prompt_inputs": {
+      "hazard": "Flood",
+      "country": "Pakistan",
+      "year_min": 2010,
+      "year_max": 2024
+    },
+    "status_code": 200,
+    "latency_ms": 4796.79,
+    "finish_reason": "tool_calls",
+    "valid_tool_call": true,
+    "errors": [],
+    "parsed_tool_calls": [
+      {
+        "id": "call-2d069eef-e515-4b94-9689-8bebcefb0c8a",
+        "name": "get_historical_stats",
+        "args": {
+          "disaster_type": "Flood",
+          "country": "Pakistan",
+          "year_min": 2010,
+          "year_max": 2024
+        }
+      }
+    ],
+    "raw_tool_calls": [
+      {
+        "id": "call-2d069eef-e515-4b94-9689-8bebcefb0c8a",
+        "type": "function",
+        "function": {
+          "name": "get_historical_stats",
+          "arguments": "{\"disaster_type\": \"Flood\", \"country\": \"Pakistan\", \"year_min\": 2010, \"year_max\": 2024}"
+        }
+      }
+    ],
+    "reasoning_chars": 188,
+    "usage": {
+      "prompt_tokens": 907,
+      "completion_tokens": 111,
+      "total_tokens": 1018,
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 0
+      },
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": null,
+        "audio_tokens": null,
+        "reasoning_tokens": 58,
+        "rejected_prediction_tokens": null
+      }
+    },
+    "ratelimit_headers": {}
+  },
+  {
+    "trial": 8,
+    "prompt_inputs": {
+      "hazard": "Earthquake",
+      "country": "Japan",
+      "year_min": 2000,
+      "year_max": 2024
+    },
+    "status_code": 200,
+    "latency_ms": 2977.22,
+    "finish_reason": "tool_calls",
+    "valid_tool_call": true,
+    "errors": [],
+    "parsed_tool_calls": [
+      {
+        "id": "call-b2c1b856-a8b6-40b4-b16a-5a3b09937348",
+        "name": "get_historical_stats",
+        "args": {
+          "disaster_type": "Earthquake",
+          "country": "Japan",
+          "year_min": 2000,
+          "year_max": 2024
+        }
+      }
+    ],
+    "raw_tool_calls": [
+      {
+        "id": "call-b2c1b856-a8b6-40b4-b16a-5a3b09937348",
+        "type": "function",
+        "function": {
+          "name": "get_historical_stats",
+          "arguments": "{\"disaster_type\": \"Earthquake\", \"country\": \"Japan\", \"year_min\": 2000, \"year_max\": 2024}"
+        }
+      }
+    ],
+    "reasoning_chars": 192,
+    "usage": {
+      "prompt_tokens": 909,
+      "completion_tokens": 113,
+      "total_tokens": 1022,
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 0
+      },
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": null,
+        "audio_tokens": null,
+        "reasoning_tokens": 60,
+        "rejected_prediction_tokens": null
+      }
+    },
+    "ratelimit_headers": {}
+  },
+  {
+    "trial": 9,
+    "prompt_inputs": {
+      "hazard": "Extreme temperature",
+      "country": "France",
+      "year_min": 2000,
+      "year_max": 2024
+    },
+    "status_code": 200,
+    "latency_ms": 4775.06,
+    "finish_reason": "tool_calls",
+    "valid_tool_call": true,
+    "errors": [],
+    "parsed_tool_calls": [
+      {
+        "id": "call-846d8b6d-abf5-49b7-a579-f5011a7629d7",
+        "name": "get_historical_stats",
+        "args": {
+          "disaster_type": "Extreme temperature",
+          "country": "France",
+          "year_min": 2000,
+          "year_max": 2024
+        }
+      }
+    ],
+    "raw_tool_calls": [
+      {
+        "id": "call-846d8b6d-abf5-49b7-a579-f5011a7629d7",
+        "type": "function",
+        "function": {
+          "name": "get_historical_stats",
+          "arguments": "{\"disaster_type\": \"Extreme temperature\", \"country\": \"France\", \"year_min\": 2000, \"year_max\": 2024}"
+        }
+      }
+    ],
+    "reasoning_chars": 212,
+    "usage": {
+      "prompt_tokens": 908,
+      "completion_tokens": 112,
+      "total_tokens": 1020,
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 0
+      },
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": null,
+        "audio_tokens": null,
+        "reasoning_tokens": 59,
+        "rejected_prediction_tokens": null
+      }
+    },
+    "ratelimit_headers": {}
+  },
+  {
+    "trial": 10,
+    "prompt_inputs": {
+      "hazard": "Mass movement (wet)",
+      "country": "Colombia",
+      "year_min": 2000,
+      "year_max": 2024
+    },
+    "status_code": 200,
+    "latency_ms": 5192.81,
+    "finish_reason": "tool_calls",
+    "valid_tool_call": true,
+    "errors": [],
+    "parsed_tool_calls": [
+      {
+        "id": "call-cd9baad7-4fdf-492a-9261-240fc2d3696e",
+        "name": "get_historical_stats",
+        "args": {
+          "disaster_type": "Mass movement (wet)",
+          "country": "Colombia",
+          "year_min": 2000,
+          "year_max": 2024
+        }
+      }
+    ],
+    "raw_tool_calls": [
+      {
+        "id": "call-cd9baad7-4fdf-492a-9261-240fc2d3696e",
+        "type": "function",
+        "function": {
+          "name": "get_historical_stats",
+          "arguments": "{\"disaster_type\": \"Mass movement (wet)\", \"country\": \"Colombia\", \"year_min\": 2000, \"year_max\": 2024}"
+        }
+      }
+    ],
+    "reasoning_chars": 219,
+    "usage": {
+      "prompt_tokens": 911,
+      "completion_tokens": 118,
+      "total_tokens": 1029,
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 0
+      },
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": null,
+        "audio_tokens": null,
+        "reasoning_tokens": 64,
+        "rejected_prediction_tokens": null
+      }
+    },
+    "ratelimit_headers": {}
+  },
+  {
+    "trial": 11,
+    "prompt_inputs": {
+      "hazard": "Storm",
+      "country": "Viet Nam",
+      "year_min": 2010,
+      "year_max": 2024
+    },
+    "status_code": 200,
+    "latency_ms": 2921.87,
+    "finish_reason": "tool_calls",
+    "valid_tool_call": true,
+    "errors": [],
+    "parsed_tool_calls": [
+      {
+        "id": "call-e9dba5ca-4644-4671-ab62-7da37d0d8aca",
+        "name": "get_historical_stats",
+        "args": {
+          "disaster_type": "Storm",
+          "country": "Viet Nam",
+          "year_min": 2010,
+          "year_max": 2024
+        }
+      }
+    ],
+    "raw_tool_calls": [
+      {
+        "id": "call-e9dba5ca-4644-4671-ab62-7da37d0d8aca",
+        "type": "function",
+        "function": {
+          "name": "get_historical_stats",
+          "arguments": "{\"disaster_type\": \"Storm\", \"country\": \"Viet Nam\", \"year_min\": 2010, \"year_max\": 2024}"
+        }
+      }
+    ],
+    "reasoning_chars": 188,
+    "usage": {
+      "prompt_tokens": 908,
+      "completion_tokens": 112,
+      "total_tokens": 1020,
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 0
+      },
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": null,
+        "audio_tokens": null,
+        "reasoning_tokens": 59,
+        "rejected_prediction_tokens": null
+      }
+    },
+    "ratelimit_headers": {}
+  },
+  {
+    "trial": 12,
+    "prompt_inputs": {
+      "hazard": "Flood",
+      "country": "Nigeria",
+      "year_min": 2012,
+      "year_max": 2024
+    },
+    "status_code": 200,
+    "latency_ms": 2717.6,
+    "finish_reason": "tool_calls",
+    "valid_tool_call": true,
+    "errors": [],
+    "parsed_tool_calls": [
+      {
+        "id": "call-8c117bc7-12e5-4970-ad42-e24fd0628b97",
+        "name": "get_historical_stats",
+        "args": {
+          "disaster_type": "Flood",
+          "country": "Nigeria",
+          "year_min": 2012,
+          "year_max": 2024
+        }
+      }
+    ],
+    "raw_tool_calls": [
+      {
+        "id": "call-8c117bc7-12e5-4970-ad42-e24fd0628b97",
+        "type": "function",
+        "function": {
+          "name": "get_historical_stats",
+          "arguments": "{\"disaster_type\": \"Flood\", \"country\": \"Nigeria\", \"year_min\": 2012, \"year_max\": 2024}"
+        }
+      }
+    ],
+    "reasoning_chars": 186,
+    "usage": {
+      "prompt_tokens": 907,
+      "completion_tokens": 111,
+      "total_tokens": 1018,
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 0
+      },
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": null,
+        "audio_tokens": null,
+        "reasoning_tokens": 58,
+        "rejected_prediction_tokens": null
+      }
+    },
+    "ratelimit_headers": {}
+  },
+  {
+    "trial": 13,
+    "prompt_inputs": {
+      "hazard": "Earthquake",
+      "country": "T\u00fcrkiye",
+      "year_min": 2000,
+      "year_max": 2024
+    },
+    "status_code": 200,
+    "latency_ms": 3079.92,
+    "finish_reason": "tool_calls",
+    "valid_tool_call": true,
+    "errors": [],
+    "parsed_tool_calls": [
+      {
+        "id": "call-abd65348-e0aa-43b8-bc97-9c556d4c0419",
+        "name": "get_historical_stats",
+        "args": {
+          "disaster_type": "Earthquake",
+          "country": "T\u00fcrkiye",
+          "year_min": 2000,
+          "year_max": 2024
+        }
+      }
+    ],
+    "raw_tool_calls": [
+      {
+        "id": "call-abd65348-e0aa-43b8-bc97-9c556d4c0419",
+        "type": "function",
+        "function": {
+          "name": "get_historical_stats",
+          "arguments": "{\"disaster_type\": \"Earthquake\", \"country\": \"T\u00fcrkiye\", \"year_min\": 2000, \"year_max\": 2024}"
+        }
+      }
+    ],
+    "reasoning_chars": 196,
+    "usage": {
+      "prompt_tokens": 909,
+      "completion_tokens": 117,
+      "total_tokens": 1026,
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 0
+      },
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": null,
+        "audio_tokens": null,
+        "reasoning_tokens": 62,
+        "rejected_prediction_tokens": null
+      }
+    },
+    "ratelimit_headers": {}
+  },
+  {
+    "trial": 14,
+    "prompt_inputs": {
+      "hazard": "Wildfire",
+      "country": "Australia",
+      "year_min": 2010,
+      "year_max": 2024
+    },
+    "status_code": 200,
+    "latency_ms": 2461.35,
+    "finish_reason": "tool_calls",
+    "valid_tool_call": true,
+    "errors": [],
+    "parsed_tool_calls": [
+      {
+        "id": "call-f813079a-e225-4e6a-a888-b6bf2d85a789",
+        "name": "get_historical_stats",
+        "args": {
+          "disaster_type": "Wildfire",
+          "country": "Australia",
+          "year_min": 2010,
+          "year_max": 2024
+        }
+      }
+    ],
+    "raw_tool_calls": [
+      {
+        "id": "call-f813079a-e225-4e6a-a888-b6bf2d85a789",
+        "type": "function",
+        "function": {
+          "name": "get_historical_stats",
+          "arguments": "{\"disaster_type\": \"Wildfire\", \"country\": \"Australia\", \"year_min\": 2010, \"year_max\": 2024}"
+        }
+      }
+    ],
+    "reasoning_chars": 196,
+    "usage": {
+      "prompt_tokens": 908,
+      "completion_tokens": 110,
+      "total_tokens": 1018,
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 0
+      },
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": null,
+        "audio_tokens": null,
+        "reasoning_tokens": 58,
+        "rejected_prediction_tokens": null
+      }
+    },
+    "ratelimit_headers": {}
+  },
+  {
+    "trial": 15,
+    "prompt_inputs": {
+      "hazard": "Drought",
+      "country": "Ethiopia",
+      "year_min": 2000,
+      "year_max": 2024
+    },
+    "status_code": 200,
+    "latency_ms": 3718.84,
+    "finish_reason": "tool_calls",
+    "valid_tool_call": true,
+    "errors": [],
+    "parsed_tool_calls": [
+      {
+        "id": "call-2f2a4335-7bc9-46fd-a88b-7d7472ef2c83",
+        "name": "get_historical_stats",
+        "args": {
+          "disaster_type": "Drought",
+          "country": "Ethiopia",
+          "year_min": 2000,
+          "year_max": 2024
+        }
+      }
+    ],
+    "raw_tool_calls": [
+      {
+        "id": "call-2f2a4335-7bc9-46fd-a88b-7d7472ef2c83",
+        "type": "function",
+        "function": {
+          "name": "get_historical_stats",
+          "arguments": "{\"disaster_type\": \"Drought\", \"country\": \"Ethiopia\", \"year_min\": 2000, \"year_max\": 2024}"
+        }
+      }
+    ],
+    "reasoning_chars": 192,
+    "usage": {
+      "prompt_tokens": 908,
+      "completion_tokens": 113,
+      "total_tokens": 1021,
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 0
+      },
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": null,
+        "audio_tokens": null,
+        "reasoning_tokens": 59,
+        "rejected_prediction_tokens": null
+      }
+    },
+    "ratelimit_headers": {}
+  },
+  {
+    "trial": 16,
+    "prompt_inputs": {
+      "hazard": "Storm",
+      "country": "Mexico",
+      "year_min": 2010,
+      "year_max": 2024
+    },
+    "status_code": 200,
+    "latency_ms": 4224.57,
+    "finish_reason": "tool_calls",
+    "valid_tool_call": true,
+    "errors": [],
+    "parsed_tool_calls": [
+      {
+        "id": "call-a25cb874-ea2d-400a-9cb8-e08f89fdc72c",
+        "name": "get_historical_stats",
+        "args": {
+          "disaster_type": "Storm",
+          "country": "Mexico",
+          "year_min": 2010,
+          "year_max": 2024
+        }
+      }
+    ],
+    "raw_tool_calls": [
+      {
+        "id": "call-a25cb874-ea2d-400a-9cb8-e08f89fdc72c",
+        "type": "function",
+        "function": {
+          "name": "get_historical_stats",
+          "arguments": "{\"disaster_type\": \"Storm\", \"country\": \"Mexico\", \"year_min\": 2010, \"year_max\": 2024}"
+        }
+      }
+    ],
+    "reasoning_chars": 184,
+    "usage": {
+      "prompt_tokens": 907,
+      "completion_tokens": 107,
+      "total_tokens": 1014,
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 0
+      },
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": null,
+        "audio_tokens": null,
+        "reasoning_tokens": 56,
+        "rejected_prediction_tokens": null
+      }
+    },
+    "ratelimit_headers": {}
+  },
+  {
+    "trial": 17,
+    "prompt_inputs": {
+      "hazard": "Flood",
+      "country": "Brazil",
+      "year_min": 2010,
+      "year_max": 2024
+    },
+    "status_code": 200,
+    "latency_ms": 14871.73,
+    "finish_reason": "tool_calls",
+    "valid_tool_call": true,
+    "errors": [],
+    "parsed_tool_calls": [
+      {
+        "id": "call-7eb0f831-ab66-4e5a-8225-2306e3a99329",
+        "name": "get_historical_stats",
+        "args": {
+          "disaster_type": "Flood",
+          "country": "Brazil",
+          "year_min": 2010,
+          "year_max": 2024
+        }
+      }
+    ],
+    "raw_tool_calls": [
+      {
+        "id": "call-7eb0f831-ab66-4e5a-8225-2306e3a99329",
+        "type": "function",
+        "function": {
+          "name": "get_historical_stats",
+          "arguments": "{\"disaster_type\": \"Flood\", \"country\": \"Brazil\", \"year_min\": 2010, \"year_max\": 2024}"
+        }
+      }
+    ],
+    "reasoning_chars": 184,
+    "usage": {
+      "prompt_tokens": 907,
+      "completion_tokens": 109,
+      "total_tokens": 1016,
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 0
+      },
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": null,
+        "audio_tokens": null,
+        "reasoning_tokens": 57,
+        "rejected_prediction_tokens": null
+      }
+    },
+    "ratelimit_headers": {}
+  },
+  {
+    "trial": 18,
+    "prompt_inputs": {
+      "hazard": "Earthquake",
+      "country": "Chile",
+      "year_min": 2000,
+      "year_max": 2024
+    },
+    "status_code": 200,
+    "latency_ms": 3360.59,
+    "finish_reason": "tool_calls",
+    "valid_tool_call": true,
+    "errors": [],
+    "parsed_tool_calls": [
+      {
+        "id": "call-3701b4fd-8e5a-4912-98ef-1fb103e53335",
+        "name": "get_historical_stats",
+        "args": {
+          "disaster_type": "Earthquake",
+          "country": "Chile",
+          "year_min": 2000,
+          "year_max": 2024
+        }
+      }
+    ],
+    "raw_tool_calls": [
+      {
+        "id": "call-3701b4fd-8e5a-4912-98ef-1fb103e53335",
+        "type": "function",
+        "function": {
+          "name": "get_historical_stats",
+          "arguments": "{\"disaster_type\": \"Earthquake\", \"country\": \"Chile\", \"year_min\": 2000, \"year_max\": 2024}"
+        }
+      }
+    ],
+    "reasoning_chars": 192,
+    "usage": {
+      "prompt_tokens": 909,
+      "completion_tokens": 111,
+      "total_tokens": 1020,
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 0
+      },
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": null,
+        "audio_tokens": null,
+        "reasoning_tokens": 58,
+        "rejected_prediction_tokens": null
+      }
+    },
+    "ratelimit_headers": {}
+  },
+  {
+    "trial": 19,
+    "prompt_inputs": {
+      "hazard": "Storm",
+      "country": "Myanmar",
+      "year_min": 2005,
+      "year_max": 2024
+    },
+    "status_code": 200,
+    "latency_ms": 4015.99,
+    "finish_reason": "tool_calls",
+    "valid_tool_call": true,
+    "errors": [],
+    "parsed_tool_calls": [
+      {
+        "id": "call-e4950657-2211-484f-a4c4-d774421b9681",
+        "name": "get_historical_stats",
+        "args": {
+          "disaster_type": "Storm",
+          "country": "Myanmar",
+          "year_min": 2005,
+          "year_max": 2024
+        }
+      }
+    ],
+    "raw_tool_calls": [
+      {
+        "id": "call-e4950657-2211-484f-a4c4-d774421b9681",
+        "type": "function",
+        "function": {
+          "name": "get_historical_stats",
+          "arguments": "{\"disaster_type\": \"Storm\", \"country\": \"Myanmar\", \"year_min\": 2005, \"year_max\": 2024}"
+        }
+      }
+    ],
+    "reasoning_chars": 186,
+    "usage": {
+      "prompt_tokens": 907,
+      "completion_tokens": 109,
+      "total_tokens": 1016,
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 0
+      },
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": null,
+        "audio_tokens": null,
+        "reasoning_tokens": 57,
+        "rejected_prediction_tokens": null
+      }
+    },
+    "ratelimit_headers": {}
+  },
+  {
+    "trial": 20,
+    "prompt_inputs": {
+      "hazard": "Flood",
+      "country": "Indonesia",
+      "year_min": 2005,
+      "year_max": 2024
+    },
+    "status_code": 200,
+    "latency_ms": 2617.08,
+    "finish_reason": "tool_calls",
+    "valid_tool_call": true,
+    "errors": [],
+    "parsed_tool_calls": [
+      {
+        "id": "call-316b2351-1a14-4c0a-a029-1ae5801ee3de",
+        "name": "get_historical_stats",
+        "args": {
+          "disaster_type": "Flood",
+          "country": "Indonesia",
+          "year_min": 2005,
+          "year_max": 2024
+        }
+      }
+    ],
+    "raw_tool_calls": [
+      {
+        "id": "call-316b2351-1a14-4c0a-a029-1ae5801ee3de",
+        "type": "function",
+        "function": {
+          "name": "get_historical_stats",
+          "arguments": "{\"disaster_type\": \"Flood\", \"country\": \"Indonesia\", \"year_min\": 2005, \"year_max\": 2024}"
+        }
+      }
+    ],
+    "reasoning_chars": 190,
+    "usage": {
+      "prompt_tokens": 907,
+      "completion_tokens": 111,
+      "total_tokens": 1018,
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 0
+      },
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": null,
+        "audio_tokens": null,
+        "reasoning_tokens": 58,
+        "rejected_prediction_tokens": null
+      }
+    },
+    "ratelimit_headers": {}
+  }
+]
