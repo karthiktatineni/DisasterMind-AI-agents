@@ -7,6 +7,7 @@ from openai import APIConnectionError, APIError, APIStatusError, APITimeoutError
 
 from backend.app.config import Settings, get_settings
 from backend.app.schemas import GenerationMessage, GenerationResponse
+from backend.app.services.retry_policy import retry_after_seconds
 
 
 class NvidiaGenerationConfigError(RuntimeError):
@@ -33,7 +34,7 @@ class NvidiaBuildGenerationClient:
             api_key=self.settings.nvidia_api_key,
             base_url=self.settings.nvidia_base_url,
             timeout=60,
-            max_retries=2,
+            max_retries=0,
         )
 
     async def generate(
@@ -45,6 +46,7 @@ class NvidiaBuildGenerationClient:
     ) -> GenerationResponse:
         last_exc: Exception | None = None
         for attempt in range(3):
+            retry_after_s: float | None = None
             try:
                 completion = await self._client.chat.completions.create(
                     model=self.settings.nvidia_model,
@@ -61,13 +63,16 @@ class NvidiaBuildGenerationClient:
                 break
             except APIStatusError as exc:
                 last_exc = exc
+                if exc.status_code == 429:
+                    retry_after_s = retry_after_seconds(exc.response.headers)
                 if exc.status_code not in (429, 500, 502, 503, 504) or attempt == 2:
                     raise NvidiaGenerationError(f"NVIDIA generation failed: {exc}") from exc
             except (APIConnectionError, APITimeoutError, APIError) as exc:
                 last_exc = exc
                 if attempt == 2:
                     raise NvidiaGenerationError(f"NVIDIA generation failed: {exc}") from exc
-            await asyncio.sleep(0.2 * (2**attempt) + random.uniform(0.0, 0.2))
+            backoff = 0.2 * (2**attempt) + random.uniform(0.0, 0.2)
+            await asyncio.sleep(max(backoff, retry_after_s or 0.0))
         else:
             raise NvidiaGenerationError(f"NVIDIA generation failed: {last_exc}")
 

@@ -11,6 +11,7 @@ from openai import APIConnectionError, APIStatusError, APITimeoutError, AsyncOpe
 from pinecone import AsyncPinecone
 
 from backend.app.config import Settings, get_settings
+from backend.app.services.retry_policy import retry_after_seconds
 
 DEFAULT_EMBEDDING_DIM = 1024
 EMBEDDING_DIM = DEFAULT_EMBEDDING_DIM
@@ -107,6 +108,7 @@ class EmbeddingService:
     ) -> list[list[float]]:
         last_exc: Exception | None = None
         for attempt in range(max_retries):
+            retry_after_s: float | None = None
             try:
                 if self._backend == "pinecone":
                     assert self._pinecone_client is not None
@@ -130,6 +132,8 @@ class EmbeddingService:
                 return [list(item.embedding) for item in resp.data]
             except APIStatusError as exc:
                 last_exc = exc
+                if self._backend == "openai" and exc.status_code == 429:
+                    retry_after_s = retry_after_seconds(exc.response.headers)
                 if exc.status_code not in (429, 500, 502, 503, 504) or attempt == max_retries - 1:
                     raise
             except (APIConnectionError, APITimeoutError) as exc:
@@ -140,7 +144,7 @@ class EmbeddingService:
                 last_exc = exc
                 if self._backend != "pinecone" or attempt == max_retries - 1:
                     raise
-            delay = base_delay * (2**attempt) + random.uniform(0.0, 0.5)
+            delay = max(base_delay * (2**attempt) + random.uniform(0.0, 0.5), retry_after_s or 0.0)
             await asyncio.sleep(delay)
         assert last_exc is not None
         raise last_exc

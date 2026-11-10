@@ -20,6 +20,7 @@ from openai import (
 )
 
 from backend.app.config import Settings, get_settings
+from backend.app.services.retry_policy import retry_after_seconds
 
 logger = logging.getLogger(__name__)
 
@@ -154,6 +155,7 @@ class NativeToolLLMClient:
         last_exc: Exception | None = None
 
         for attempt in range(max_retries + 1):
+            retry_after_s: float | None = None
             await self._limiter.acquire()
             started = time.perf_counter()
             try:
@@ -178,6 +180,8 @@ class NativeToolLLMClient:
             except APIStatusError as exc:
                 status = exc.status_code
                 last_exc = exc
+                if status == 429:
+                    retry_after_s = retry_after_seconds(exc.response.headers)
                 if status in (401, 403, 404, 410, 422):
                     raise LLMClientError(
                         f"NVIDIA LLM non-retryable HTTP {status} for model '{target_model}': {exc}",
@@ -202,7 +206,8 @@ class NativeToolLLMClient:
                 self._limiter.release()
 
             jitter = random.uniform(0.0, 0.5 * base_delay)
-            delay = min(30.0, base_delay * (2**attempt) + jitter)
+            backoff = min(30.0, base_delay * (2**attempt) + jitter)
+            delay = max(backoff, retry_after_s or 0.0)
             logger.warning("Retrying LLM request (%s) in %.2fs after %s", target_model, delay, type(last_exc).__name__)
             await asyncio.sleep(delay)
 

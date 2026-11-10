@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime, timedelta, timezone
+from email.utils import format_datetime
 import json
 import logging
 import time
@@ -26,6 +28,7 @@ from backend.app.security import (
 )
 from backend.app.services.data_enrichment import enrich_scenario
 from backend.app.services.llm_client import LLMToolResponse, NativeToolLLMClient, ToolCallRequest
+from backend.app.services.retry_policy import retry_after_seconds
 from backend.app.tools.domain_tools import build_domain_tools
 from backend.app.tools.registry import ToolRegistry
 from tests.test_task4_orchestration import (
@@ -36,6 +39,15 @@ from tests.test_task4_orchestration import (
     _make_fake_stats,
     _tc,
 )
+
+
+def test_retry_after_seconds_parses_seconds_milliseconds_http_date_and_invalid():
+    assert retry_after_seconds({"Retry-After": "4"}) == 4.0
+    assert retry_after_seconds({"retry-after-ms": "2500"}) == 2.5
+    date = format_datetime(datetime.now(timezone.utc) + timedelta(seconds=5))
+    parsed = retry_after_seconds({"Retry-After": date})
+    assert parsed is not None and 0 <= parsed <= 5
+    assert retry_after_seconds({"Retry-After": "not-a-date"}) is None
 
 
 def _fake_openai_err(cls, msg: str, status_code: int = 500):
