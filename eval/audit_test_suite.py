@@ -388,6 +388,15 @@ async def run_phase6_test_suite():
         DisasterScenario(disaster_type="Earthquake", region="Chengdu", severity="High", population=220000, shelter_capacity=55000, hospital_capacity=2800, wind_speed=15, rainfall=5),
     ]
     
+    METADATA_KEYS_TO_EXCLUDE = {"execution_time_ms", "fallback_reason", "generation_mode", "timestamp", "created_at"}
+
+    def _strip_runtime_metadata(obj):
+        if isinstance(obj, dict):
+            return {k: _strip_runtime_metadata(v) for k, v in obj.items() if k not in METADATA_KEYS_TO_EXCLUDE}
+        elif isinstance(obj, list):
+            return [_strip_runtime_metadata(v) for v in obj]
+        return obj
+
     total_numbers_found = 0
     ungrounded_numbers_found = 0
     for sc in cases_d:
@@ -407,7 +416,8 @@ async def run_phase6_test_suite():
         # Extract numbers from agent results output (logistics resource plan, evacuation zones)
         for r in resp.agent_results:
             if r.agent_name in ("logistics", "evacuation", "planner"):
-                out_str = json.dumps(r.output)
+                cleaned_output = _strip_runtime_metadata(r.output)
+                out_str = json.dumps(cleaned_output)
                 nums = [int(n) for n in re.findall(r"\b\d+\b", out_str)]
                 for n in nums:
                     if n < 5:  # skip trivial indices or phases (1, 2, 3)

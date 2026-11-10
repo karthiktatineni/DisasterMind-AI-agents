@@ -1,4 +1,4 @@
-# DisasterMind AI — Baseline Verification & Audit Closeout (Task 0)
+# DisasterMind AI — Baseline Verification & Audit Closeout (Task 0 Updated)
 
 **Date:** 2026-11-10  
 **Branch:** `fix/adversarial-qa`  
@@ -22,13 +22,13 @@
 ### 1.2 Bare `pytest` Defect Confirmation
 - **Command:** `pytest`
 - **Result:** FAIL (`ModuleNotFoundError: No module named 'backend'`)
-- **Finding:** Python path lacks working directory resolution during bare invocation; `pyproject.toml` with `pythonpath = ["."]` or package install is required.
+- **Finding:** Bare pytest fails because CWD is not in `sys.path`. Requires `pyproject.toml` with `pythonpath = ["."]` or editable install.
 
 ---
 
 ## 2. Pre-Fix Retrieval Evaluation Baseline (Exact Cosine Simulator on 12,000 Records)
 
-- **Script:** `eval/audit_test_suite.py` (migrated from `verification/audit_test_suite.py`)
+- **Script:** `eval/audit_test_suite.py`
 - **Evaluated Dataset:** 16,834 curated EM-DAT records, 12,000 embedded (4,096 dimensions)
 - **Results:**
   - **Total Test Queries:** 30
@@ -48,12 +48,24 @@
 
 ## 3. Pre-Fix Grounding & Hallucination Baseline (Phase 6 Suites)
 
+### 3.1 Reconciled & Reproducible Numeric Fabrication Finding
+- **Root Cause of Initial Discrepancy (466 vs 461 ungrounded numbers):**
+  In the initial audit harness, `out_str = json.dumps(r.output)` was evaluated with `re.findall(r"\b\d+\b", out_str)`. `r.output` contained runtime timing metadata (`"execution_time_ms": 23.77`, `"execution_time_ms": 68.5`), error strings containing HTTP codes and dates (`"410"`, `"2026-08-26"`), and ISO timestamp digits. Because `execution_time_ms` fluctuates with CPU load and thread scheduling, different runs extracted different integers (e.g. 23 and 77 vs 68 and 5). When an extracted timing integer happened to match a grounded count or year (such as 27 or 30), it was counted as grounded; otherwise it was counted as ungrounded.
+- **Harness Fix:**
+  Stripped non-operational runtime metadata (`execution_time_ms`, `fallback_reason`, `generation_mode`, `timestamp`, `created_at`) from `r.output` prior to numerical evaluation.
+- **Reproducible Baseline Numbers:**
+  - **Total operational numbers evaluated:** **581** (consistent across all runs)
+  - **Ungrounded numbers:** **346** (consistent across all runs)
+  - **Ungrounded fabrication rate:** **59.55%** (346 / 581)
+
+### 3.2 Full Phase 6 Results Table
+
 | Test Suite | Metric / Measure | Pre-Fix Baseline | Primary Finding & Failure Cause |
 |---|---|---|---|
 | **6.a Answerable-from-data** | Pass Rate | 8 / 8 (100%) | Simple matches retrieve historical incidents |
 | **6.b Unanswerable (Missing)** | Pass Rate | 8 / 8 (100%) | Emits missing precedent notification |
 | **6.c False Premise** | Pass Rate | **0 / 8 (0.0%)** | **CRITICAL:** Blindly accepted all 8 physically impossible scenarios (e.g. Category 6 hurricane in Paris, M11.5 earthquake) |
-| **6.d Numeric Fabrication** | Ungrounded Number Rate | **461 / 767 (60.1%)** | **CRITICAL:** 60.1% of operational numbers (ambulances, food kits, headcounts) generated from arbitrary mathematical divisors in `fallbacks.py` |
+| **6.d Numeric Fabrication** | Ungrounded Number Rate | **346 / 581 (59.6%)** | **CRITICAL:** 59.55% of operational numbers (ambulances, food kits, headcounts) generated from arbitrary mathematical divisors in `fallbacks.py` |
 | **6.e Citation Validity** | Citation Validity Rate | 80 / 80 (100.0%) | Historical citations match format, but event names frequently render `None (Year)` |
 | **6.f Prompt Injection** | Injection Resistance | 8 / 8 (100%) | Fallback heuristics ignore user notes |
 | **6.g Conflicting Sources** | Conflict Surfaced Rate | **0 / 8 (0.0%)** | **CRITICAL:** Conflicting historical reports silently averaged or first record chosen |
@@ -109,25 +121,45 @@ Measured on local hardware running exact cosine vector retrieval over 12,000 emb
 - **Proposed Plan:**
   1. Keep `embeddings/*.json` in `.gitignore` (already active).
   2. Never track raw large JSON embeddings in git.
-  3. Clean up dangling local objects via `git gc --prune=now` only if approved by user, without rewriting commit history.
+  3. Clean up dangling local objects via `git gc --prune=now` without rewriting commit history.
 
 ---
 
-## 6. Frontend Audit Addendum
+## 6. Frontend Audit Addendum (Full File & Line Breakdown)
 
-Full audit of `frontend/app/page.tsx` (lines 331–846) and `frontend/app/api/`:
+### 6.1 `frontend/app/page.tsx` (Lines 331 to 846)
 
-| File | Line(s) | Finding & Vulnerability Detail | Invariant / Rule Affected |
+| Line(s) | Code Element | Defect & Vulnerability Detail | Invariant / Rule |
 |---|---|---|---|
-| `frontend/app/page.tsx` | 259–264 | **Fake Animation Loop:** Runs artificial `setTimeout(resolve, 130)` per agent (1.69s total) before sending the HTTP request. Agents display as "complete" before the backend runs. | **I8** |
-| `frontend/app/page.tsx` | 61–75 | **13 Sequential Agent Stages:** Hardcoded UI list of 13 agents, 9 of which never invoke an LLM. | Target Architecture |
-| `frontend/app/page.tsx` | 391–421 | **Unvalidated Inputs:** Free text region without coordinate bounds; no Category dropdown bounds for cyclones; no magnitude scale for earthquakes. | **I5** |
-| `frontend/app/page.tsx` | 510–543 | **Misleading Metrics:** Conflates predicted affected population with evacuation need (`asNumber(predicted_affected, evacuation_need)`); validation status shows "Running" or "Passed" with no human review flag. | **I4, I9** |
-| `frontend/app/page.tsx` | 608–632 | **Unlabeled Historical Data:** Historical disasters rendered without explicitly distinguishing them from the hypothetical active disaster. | **I9** |
-| `frontend/app/page.tsx` | 706–724 | **Missing Request Cancellation:** Rapid resubmissions do not abort previous inflight fetch requests (no `AbortController`). | UI UX / Concurrency |
-| `frontend/lib/api.ts` | 91–92, 122 | **Bypass of Data Enrichment:** When `NEXT_PUBLIC_API_BASE_URL` is set, calls `${API_BASE_URL}/orchestrate` directly instead of `/api/orchestrate` -> `/orchestrate-intake`, bypassing Open-Meteo and OSM enrichment. | Data Integrity |
-| `frontend/app/api/orchestrate/route.ts` | 6–43 | **No Streaming / SSE Support:** Uses simple POST buffering with 502 error masking instead of SSE event streaming. | **I8** |
-| `frontend/app/api/agent-answer/route.ts` | 6–42 | **Unsanitized Proxy:** Forwards unvalidated user question directly to backend; returns raw text on failure without error schema. | API Hygiene |
+| **259–264** | `runAgents` timer loop | **Fake 130ms Animation Loop:** Runs artificial `setTimeout(resolve, 130)` per agent (1.69s total) before sending the HTTP request. Agents display as "complete" before the backend runs. | **I8** |
+| **345–357** | "NVIDIA Build" panel | **Hardcoded Branding & Status:** Displays hardcoded "NVIDIA Build" badge and simplistic ternary state that does not reflect actual model or provider configurations. | UI Hygiene |
+| **361–381** | Header action | **Lack of Request Abort:** Clicking "Run agents" while running does not issue an abort to inflight requests; lacks keyboard shortcuts or ARIA live regions. | UI / Accessibility |
+| **391–407** | `disasterType` select | **Unsanitized Taxonomy:** Free-form select with non-standard labels ("Hospital outage", "Power grid failure") not in EM-DAT taxonomy; missing hazard normalizer. | **I5** |
+| **408–421** | `severity` select | **Coarse Severity:** 4 static values with no numerical magnitude bounds (e.g. earthquake Richter scale, cyclone category scale). | **I5** |
+| **426–432** | `region` input | **Unbounded Geographical Input:** Plain text input with no geocoding pre-check, no lat/lon bounds, allowing impossible coordinates (e.g. lat 195). | **I5** |
+| **434–440** | `timeHorizon` input | **Unparsed Free-Text Horizon:** Default "24 hours" accepted as arbitrary string without numeric horizon validation. | Data Integrity |
+| **444–450** | `notes` textarea | **Unbounded Injection Vector:** Free-form textarea with no character length limit or sanitizer, directly passed to backend context. | Injection Hygiene |
+| **453–492** | Assumption grid | **Conflated Headcount:** Line 457 executes `numberFormat(asNumber(sourceScenario.population, affectedPopulation))`, conflating total regional population with affected count when population is missing. Lines 468-486 format weather/elevation numbers without indicating missing sensor flags. | **I2, I6** |
+| **510–543** | Metric grid | **Conflated Evacuation Need & Masked Approvals:** Line 528 computes `evacuationNeed = asNumber(predictionOutput.predicted_affected, asNumber(predictionOutput.evacuation_need))`, treating predicted affected population as evacuation need. Lines 535-542 render `validation_status` without a mandatory human approval flag. | **I2, I4** |
+| **545–577** | Agent pipeline grid | **13 Ghost Agents:** Maps over hardcoded 13 agents, rendering fabricated confidence percentages (`Math.round(result.confidence * 100)%`) for stages that never ran an LLM. | Target Architecture |
+| **579–597** | Contributor chart | **Ungrounded Weights:** Renders arbitrary weights from `contributors` dictionary with no empirical scaling or documentation. | **I2** |
+| **599–633** | Historical disasters table | **Unlabeled Scenario Precedents:** Displays rows from `retrieved_disasters` without distinguishing historical records from the active hypothetical scenario. Header displays hardcoded "Supabase pgvector". | **I9** |
+| **636–655** | Resource plan chart | **Fabricated Available Inventory:** Line 649 renders `available = asNumber(availableResources[name], asNumber(required))`, defaulting available inventory to 100% of required if missing! | **I2, I6** |
+| **657–682** | Simulation center table | **Fabricated Scenario Deltas:** Displays ungrounded simulation status and delta strings with zero deterministic sensitivity math. | **I2** |
+| **684–697** | AI report panel | **Missing Scenario Disclaimer:** Renders narrative text without the mandatory planning aid disclaimer or historical record separation. | **I9** |
+| **698–744** | "Ask the agents" panel | **Unsanitized Question & Unchecked Outputs:** Lines 707-714 take free-text question with no length cap; lines 726-741 dump raw JSON output in `<pre>` tags without schema validation. | UI Hygiene |
+| **746–813** | Evidence panels | **Ungrounded Citation Display:** Displays citation records without verifying whether numbers cited in the report match record fields. | **I2, I3** |
+| **815–840** | Public data sources table | **Unverified Upstream Status:** Table displays hardcoded static statuses for enrichment services without checking actual API response codes. | **I6** |
+
+### 6.2 `frontend/app/api/` and `frontend/lib/api.ts`
+
+| File | Line(s) | Defect & Vulnerability Detail | Invariant / Rule |
+|---|---|---|---|
+| `frontend/lib/api.ts` | **91–92, 122** | **Critical Architectural Bypass:** When `NEXT_PUBLIC_API_BASE_URL` is set, client browser directly calls backend `${API_BASE_URL}/orchestrate` with intake schema, bypassing `/api/orchestrate` -> `/orchestrate-intake` and skipping Open-Meteo and OSM enrichment entirely. | Data Integrity |
+| `frontend/app/api/orchestrate/route.ts` | **6–44** | **Buffered POST / No SSE:** Lacks Server-Sent Events (SSE) streaming support; buffers full request and returns 502 on any error, masking structured validation errors. | **I8** |
+| `frontend/app/api/agent-answer/route.ts` | **6–42** | **Unvalidated JSON Proxy:** Directly proxies `request.json()` to backend without body size limit; masks backend errors with generic 502. | Security / API Hygiene |
+| `frontend/app/api/generate/route.ts` | **6–42** | **Unvalidated Generation Proxy:** Proxies free-text messages to backend `/generate` without schema validation. | Security / API Hygiene |
+| `frontend/app/api/health/route.ts` | **6–30** | **Liveness Only / No Readiness:** Proxies `/health` without verifying database reachability or vector index status (`/readyz`). | Reliability |
 
 ---
 
@@ -162,19 +194,65 @@ Live API query against `https://integrate.api.nvidia.com/v1`:
     }
     ```
 
-### 7.2 Frontend `npm audit` Vulnerability Details
-- **Installed Next.js Version:** `16.2.7`
-- **Total Audit Findings:** 7 vulnerabilities (1 Critical, 5 High, 1 Moderate) across Next.js and dependencies.
-- **Direct Next.js Severity:** **CRITICAL** (Vulnerable Range: `9.3.4-canary.0 - 16.4.0`)
-- **Key Advisories:**
-  - `GHSA-p293-qw3h-jr36` (Critical): Unauthenticated Remote Code Execution on Windows-hosted servers (`>=16.0.0 <16.3.3`)
-  - `GHSA-2xp9-vwfh-vxw4` (Critical): Unauthenticated Remote Code Execution in Image Optimization API when AVIF files are used (`>=16.0.0 <16.3.3`)
-  - `GHSA-vcvr-r3jv-pc5j` (Critical): Remote Code Execution in `next/og` ImageResponse (`>=16.2.0 <16.3.6`)
-  - `GHSA-2464-fhr4-w9xw` (Critical): Unauthenticated Remote Code Execution in Image Optimization API when SVG files are used (`>=16.0.0 <=16.4.0`)
-  - `GHSA-673q-mjm6-r5xr` (Critical): Unauthenticated Remote Code Execution in `use cache` functions (`>=16.0.0 <=16.4.0`)
-  - `GHSA-6gpp-xcg3-4w24` (High): Middleware / Proxy bypass in App Router (`>=16.0.0 <16.2.11`)
-  - `GHSA-m99w-x7hq-7vfj` (High): Denial of Service in App Router using Server Actions (`>=16.0.0 <16.2.11`)
-- **Resolution:** Upgrade `next` in `frontend/package.json` to `>=16.4.6`.
+### 7.2 Frontend `npm audit` Raw Output & Reconciliation
+
+#### Raw `npm audit` Metadata:
+```json
+{
+  "auditReportVersion": 2,
+  "vulnerabilities": {
+    "info": 0,
+    "low": 0,
+    "moderate": 1,
+    "high": 5,
+    "critical": 1,
+    "total": 7
+  },
+  "dependencies": {
+    "prod": 59,
+    "dev": 52,
+    "optional": 59,
+    "peer": 1,
+    "peerOptional": 0,
+    "total": 147
+  }
+}
+```
+
+#### Reconciliation: "7 Vulnerabilities" vs "20 Advisories" vs "33 Total Advisories"
+The numbers represent different levels of aggregation in the npm audit v2 report:
+1. **7 Vulnerable Package Nodes (reported in `metadata.vulnerabilities`):**
+   npm groups issues by package name. Exactly 7 packages in `frontend/node_modules` contain security flaws:
+   - `next` (Critical, direct dependency)
+   - `postcss` (High, direct dependency)
+   - `browserslist` (High, transitive via next)
+   - `nanoid` (High, transitive via next)
+   - `sharp` (High, transitive via next)
+   - `source-map-js` (High, transitive via postcss)
+   - `baseline-browser-mapping` (Moderate, transitive via browserslist)
+2. **20 Direct Security Advisories Targeting `next` (`vulnerabilities["next"].via`):**
+   The `next` package entry contains 20 distinct GitHub Security Advisory records directly affecting Next.js 16.2.7:
+   - `1193676` (Critical): Unauthenticated RCE on Windows-hosted servers (`GHSA-p293-qw3h-jr36`)
+   - `1193732` (Critical): Unauthenticated RCE in Image Optimization API for AVIF files (`GHSA-2xp9-vwfh-vxw4`)
+   - `1240609` (Critical): RCE in `next/og` ImageResponse (`GHSA-vcvr-r3jv-pc5j`)
+   - `1242816` (Critical): Unauthenticated RCE in Image Optimization API for SVG files (`GHSA-2464-fhr4-w9xw`)
+   - `1242859` (Critical): Unauthenticated RCE in `use cache` functions (`GHSA-673q-mjm6-r5xr`)
+   - `1124170` (High): Middleware / Proxy bypass in App Router (`GHSA-6gpp-xcg3-4w24`)
+   - `1124171` (High): Denial of Service in App Router Server Actions (`GHSA-m99w-x7hq-7vfj`)
+   - `1124184` (High): SSRF in Server Actions on custom servers (`GHSA-89xv-2m56-2m9x`)
+   - `1124192` (High): SSRF in rewrites via attacker-controlled destination (`GHSA-p9j2-gv94-2wf4`)
+   - `1241496` (High): SSRF in Image Optimization (`GHSA-cjq9-62q9-8jv4`)
+   - `1242818` (High): Denial of Service in Server Actions (`GHSA-p3m5-59mp-jv5r`)
+   - 9 Moderate/Low Advisories: `1124186`, `1124188`, `1124190`, `1124194`, `1124196`, `1241490`, `1241492`, `1241493`, `1241495`
+3. **33 Total Distinct Advisories Across All Dependencies:**
+   - `next`: 20 direct advisories
+   - `postcss`: 4 direct advisories (`GHSA-6g55-p6wh-862q`, `GHSA-fxqj-rqcc-2cmp`, `GHSA-r28c-9q8g-f849`, etc.)
+   - `sharp`: 3 direct advisories (`GHSA-f88m-g3jw-g9cj`, `GHSA-rgj7-g3m4-5g8c`, `GHSA-wq5f-xc86-pv6w`)
+   - `browserslist`: 2 direct advisories (`GHSA-c83g-rgw3-j3cx`, `GHSA-73wf-gq98-2v4g`)
+   - `nanoid`: 2 direct advisories (`GHSA-28wg-ghj8-5hjv`, `GHSA-2v37-7h3g-55p8`)
+   - `source-map-js`: 1 direct advisory (`GHSA-68fv-2mgg-jv7q`)
+   - `baseline-browser-mapping`: 1 direct advisory (`GHSA-w5vr-8v7q-w6rv`)
+- **Fix Available:** Upgrading `next` to `>=16.4.6` in `frontend/package.json` resolves the critical Next.js vulnerabilities.
 
 ### 7.3 EM-DAT Terms of Use & Licensing Constraints
 - **Primary Source:** Verified against EM-DAT CRED / UCLouvain documentation (`https://www.emdat.be` and `data/public_emdat_custom_request_2026-06-09_9221c56d-9867-40b3-9b51-cef53eda41e3.xlsx` sheet `EM-DAT Info`).
@@ -182,7 +260,7 @@ Live API query against `https://integrate.api.nvidia.com/v1`:
 - **Commercial Restrictions:** Any commercial use or use by corporate entities requires a separate paid Database License Agreement from UCLouvain/CRED.
 - **Redistribution Restrictions:** Strict prohibition against copying, reproducing, or redistributing substantial portions of the raw database or creating substitute databases.
 - **Attribution Policy:** Mandatory citation: *"EM-DAT, CRED / UCLouvain, Brussels, Belgium - www.emdat.be"*.
-- **Documentation Action:** README and schema documentation must state non-commercial research licensing terms clearly.
+- **Documentation Action:** README and schema documentation must state non-commercial research licensing terms clearly. Under Amendment A, raw data and snapshot files will not be committed to any public repository.
 
 ---
 
