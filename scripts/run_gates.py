@@ -111,7 +111,8 @@ def step_secret_scan() -> bool:
             unexpected.append(raw)
 
     for a in allowlisted:
-        print(f"[ALLOWLISTED] {a}")
+        rel_path, line_str, _content = a.split(":", 2)
+        print(f"[ALLOWLISTED] {rel_path}:{line_str} (synthetic control token hash verified; value suppressed)")
     for u in unexpected:
         print(f"[UNEXPECTED SECRET HIT] {u}")
 

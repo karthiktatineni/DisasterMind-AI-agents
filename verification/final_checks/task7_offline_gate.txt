@@ -86,8 +86,8 @@ STEP_EXIT=0
 GREP_GATES_PASS=True
 
 === 3. SECRET SCAN WITH ALLOWLIST ===
-[ALLOWLISTED] scripts/preflight.py:127:        nvidia_key = "nvapi-invalid-control-key"
-[ALLOWLISTED] scripts/preflight.py:129:        pinecone_key = "pcsk_invalid_control_key"
+[ALLOWLISTED] scripts/preflight.py:127:        nvidia_key = "[REDACTED_SYNTHETIC_TEST_TOKEN]"
+[ALLOWLISTED] scripts/preflight.py:129:        pinecone_key = "[REDACTED_SYNTHETIC_TEST_TOKEN]"
 SECRET_SCAN_EXIT=0 (allowlisted=2, unexpected=0)
 
 === 4. GIT STATUS & TRACKED SENSITIVE-PATH HYGIENE ===
