@@ -161,3 +161,6 @@ def enable_wire_capture() -> None:
     """Patch httpx's transport factory only when an explicit capture path is set."""
     if os.getenv("DISASTERMIND_WIRE_CAPTURE_PATH", "").strip():
         httpx.AsyncHTTPTransport = WireSpyAsyncHTTPTransport  # type: ignore[assignment]
+        # AsyncClient resolves this module-global, not the re-export above.
+        # Patch both so clients created by httpx and SDK wrappers are observed.
+        httpx._client.AsyncHTTPTransport = WireSpyAsyncHTTPTransport  # type: ignore[attr-defined,assignment]
