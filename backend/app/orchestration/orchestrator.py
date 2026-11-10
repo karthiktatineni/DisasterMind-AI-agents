@@ -57,10 +57,12 @@ AGENT_SPECS: dict[AgentName, AgentSpec] = {
         submission_description="Submit final Coordinator synthesis after delegating to specialists.",
         temperature=0.0,
         seed=42,
-        max_tokens=2400,
+        max_tokens=2600,
+        max_tool_rounds=5,
         max_steps=8,
-        max_token_budget=24000,
-        wall_clock_cap_s=150.0,
+        max_token_budget=36000,
+        wall_clock_cap_s=240.0,
+        force_submit_on_required_ok=False,
     ),
     "risk": AgentSpec(
         name="risk",
@@ -70,10 +72,12 @@ AGENT_SPECS: dict[AgentName, AgentSpec] = {
         submission_description="Submit verified Risk & Premise assessment grounded in tool outputs.",
         temperature=0.0,
         seed=42,
-        max_tokens=2400,
+        max_tokens=2600,
+        max_tool_rounds=3,
         max_steps=6,
-        max_token_budget=16000,
-        wall_clock_cap_s=90.0,
+        max_token_budget=24000,
+        wall_clock_cap_s=120.0,
+        force_submit_on_required_ok=True,
     ),
     "logistics": AgentSpec(
         name="logistics",
@@ -83,10 +87,12 @@ AGENT_SPECS: dict[AgentName, AgentSpec] = {
         submission_description="Submit verified Logistics capacity/standards assessment with provenance.",
         temperature=0.0,
         seed=42,
-        max_tokens=2400,
+        max_tokens=2600,
+        max_tool_rounds=3,
         max_steps=6,
-        max_token_budget=16000,
-        wall_clock_cap_s=90.0,
+        max_token_budget=24000,
+        wall_clock_cap_s=120.0,
+        force_submit_on_required_ok=True,
     ),
     "evacuation": AgentSpec(
         name="evacuation",
@@ -96,10 +102,12 @@ AGENT_SPECS: dict[AgentName, AgentSpec] = {
         submission_description="Submit verified Evacuation recommendation grounded in precedent and Risk.",
         temperature=0.0,
         seed=42,
-        max_tokens=2400,
+        max_tokens=2600,
+        max_tool_rounds=3,
         max_steps=6,
-        max_token_budget=16000,
-        wall_clock_cap_s=90.0,
+        max_token_budget=24000,
+        wall_clock_cap_s=120.0,
+        force_submit_on_required_ok=True,
     ),
 }
 
@@ -262,7 +270,40 @@ class DisasterMindOrchestrator:
                 http_client=http_client,
             )
 
+            run_deadline = started + 300.0
+            run_max_tokens = 100000
+
+            # Seed resolved_geography immediately if user already supplied coordinates
+            if user_payload.get("latitude") is not None and user_payload.get("longitude") is not None:
+                state.resolved_geography = {
+                    "latitude": user_payload["latitude"],
+                    "longitude": user_payload["longitude"],
+                    "country": user_payload.get("country"),
+                    "resolved_location": user_payload.get("region"),
+                    "population": user_payload.get("population"),
+                    "provenance": "assumption supplied by user",
+                }
+
             async def _delegate(target: AgentName, args: dict[str, Any], call_id: str) -> tuple[str, dict[str, Any], str | None]:
+                if target in state.verified_reports:
+                    return (
+                        "ok",
+                        {
+                            "call_id": call_id,
+                            "agent": target,
+                            "status": "verified",
+                            "already_provided": True,
+                            "report": state.verified_reports[target].output,
+                            "retrieved_record_ids": list(state.retrieved_records.keys()),
+                        },
+                        None,
+                    )
+                if target in state.budget_exhausted_agents or target in state.abstained_agents:
+                    return (
+                        "error",
+                        {"call_id": call_id, "agent": target, "blocked": True},
+                        f"Re-delegation blocked: '{target}' already abstained or exhausted its budget.",
+                    )
                 if target == "evacuation" and state.get_verified_risk() is None:
                     return (
                         "error",
@@ -270,10 +311,21 @@ class DisasterMindOrchestrator:
                         "Precondition failed: Risk agent must complete and be verified before Evacuation agent runs.",
                     )
 
+                attempts = state.delegation_attempts.get(target, 0) + 1
+                state.delegation_attempts[target] = attempts
+                if attempts > 2:
+                    return (
+                        "error",
+                        {"call_id": call_id, "agent": target, "blocked": True},
+                        f"Delegation limit reached for '{target}'.",
+                    )
+
                 sub_context: dict[str, Any] = {
                     "scenario": user_payload,
                     "focus_question": args["focus_question"],
                 }
+                if state.resolved_geography:
+                    sub_context["resolved_geography"] = state.resolved_geography
                 if target == "logistics":
                     sub_context["verified_risk"] = (
                         state.verified_reports["risk"].output if "risk" in state.verified_reports else None
@@ -293,6 +345,8 @@ class DisasterMindOrchestrator:
                     registry=registry,
                     verifier=self.verifier,
                     emit=emit,
+                    run_deadline=run_deadline,
+                    run_max_tokens=run_max_tokens,
                 )
                 sub_traces[target] = trace
                 if trace.status == "verified" and target in state.verified_reports:
@@ -361,6 +415,8 @@ class DisasterMindOrchestrator:
                 registry=registry,
                 verifier=self.verifier,
                 emit=emit,
+                run_deadline=run_deadline,
+                run_max_tokens=run_max_tokens,
             )
 
             ordered_traces: list[AgentTraceRecord] = [coord_trace]

@@ -40,3 +40,5 @@ embeddings/*.json
 data/
 eval/.cache/
 .cache/
+verification/**/raw_traces/
+verification/*/raw_*.json

@@ -51,3 +51,4 @@ class DisasterMindOrchestrator:
 
     async def run_from_intake(self, intake: ScenarioIntakeRequest) -> OrchestrationRunResult:
         return await self.run_briefing(intake)
+

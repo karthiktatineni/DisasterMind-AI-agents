@@ -99,8 +99,8 @@ class NativeToolLLMClient:
         *,
         http_client: httpx.AsyncClient | None = None,
         openai_client: AsyncOpenAI | None = None,
-        max_rpm: int = 30,
-        max_concurrency: int = 4,
+        max_rpm: int = 25,
+        max_concurrency: int = 3,
     ) -> None:
         self.settings = settings or get_settings()
         self._owns_http = http_client is None and openai_client is None
@@ -157,17 +157,20 @@ class NativeToolLLMClient:
             await self._limiter.acquire()
             started = time.perf_counter()
             try:
+                kwargs: dict[str, Any] = {
+                    "model": target_model,
+                    "messages": messages,
+                    "tools": tools,
+                    "tool_choice": tool_choice,
+                    "temperature": temperature,
+                    "seed": seed,
+                    "max_tokens": max_tokens,
+                    "stream": False,
+                }
+                if isinstance(tool_choice, str) and len(tools) > 1:
+                    kwargs["parallel_tool_calls"] = True
                 completion = await asyncio.wait_for(
-                    self._client.chat.completions.create(
-                        model=target_model,
-                        messages=messages,
-                        tools=tools,
-                        tool_choice=tool_choice,
-                        temperature=temperature,
-                        seed=seed,
-                        max_tokens=max_tokens,
-                        stream=False,
-                    ),
+                    self._client.chat.completions.create(**kwargs),
                     timeout=request_timeout_s,
                 )
                 elapsed_ms = round((time.perf_counter() - started) * 1000.0, 2)
@@ -240,3 +243,4 @@ class NativeToolLLMClient:
             total_tokens=int(getattr(usage, "total_tokens", 0) or 0) if usage else 0,
             latency_ms=elapsed_ms,
         )
+

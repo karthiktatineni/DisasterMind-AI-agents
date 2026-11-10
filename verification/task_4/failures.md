@@ -1,0 +1,17 @@
+# Task 4 Failures & Root-Cause Log (`R4`)
+
+## Attempt 1 (`task-1221`, committed code `b683e4a`)
+- **Outcome:** Live run `task4-live-odisha-cyclone` exited with `status="insufficient_data"` (`llm_calls=8`, `tool_calls=28`, `tokens=28076`, `wall_ms=167526.53`, `citations=0`, `quantities=0`, `abstentions=3`).
+- **Observed Root Causes (`verification/task_4/live_traces.json` & single-step replay `task-1251`):**
+  1. **Cause A (`geocode_region` returned `no_data` for `"Odisha, India"`):** Open-Meteo `/v1/search?name=Odisha, India` returned empty results because of the comma-separated suffix, whereas splitting `"place, country"` and filtering by country resolves it cleanly without hardcoding.
+  2. **Cause B (Risk tool loop + token exhaustion):** On Steps 1–3, Risk succeeded on `search_precedents`, `get_historical_stats`, and `get_weather`. In `task-1251` (Step 4 replay), `reasoning_content` explicitly concluded `"Let me prepare the report."`, yet under free `tool_choice="required"` across repeated unconstrained tool schemas (`$defs/$ref` + full previous tool list + repeated `tool_results`), NIM's decoder re-emitted the previous 4 domain tool calls (`search_precedents`, `get_historical_stats`, `geocode_region`, `get_weather`) on Steps 4 and 5 instead of invoking `submit_risk_report`. That hit Risk's `16000`-token cap.
+  3. **Cause C (Unbounded Coordinator re-delegation):** After Risk abstained on token budget, Coordinator re-invoked `run_risk_agent` a second time, repeating the token burn and exhausting the `150.0s` wall-clock cap.
+- **Hung Command Incident (`task-1235`):** Diagnostic replay via PowerShell `@' ... '@ | python -` stalled with empty stdout for ~28 minutes waiting on piped stdin; killed manually. Subsequent diagnostics must write files under `scratch/` and pass explicit timeouts.
+- **Structural Fixes Planned Before Attempt 2:**
+  - Per-agent tool-round cap (`3`) + forced named `tool_choice` to `submit_*_report` once required tools have succeeded or round cap/duplicate trigger is hit.
+  - Idempotent per-agent tool deduplication (`already_provided` marker; repeated identical calls trigger forced submit).
+  - Compact tool result summaries returned to the model (hard char cap; full payloads kept in traces/state).
+  - `parallel_tool_calls=True` enabled cleanly in client calls.
+  - Shared `run_budget` + no re-delegation to abstained/out-of-budget agents (only 1 retry allowed, only if budget remains and only on verifier rejection).
+  - `"place, country"` parsing & country filtering in `geocode_region` + coordinate-skip rule when lat/lon supplied.
+

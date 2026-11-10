@@ -39,7 +39,15 @@ class ScriptedToolLLMClient:
         **_kwargs: Any,
     ) -> LLMToolResponse:
         assert tools, "Every LLM call must pass non-empty tools JSON schema array."
-        self.calls.append({"messages": messages, "tools": tools, "temperature": temperature, "seed": seed})
+        self.calls.append(
+            {
+                "messages": messages,
+                "tools": tools,
+                "tool_choice": tool_choice,
+                "temperature": temperature,
+                "seed": seed,
+            }
+        )
         return self._handler(messages=messages, tools=tools, idx=len(self.calls))
 
     async def aclose(self) -> None:
@@ -183,50 +191,56 @@ def _happy_handler(*, risk_level: str = "high", evac_rec: str = "mandatory_evacu
         if "submit_risk_report" in names:
             tool_msgs = [m for m in messages if m.get("role") == "tool"]
             if len(tool_msgs) == 0:
-                tc = _tc("call_risk_search", "search_precedents", {"query": "Storm Odisha India", "disaster_type": "Storm", "country": "India", "top_k": 5})
-            elif len(tool_msgs) == 1:
-                tc = _tc("call_risk_stats", "get_historical_stats", {"disaster_type": "Storm", "country": "India"})
+                tcs = [
+                    _tc("call_risk_search", "search_precedents", {"query": "Storm Odisha India", "disaster_type": "Storm", "country": "India", "top_k": 5}),
+                    _tc("call_risk_stats", "get_historical_stats", {"disaster_type": "Storm", "country": "India"}),
+                ]
             else:
-                tc = _tc(
-                    "call_risk_sub",
-                    "submit_risk_report",
-                    {
-                        "risk_level": risk_level,
-                        "premise_valid": True,
-                        "premise_issue": None,
-                        "hazard_summary": "Precedent Cyclone Fani matched with verified historical impact totals.",
-                        "cited_record_ids": ["2019-0123-IND"],
-                        "quantities": [{"name": "precedent_similarity", "value": 0.5812, "unit": "cosine", "provenance": "call_risk_search", "inputs": []}],
-                        "data_gaps": [],
-                    },
-                )
-            return LLMToolResponse(model="nvidia/nemotron-3-ultra-550b-a55b", request_id=f"req-{idx}", finish_reason="tool_calls", content=None, reasoning_content=None, tool_calls=[tc], prompt_tokens=90, completion_tokens=25, total_tokens=115)
+                tcs = [
+                    _tc(
+                        "call_risk_sub",
+                        "submit_risk_report",
+                        {
+                            "risk_level": risk_level,
+                            "premise_valid": True,
+                            "premise_issue": None,
+                            "hazard_summary": "Precedent Cyclone Fani matched with verified historical impact totals.",
+                            "cited_record_ids": ["2019-0123-IND"],
+                            "quantities": [{"name": "precedent_similarity", "value": 0.5812, "unit": "cosine", "provenance": "call_risk_search", "inputs": []}],
+                            "data_gaps": [],
+                        },
+                    )
+                ]
+            return LLMToolResponse(model="nvidia/nemotron-3-ultra-550b-a55b", request_id=f"req-{idx}", finish_reason="tool_calls", content=None, reasoning_content=None, tool_calls=tcs, prompt_tokens=90, completion_tokens=25, total_tokens=115)
 
         if "submit_logistics_report" in names:
             tool_msgs = [m for m in messages if m.get("role") == "tool"]
             if len(tool_msgs) == 0:
-                tc = _tc("call_log_stats", "get_historical_stats", {"disaster_type": "Storm", "country": "India"})
-            elif len(tool_msgs) == 1:
-                tc = _tc(
-                    "call_log_sphere",
-                    "compute_logistics_requirements",
-                    {"population": 100000, "population_provenance": "assumption supplied by user"},
-                )
+                tcs = [
+                    _tc("call_log_stats", "get_historical_stats", {"disaster_type": "Storm", "country": "India"}),
+                    _tc(
+                        "call_log_sphere",
+                        "compute_logistics_requirements",
+                        {"population": 100000, "population_provenance": "assumption supplied by user"},
+                    ),
+                ]
             else:
                 sphere_payload = json.loads(tool_msgs[-1]["content"])
-                tc = _tc(
-                    "call_log_sub",
-                    "submit_logistics_report",
-                    {
-                        "resource_adequacy": "insufficient_inventory_data",
-                        "capacity_comparisons": sphere_payload["capacity_comparisons"],
-                        "quantities": sphere_payload["quantities"],
-                        "supply_recommendations": ["Verify municipal potable water tanker stocks before deployment."],
-                        "cited_record_ids": ["2019-0123-IND"],
-                        "data_gaps": ["Shelter, potable water, and food inventory not provided by user"],
-                    },
-                )
-            return LLMToolResponse(model="nvidia/nemotron-3-ultra-550b-a55b", request_id=f"req-{idx}", finish_reason="tool_calls", content=None, reasoning_content=None, tool_calls=[tc], prompt_tokens=90, completion_tokens=25, total_tokens=115)
+                tcs = [
+                    _tc(
+                        "call_log_sub",
+                        "submit_logistics_report",
+                        {
+                            "resource_adequacy": "insufficient_inventory_data",
+                            "capacity_comparisons": sphere_payload["capacity_comparisons"],
+                            "quantities": sphere_payload["quantities"],
+                            "supply_recommendations": ["Verify municipal potable water tanker stocks before deployment."],
+                            "cited_record_ids": ["2019-0123-IND"],
+                            "data_gaps": ["Shelter and potable water inventory not provided by user"],
+                        },
+                    )
+                ]
+            return LLMToolResponse(model="nvidia/nemotron-3-ultra-550b-a55b", request_id=f"req-{idx}", finish_reason="tool_calls", content=None, reasoning_content=None, tool_calls=tcs, prompt_tokens=90, completion_tokens=25, total_tokens=115)
 
         if "submit_evacuation_report" in names:
             tool_msgs = [m for m in messages if m.get("role") == "tool"]
@@ -462,3 +476,200 @@ def test_task4_fastapi_sse_endpoint_streams_real_events(monkeypatch):
     assert "event: run_started" in resp.text
     assert "event: agent_verified" in resp.text
     assert "event: briefing_ready" in resp.text
+
+
+@pytest.mark.asyncio
+async def test_task4_looping_risk_forced_to_submit_and_deduped():
+    """Verify duplicate calls return cached already_provided result and round cap forces named submit_risk_report."""
+    settings = Settings(nvidia_api_key="dummy", nvidia_model="nvidia/nemotron-3-ultra-550b-a55b")
+    custom_specs = {
+        k: (
+            type(v)(**{**v.__dict__, "force_submit_on_required_ok": False, "max_tool_rounds": 3})
+            if k == "risk"
+            else v
+        )
+        for k, v in AGENT_SPECS.items()
+    }
+    stats_calls = {"count": 0}
+    orig_stats = _make_fake_stats()
+
+    class CountingStats:
+        dataset_version = orig_stats.dataset_version
+
+        def query_stats(self, **kwargs: Any) -> dict[str, Any]:
+            stats_calls["count"] += 1
+            return orig_stats.query_stats(**kwargs)
+
+    risk_turns = {"n": 0}
+    seen_choices: list[Any] = []
+
+    class CaptureLLM(ScriptedToolLLMClient):
+        async def chat_with_tools(self, **kwargs: Any) -> LLMToolResponse:
+            resp = await super().chat_with_tools(**kwargs)
+            if any(t["function"]["name"] == "submit_risk_report" for t in kwargs["tools"]):
+                seen_choices.append(kwargs["tool_choice"])
+            return resp
+
+    def looping_handler(*, messages: list[dict[str, Any]], tools: list[dict[str, Any]], idx: int) -> LLMToolResponse:
+        names = {t["function"]["name"] for t in tools}
+        if "submit_risk_report" in names:
+            risk_turns["n"] += 1
+            turn = risk_turns["n"]
+            if turn == 1:
+                return LLMToolResponse(model="test", request_id="r1", finish_reason="tool_calls", content=None, reasoning_content=None, tool_calls=[_tc("c1", "get_historical_stats", {"disaster_type": "Storm", "country": "India"})])
+            if turn == 2:
+                # Duplicate identical call -> must dedup with already_provided=true & force submit on next turn!
+                return LLMToolResponse(model="test", request_id="r2", finish_reason="tool_calls", content=None, reasoning_content=None, tool_calls=[_tc("c2", "get_historical_stats", {"disaster_type": "Storm", "country": "India"})])
+            if turn == 3:
+                # Model forced to submit, but hasn't called search_precedents yet; verifier rejects -> resets to let search run or let's call search + submit when forced
+                # Actually let's check: when turn 2 deduped, turn 3 received forced tool_choice! Let's submit without search -> rejected -> then search -> submit!
+                return LLMToolResponse(model="test", request_id="r3", finish_reason="tool_calls", content=None, reasoning_content=None, tool_calls=[_tc("c3", "submit_risk_report", {"risk_level": "high", "premise_valid": True, "hazard_summary": "Missing search attempt.", "cited_record_ids": [], "quantities": [], "data_gaps": []})])
+            if turn == 4:
+                return LLMToolResponse(model="test", request_id="r4", finish_reason="tool_calls", content=None, reasoning_content=None, tool_calls=[_tc("c4", "search_precedents", {"query": "Storm Odisha", "disaster_type": "Storm"})])
+            return LLMToolResponse(model="test", request_id="r5", finish_reason="tool_calls", content=None, reasoning_content=None, tool_calls=[_tc("c5", "submit_risk_report", {"risk_level": "high", "premise_valid": True, "hazard_summary": "Verified after required search.", "cited_record_ids": ["2019-0123-IND"], "quantities": [], "data_gaps": []})])
+        return _happy_handler()(messages=messages, tools=tools, idx=idx)
+
+    llm = CaptureLLM(looping_handler)
+    async with _make_fake_http() as http_client:
+        orch = DisasterMindOrchestrator(
+            settings=settings,
+            llm_client=llm,  # type: ignore[arg-type]
+            retrieval_service=FakeRetrievalService(),  # type: ignore[arg-type]
+            historical_stats_service=CountingStats(),  # type: ignore[arg-type]
+            http_client=http_client,
+            agent_specs=custom_specs,
+        )
+        res = await orch.run({"disaster_type": "Storm", "region": "Odisha"}, run_id="run-loop-dedup")
+
+    assert res.briefing.status == "complete"
+    # Historical stats executed only once for Risk despite 2 identical calls (+1 once for Logistics = 2 total).
+    assert stats_calls["count"] == 2
+    assert seen_choices[2] == {"type": "function", "function": {"name": "submit_risk_report"}}
+    risk_trace = [t for t in res.agent_traces if t.agent == "risk"][0]
+    assert risk_trace.steps[1].tool_results[0].get("deduped") is True
+    assert "already_provided" in risk_trace.steps[2].request_messages[-2]["content"]
+
+
+@pytest.mark.asyncio
+async def test_task4_budget_exhaustion_abstained_and_no_redelegation():
+    """Exhausted token budget marks agent abstained and Coordinator cannot re-delegate."""
+    settings = Settings(nvidia_api_key="dummy", nvidia_model="nvidia/nemotron-3-ultra-550b-a55b")
+    tiny_budget_specs = {
+        k: (type(v)(**{**v.__dict__, "max_token_budget": 100}) if k == "risk" else v)
+        for k, v in AGENT_SPECS.items()
+    }
+    risk_invocations = {"count": 0}
+    coord_step = {"n": 0}
+
+    def budget_handler(*, messages: list[dict[str, Any]], tools: list[dict[str, Any]], idx: int) -> LLMToolResponse:
+        names = {t["function"]["name"] for t in tools}
+        if "submit_coordinator_report" in names:
+            coord_step["n"] += 1
+            s = coord_step["n"]
+            if s == 1:
+                tc = _tc("c1", "run_risk_agent", {"focus_question": "Attempt 1"})
+            elif s == 2:
+                # Re-delegation after budget exhaustion -> MUST return blocked error!
+                tc = _tc("c2", "run_risk_agent", {"focus_question": "Retry after budget exhaustion"})
+            elif s == 3:
+                assert "Re-delegation blocked" in messages[-1]["content"]
+                tc = _tc("c3", "submit_coordinator_report", {"executive_summary": "Partial after Risk budget exhaustion.", "action_plan": [], "cited_record_ids": [], "data_gaps": ["Risk budget exhausted"]})
+            else:
+                tc = _tc("c4", "submit_coordinator_report", {"executive_summary": "Fallback exit", "action_plan": [], "cited_record_ids": [], "data_gaps": []})
+            return LLMToolResponse(model="test", request_id=f"c-{s}", finish_reason="tool_calls", content=None, reasoning_content=None, tool_calls=[tc], total_tokens=50)
+        if "submit_risk_report" in names:
+            risk_invocations["count"] += 1
+            # First step consumes 200 > 100 token budget -> step 2 stops via budget_exhausted!
+            return LLMToolResponse(model="test", request_id="r-1", finish_reason="tool_calls", content=None, reasoning_content=None, tool_calls=[_tc("r1", "get_historical_stats", {"disaster_type": "Storm", "country": "India"})], prompt_tokens=150, completion_tokens=50, total_tokens=200)
+        return _happy_handler()(messages=messages, tools=tools, idx=idx)
+
+    async with _make_fake_http() as http_client:
+        orch = DisasterMindOrchestrator(
+            settings=settings,
+            llm_client=ScriptedToolLLMClient(budget_handler),  # type: ignore[arg-type]
+            retrieval_service=FakeRetrievalService(),  # type: ignore[arg-type]
+            historical_stats_service=_make_fake_stats(),
+            http_client=http_client,
+            agent_specs=tiny_budget_specs,
+        )
+        res = await orch.run({"disaster_type": "Storm", "region": "Odisha"}, run_id="run-budget-block")
+
+    assert risk_invocations["count"] == 1
+    assert any(a.agent == "risk" and "token budget" in a.reason.lower() for a in res.briefing.abstentions)
+    assert res.briefing.human_review.required is True
+
+
+@pytest.mark.asyncio
+async def test_task4_geocode_parsing_and_compact_result_cap():
+    """Verify geocode handles place+country, single city, unknown place, and compaction bounds tool messages."""
+    from backend.app.tools.domain_tools import build_domain_tools
+    from backend.app.tools.registry import MAX_TOOL_RESULT_CHARS, ToolRegistry, compact_tool_result_for_model
+
+    def geo_handler(request: httpx.Request) -> httpx.Response:
+        name = request.url.params.get("name", "")
+        if "," in name:
+            return httpx.Response(200, json={})
+        if name == "Odisha":
+            return httpx.Response(
+                200,
+                json={"results": [{"name": "Odisha", "country": "India", "country_code": "IN", "latitude": 20.95, "longitude": 85.10, "population": 41974218}]},
+            )
+        if name == "Chennai":
+            return httpx.Response(
+                200,
+                json={"results": [{"name": "Chennai", "admin1": "Tamil Nadu", "country": "India", "latitude": 13.08, "longitude": 80.27, "population": 4646732}]},
+            )
+        if name == "Tohoku":
+            return httpx.Response(
+                200,
+                json={
+                    "results": [
+                        {"name": "Tohoku", "country": "United States", "country_code": "US", "latitude": 1.0, "longitude": 1.0},
+                        {"name": "Tohoku", "admin1": "Aomori", "country": "Japan", "country_code": "JP", "latitude": 40.82, "longitude": 141.20},
+                    ]
+                },
+            )
+        return httpx.Response(200, json={})
+
+    class LargeRetrieval:
+        async def search(self, *_a: Any, **_kw: Any) -> RetrievalResult:
+            matches = [
+                RetrievalMatch(
+                    id=f"2020-{i:04d}-IND",
+                    event_name=f"Very Long Cyclone Historical Precedent Event Number {i} With Extensive Metadata " * 4,
+                    disaster_type="Storm",
+                    country="India",
+                    region="Odisha Coast",
+                    start_year=2020,
+                    total_deaths=100 + i,
+                    total_affected=500000 + i,
+                    total_damage=900000,
+                    similarity=0.6 - i * 0.01,
+                )
+                for i in range(10)
+            ]
+            return RetrievalResult(status="ok", record_ids=[m.id for m in matches], matches=matches, threshold_used=0.3112, top_score=0.6, namespace="v2")
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(geo_handler)) as http:
+        reg = ToolRegistry(build_domain_tools(retrieval_service=LargeRetrieval(), historical_stats_service=_make_fake_stats(), http_client=http))  # type: ignore[arg-type]
+        allow = ("geocode_region", "search_precedents")
+
+        r1 = await reg.execute(call_id="g1", agent="coordinator", tool_name="geocode_region", raw_arguments={"region": "Odisha, India"}, allow_list=allow)
+        assert r1.status == "ok" and r1.data["country"] == "India" and abs(r1.data["latitude"] - 20.95) < 1e-6
+
+        r2 = await reg.execute(call_id="g2", agent="coordinator", tool_name="geocode_region", raw_arguments={"region": "Chennai"}, allow_list=allow)
+        assert r2.status == "ok" and r2.data["country"] == "India" and abs(r2.data["latitude"] - 13.08) < 1e-6
+
+        r3 = await reg.execute(call_id="g3", agent="coordinator", tool_name="geocode_region", raw_arguments={"region": "Tohoku, Japan"}, allow_list=allow)
+        assert r3.status == "ok" and r3.data["country"] == "Japan" and abs(r3.data["latitude"] - 40.82) < 1e-6
+
+        r4 = await reg.execute(call_id="g4", agent="coordinator", tool_name="geocode_region", raw_arguments={"region": "Zyxwvut Nowhereville"}, allow_list=allow)
+        assert r4.status == "no_data"
+
+        s_env = await reg.execute(call_id="s1", agent="risk", tool_name="search_precedents", raw_arguments={"query": "cyclone india", "top_k": 10}, allow_list=allow)
+        assert s_env.status == "ok" and len(s_env.data["matches"]) == 10
+        compact_str = compact_tool_result_for_model(s_env)
+        assert len(compact_str) <= MAX_TOOL_RESULT_CHARS
+        assert json.loads(compact_str)["status"] == "ok"
+
+

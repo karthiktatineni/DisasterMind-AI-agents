@@ -30,19 +30,19 @@ class GenerationResponse(BaseModel):
 class DisasterScenario(BaseModel):
     request_id: str = Field(default_factory=lambda: str(uuid4()))
     disaster_type: str = Field(default="Cyclone", min_length=1)
-    region: str = Field(default="Visakhapatnam coastal zone", min_length=1)
+    region: str = Field(default="Unknown region", min_length=1)
     time_horizon: str = Field(default="48 hours", min_length=1)
-    severity: Literal["Low", "Moderate", "High", "Critical"] = "Critical"
-    population: int = Field(default=186000, ge=0)
-    hospital_capacity: int = Field(default=4200, ge=0)
-    shelter_capacity: int = Field(default=132000, ge=0)
-    wind_speed: float = Field(default=132, ge=0)
-    rainfall: float = Field(default=238, ge=0)
-    elevation: float = Field(default=8, ge=-500, le=9000)
-    population_density: float = Field(default=6100, ge=0)
-    temperature: float = Field(default=30, ge=-80, le=80)
-    humidity: float = Field(default=82, ge=0, le=100)
-    historical_damage: float = Field(default=0.55, ge=0, le=1)
+    severity: Literal["Low", "Moderate", "High", "Critical"] = "High"
+    population: int | None = Field(default=None, ge=0)
+    hospital_capacity: int | None = Field(default=None, ge=0)
+    shelter_capacity: int | None = Field(default=None, ge=0)
+    wind_speed: float | None = Field(default=None, ge=0)
+    rainfall: float | None = Field(default=None, ge=0)
+    elevation: float | None = Field(default=None, ge=-500, le=9000)
+    population_density: float | None = Field(default=None, ge=0)
+    temperature: float | None = Field(default=None, ge=-80, le=80)
+    humidity: float | None = Field(default=None, ge=0, le=100)
+    historical_damage: float | None = Field(default=None, ge=0, le=1)
     notes: str = Field(default="", max_length=4000)
     latitude: float | None = None
     longitude: float | None = None

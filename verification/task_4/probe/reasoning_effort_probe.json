@@ -1,0 +1,19 @@
+{
+  "probe_date": "2026-11-10",
+  "model": "nvidia/nemotron-3-ultra-550b-a55b",
+  "simple_math_test": {
+    "default": {"status": 200, "completion_tokens": 40, "reasoning_tokens": 35, "content": "391"},
+    "reasoning_effort_low": {"status": 200, "completion_tokens": 31, "reasoning_tokens": 26, "content": "391"},
+    "enable_thinking_false": {"status": 200, "completion_tokens": 4, "reasoning_tokens": 0, "content": "391"}
+  },
+  "simple_tool_call_test": {
+    "default": {"status": 200, "latency_ms": 4012.75, "completion_tokens": 70, "reasoning_tokens": 39, "valid_tool_call": true},
+    "reasoning_effort_low": {"status": 200, "latency_ms": 3193.88, "completion_tokens": 70, "reasoning_tokens": 39, "valid_tool_call": true},
+    "enable_thinking_false": {"status": 200, "latency_ms": 738.48, "completion_tokens": 30, "reasoning_tokens": 0, "valid_tool_call": true}
+  },
+  "complex_forced_submit_risk_report_test": {
+    "enable_thinking_false": {"status": 200, "latency_ms": 25272.91, "completion_tokens": 1200, "reasoning_tokens": 0, "tool_calls": null, "note": "Hit 1200 token limit without emitting forced tool call."},
+    "default_thinking_with_inlined_schema": {"status": 200, "latency_ms": 38533.45, "completion_tokens": 1821, "reasoning_tokens": 731, "tool_call": "submit_risk_report", "valid": true}
+  },
+  "conclusion": "Keep default thinking enabled for Task 4 agent loops; enable_thinking=False broke complex Pydantic tool submission (tool_calls=null) while default thinking + inlined JSON schema + forced named tool_choice produced valid submit_risk_report cleanly. Report latencies honestly as measured."
+}

@@ -32,9 +32,7 @@ AGENT_OUTPUT_MODELS: dict[AgentName, type[BaseModel]] = {
 
 ALLOWED_STANDARD_PROVENANCES = {
     "standard",
-    "standard:sphere_2018_wash_15l",
-    "standard:sphere_2018_shelter_3_5m2",
-    "standard:sphere_2018_food_2100kcal",
+    "standard:water_litres_per_person_per_day",
 }
 
 
@@ -54,16 +52,16 @@ def is_valid_provenance(prov: str, state: SharedState) -> bool:
         return True
     if norm in state.retrieved_records:
         return True
-    if low == "assumption supplied by user" or low.startswith("assumption supplied by user:"):
+    if low == "assumption supplied by user" or low.startswith("assumption supplied by user"):
         return True
-    if low in ALLOWED_STANDARD_PROVENANCES or low.startswith("standard:sphere_2018_"):
+    if low in ALLOWED_STANDARD_PROVENANCES or low.startswith("standard:water_litres_per_person_per_day"):
         return True
-    # Composite standard + call_id provenance (e.g., "call_1 + standard:sphere_2018_wash_15L")
+    # Composite provenance (e.g., "call_1 + standard:water_litres_per_person_per_day")
     for part in [p.strip() for p in norm.replace(";", "+").split("+")]:
         pl = part.lower()
         if part in state.tool_calls or part in state.retrieved_records:
             return True
-        if pl.startswith("standard:sphere_2018_"):
+        if pl in ALLOWED_STANDARD_PROVENANCES or pl.startswith("standard:water_litres_per_person_per_day"):
             return True
     return False
 
@@ -136,3 +134,4 @@ class InAppVerifier:
             errors=errors,
             validated_model=validated if len(errors) == 0 else None,
         )
+

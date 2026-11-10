@@ -26,10 +26,6 @@ def _source(name: str, status: str, detail: str) -> dict[str, str]:
     return {"name": name, "status": status, "detail": detail}
 
 
-def _fallback_population(region: str, severity: str) -> int:
-    return round((65000 + max(1, len(region)) * 2200) * SEVERITY_SCALE[severity])
-
-
 def _safe_float(value: Any, default: float = 0.0) -> float:
     try:
         result = float(value)
@@ -254,34 +250,9 @@ async def enrich_scenario(intake: ScenarioIntakeRequest) -> DisasterScenario:
             except Exception:
                 sources.append(_source("World Bank", "fallback", "Hospital bed density API unavailable."))
 
-    population = population or country_population or _fallback_population(intake.region, intake.severity)
-    if not any(source["name"] in {"Open-Meteo Geocoding", "Nominatim", "REST Countries"} and source["status"] in {"live", "latest"} for source in sources):
-        sources.append(_source("Population estimate", "fallback", "Estimated population from scenario region text."))
-
+    population = population or country_population
     area_km2 = population_area_km2 or country_area_km2
-    density = round(population / area_km2, 2) if area_km2 else round(population / 300, 2)
-    if area_km2:
-        sources.append(_source("Population density", "derived", "Computed from live population and area APIs."))
-    else:
-        sources.append(_source("Population density", "derived", "Estimated because no live area was available."))
-
-    if hospital_capacity == 0 and population:
-        bed_ratio = beds_per_1000 if beds_per_1000 is not None else 2.5
-        hospital_capacity = max(1, round(population * bed_ratio / 1000))
-        sources.append(_source("Hospital capacity", "derived", "Estimated from latest country hospital-bed density."))
-
-    if shelter_capacity == 0 and population:
-        shelter_fraction = {
-            "Low": 0.04,
-            "Moderate": 0.08,
-            "High": 0.14,
-            "Critical": 0.2,
-        }[intake.severity]
-        shelter_capacity = max(1, round(population * shelter_fraction))
-        sources.append(_source("Shelter capacity", "derived", "Estimated from population and scenario severity."))
-
-    base_damage = {"Low": 0.2, "Moderate": 0.4, "High": 0.7, "Critical": 0.95}
-    historical_damage = base_damage.get(intake.severity, 0.5)
+    density = round(population / area_km2, 2) if (population and area_km2) else None
 
     scenario = DisasterScenario(
         disaster_type=intake.disaster_type,
@@ -289,15 +260,15 @@ async def enrich_scenario(intake: ScenarioIntakeRequest) -> DisasterScenario:
         time_horizon=intake.time_horizon,
         severity=intake.severity,
         population=population,
-        hospital_capacity=hospital_capacity,
-        shelter_capacity=shelter_capacity,
-        wind_speed=wind_speed,
-        rainfall=rainfall,
-        elevation=elevation,
+        hospital_capacity=hospital_capacity or None,
+        shelter_capacity=shelter_capacity or None,
+        wind_speed=wind_speed or None,
+        rainfall=rainfall or None,
+        elevation=elevation or None,
         population_density=density,
-        temperature=temperature,
-        humidity=humidity,
-        historical_damage=historical_damage,
+        temperature=temperature or None,
+        humidity=humidity or None,
+        historical_damage=None,
         notes=intake.notes,
         latitude=latitude,
         longitude=longitude,

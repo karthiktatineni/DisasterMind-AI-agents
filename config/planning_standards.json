@@ -1,30 +1,16 @@
 {
-  "source": "The Sphere Handbook: Humanitarian Charter and Minimum Standards in Humanitarian Response",
-  "edition": "2018 (4th Edition)",
-  "urls": [
-    "https://handbook.spherestandards.org/en/sphere/",
-    "https://emergency.unhcr.org/"
-  ],
+  "source": "World Health Organization & WEDC — Technical Notes on Drinking-Water, Sanitation and Hygiene in Emergencies, Technical Note No. 9: How much water is needed in emergencies",
+  "edition": "Updated July 2013 (citing The Sphere Humanitarian Charter and Minimum Standards)",
+  "url": "https://cdn.who.int/media/docs/default-source/wash-documents/who-tn-09-how-much-water-is-needed.pdf",
   "retrieved_date": "2026-11-10",
   "provenance_tag": "standard",
   "standards": {
     "water_litres_per_person_per_day": {
       "value": 15.0,
       "unit": "litres/person/day",
-      "chapter": "WASH — Water Supply Standard 2.1, Key Indicator 1",
-      "notes": "Minimum household emergency quantity for drinking, cooking, and personal hygiene."
-    },
-    "shelter_covered_area_m2_per_person": {
-      "value": 3.5,
-      "unit": "m2/person",
-      "chapter": "Shelter and Settlement — Standard 3",
-      "notes": "Minimum covered floor living area per person in temporary communal/household shelters (excluding cooking/sanitation/circulation)."
-    },
-    "food_kcal_per_person_per_day": {
-      "value": 2100.0,
-      "unit": "kcal/person/day",
-      "chapter": "Food Security and Nutrition — Standard",
-      "notes": "Initial daily mean energy planning figure per person for general food rations."
+      "section": "Table 9.1 (p. 9.2), Table 9.3 (p. 9.3), Box 9.2 Phase 2 (p. 9.4)",
+      "verbatim_quote": "Table 9.1 Simplified table of water requirements for survival (per person) ... Total: 7.5 to 15 lpd (lpd: Litres per day). Box 9.2 Phase 2 Long-term solution (litres): Domestic use (assume population remains static): 5,000 x 15 = 75,000."
     }
-  }
+  },
+  "omitted_standards_note": "Shelter floor area (3.5 m2/person) and emergency food ration (2100 kcal/person/day) were omitted under Task 4 Section 3 because their primary URLs returned HTTP 403/404 during automated retrieval and could not be opened to extract direct verbatim quotes."
 }

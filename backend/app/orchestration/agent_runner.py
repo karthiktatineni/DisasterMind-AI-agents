@@ -1,4 +1,4 @@
-"""Bounded native tool-calling execution loop for individual agents (Task 4)."""
+"""Bounded native tool-calling execution loop with round caps, dedup, compaction, and budgets."""
 
 from __future__ import annotations
 
@@ -16,10 +16,20 @@ from backend.app.orchestration.models import (
     SharedState,
     SSEEventRecord,
     TokenUsageSummary,
+    ToolExecutionEnvelope,
 )
-from backend.app.orchestration.verifier import AGENT_OUTPUT_MODELS, InAppVerifier
+from backend.app.orchestration.verifier import (
+    AGENT_OUTPUT_MODELS,
+    AGENT_REQUIRED_TOOLS,
+    InAppVerifier,
+)
 from backend.app.services.llm_client import LLMClientConfigError, LLMClientError, NativeToolLLMClient
-from backend.app.tools.registry import SubmissionToolSpec, ToolRegistry, decode_tool_arguments
+from backend.app.tools.registry import (
+    SubmissionToolSpec,
+    ToolRegistry,
+    compact_tool_result_for_model,
+    decode_tool_arguments,
+)
 
 PROMPTS_DIR = Path(__file__).resolve().parents[1] / "prompts"
 
@@ -33,10 +43,12 @@ class AgentSpec:
     submission_description: str
     temperature: float = 0.0
     seed: int = 42
-    max_tokens: int = 2400
+    max_tokens: int = 2600
+    max_tool_rounds: int = 3
     max_steps: int = 6
-    max_token_budget: int = 16000
-    wall_clock_cap_s: float = 60.0
+    max_token_budget: int = 24000
+    wall_clock_cap_s: float = 120.0
+    force_submit_on_required_ok: bool = True
 
     def load_system_prompt(self) -> str:
         return (PROMPTS_DIR / self.prompt_file).read_text(encoding="utf-8").strip()
@@ -63,6 +75,14 @@ def _format_assistant_tool_message(content: str | None, tool_calls: list[Any]) -
     return msg
 
 
+def _canonical_dedup_key(tool_name: str, raw_arguments: str) -> tuple[str, str]:
+    try:
+        parsed = decode_tool_arguments(raw_arguments)
+        return tool_name, json.dumps(parsed, sort_keys=True, ensure_ascii=False)
+    except Exception:
+        return tool_name, raw_arguments.strip()
+
+
 async def run_agent_loop(
     *,
     spec: AgentSpec,
@@ -72,8 +92,10 @@ async def run_agent_loop(
     registry: ToolRegistry,
     verifier: InAppVerifier,
     emit: Callable[[SSEEventRecord], None],
+    run_deadline: float | None = None,
+    run_max_tokens: int = 90000,
 ) -> AgentTraceRecord:
-    """Execute one agent via native tools/tool_calls until verified submission, abstention, or bound hit."""
+    """Execute one agent via native tools/tool_calls until verified submission, forced submit, or budget cap."""
     started = time.monotonic()
     emit(SSEEventRecord(event="agent_started", run_id=state.run_id, agent=spec.name))
 
@@ -89,20 +111,29 @@ async def run_agent_loop(
 
     steps_trace: list[AgentStepTrace] = []
     called_tools: list[str] = []
+    succeeded_tools: set[str] = set()
     rejection_reasons: list[str] = []
+    tool_cache: dict[tuple[str, str], ToolExecutionEnvelope] = {}
+
     total_prompt = 0
     total_comp = 0
     total_reason = 0
     total_toks = 0
+    tool_rounds = 0
+    repeated_dup_count = 0
+    force_submit = False
 
-    def _abstain(reason: str) -> AgentTraceRecord:
+    def _abstain(reason: str, *, budget_exhausted: bool = False) -> AgentTraceRecord:
+        state.abstained_agents.add(spec.name)
+        if budget_exhausted:
+            state.budget_exhausted_agents.add(spec.name)
         state.abstentions.append(AbstentionItem(agent=spec.name, reason=reason))
         emit(
             SSEEventRecord(
                 event="agent_abstained",
                 run_id=state.run_id,
                 agent=spec.name,
-                data={"reason": reason},
+                data={"reason": reason, "budget_exhausted": budget_exhausted},
             )
         )
         return AgentTraceRecord(
@@ -121,25 +152,42 @@ async def run_agent_loop(
         )
 
     for step_idx in range(1, spec.max_steps + 1):
-        elapsed = time.monotonic() - started
-        if elapsed >= spec.wall_clock_cap_s:
-            return _abstain(f"Wall-clock cap ({spec.wall_clock_cap_s}s) reached before verification.")
+        now = time.monotonic()
+        if (now - started) >= spec.wall_clock_cap_s:
+            return _abstain(f"Agent wall-clock cap ({spec.wall_clock_cap_s}s) reached before verification.", budget_exhausted=True)
+        if run_deadline is not None and now >= run_deadline:
+            return _abstain("Run-wide wall-clock budget reached before verification.", budget_exhausted=True)
         if total_toks >= spec.max_token_budget:
-            return _abstain(f"Token budget ({spec.max_token_budget}) reached before verification.")
+            return _abstain(f"Agent token budget ({spec.max_token_budget}) reached before verification.", budget_exhausted=True)
+        if state.run_total_tokens >= run_max_tokens:
+            return _abstain(f"Run-wide token budget ({run_max_tokens}) reached before verification.", budget_exhausted=True)
+
+        choice: str | dict[str, Any] = (
+            {"type": "function", "function": {"name": sub_spec.name}}
+            if force_submit
+            else "required"
+        )
+        if force_submit:
+            messages.append(
+                {
+                    "role": "user",
+                    "content": f"Evidence gathering complete. Call {sub_spec.name} now using ONLY verified tool results.",
+                }
+            )
 
         req_snapshot = [dict(m) for m in messages]
         try:
             resp = await llm_client.chat_with_tools(
                 messages=messages,
                 tools=tools_payload,
-                tool_choice="required",
+                tool_choice=choice,
                 temperature=spec.temperature,
                 seed=spec.seed,
                 max_tokens=spec.max_tokens,
             )
         except (LLMClientConfigError, LLMClientError) as exc:
             rejection_reasons.append(f"LLM unavailable/error: {exc}")
-            return _abstain(f"LLM invocation failed: {exc}")
+            return _abstain(f"LLM invocation failed: {exc}", budget_exhausted=False)
 
         if resp.model and resp.model not in state.model_ids:
             state.model_ids.append(resp.model)
@@ -154,6 +202,7 @@ async def run_agent_loop(
         total_comp += resp.completion_tokens
         total_reason += resp.reasoning_tokens
         total_toks += resp.total_tokens
+        state.run_total_tokens += resp.total_tokens
 
         step_rec = AgentStepTrace(
             step=step_idx,
@@ -196,6 +245,10 @@ async def run_agent_loop(
 
         messages.append(_format_assistant_tool_message(resp.content, resp.tool_calls))
 
+        new_progress_in_step = False
+        has_domain_call = False
+        verifier_rejected_this_step = False
+
         for tc in resp.tool_calls:
             if tc.name == sub_spec.name:
                 try:
@@ -205,6 +258,7 @@ async def run_agent_loop(
                     rejection_reasons.append(err)
                     step_rec.verification_passed = False
                     step_rec.verification_errors.append(err)
+                    verifier_rejected_this_step = True
                     emit(
                         SSEEventRecord(
                             event="agent_rejected",
@@ -265,6 +319,7 @@ async def run_agent_loop(
                 step_rec.verification_passed = False
                 step_rec.verification_errors.extend(ver.errors)
                 rejection_reasons.extend(ver.errors)
+                verifier_rejected_this_step = True
                 emit(
                     SSEEventRecord(
                         event="agent_rejected",
@@ -280,9 +335,26 @@ async def run_agent_loop(
                         "content": json.dumps({"status": "rejected", "errors": ver.errors}),
                     }
                 )
+                # If submission was rejected due to a skipped required tool, lift force_submit so agent can execute it.
+                if any("Required tool" in e for e in ver.errors):
+                    force_submit = False
                 continue
 
-            # Regular domain / delegation tool
+            has_domain_call = True
+            dedup_key = _canonical_dedup_key(tc.name, tc.raw_arguments)
+            if dedup_key in tool_cache:
+                cached_env = tool_cache[dedup_key]
+                repeated_dup_count += 1
+                step_rec.tool_results.append({**cached_env.model_dump(), "deduped": True})
+                messages.append(
+                    {
+                        "role": "tool",
+                        "tool_call_id": tc.id,
+                        "content": compact_tool_result_for_model(cached_env, already_provided=True),
+                    }
+                )
+                continue
+
             emit(
                 SSEEventRecord(
                     event="tool_called",
@@ -319,7 +391,11 @@ async def run_agent_loop(
                 )
                 continue
 
+            new_progress_in_step = True
+            tool_cache[dedup_key] = env
             called_tools.append(tc.name)
+            if env.status == "ok":
+                succeeded_tools.add(tc.name)
             state.record_tool_execution(env)
             step_rec.tool_results.append(env.model_dump())
             emit(
@@ -330,15 +406,33 @@ async def run_agent_loop(
                     data={"call_id": tc.id, "tool": tc.name, "status": env.status, "latency_ms": env.latency_ms},
                 )
             )
-            tool_resp_payload = {"status": env.status, "call_id": env.call_id, **env.data}
-            if env.error:
-                tool_resp_payload["error"] = env.error
             messages.append(
                 {
                     "role": "tool",
                     "tool_call_id": tc.id,
-                    "content": json.dumps(tool_resp_payload, ensure_ascii=False),
+                    "content": compact_tool_result_for_model(env, already_provided=False),
                 }
             )
+
+        if has_domain_call and not verifier_rejected_this_step:
+            if new_progress_in_step:
+                tool_rounds += 1
+            req_set = AGENT_REQUIRED_TOOLS.get(spec.name, ())
+            all_req_ok = bool(req_set) and all(r in succeeded_tools for r in req_set)
+            dup_triggered = (not new_progress_in_step) or (repeated_dup_count > 1)
+            all_specialists_attempted = (
+                spec.name == "coordinator"
+                and all(
+                    (s in state.verified_reports or s in state.abstained_agents)
+                    for s in ("risk", "logistics", "evacuation")
+                )
+            )
+            if (
+                tool_rounds >= spec.max_tool_rounds
+                or dup_triggered
+                or (spec.force_submit_on_required_ok and all_req_ok)
+                or all_specialists_attempted
+            ):
+                force_submit = True
 
     return _abstain(f"Exceeded max_steps ({spec.max_steps}) without verified submission.")

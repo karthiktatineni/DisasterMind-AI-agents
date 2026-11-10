@@ -1,0 +1,117 @@
+{
+  "git_commit": "b683e4a66696928d02ae010024e1554e3ff9ef03",
+  "rejection_precondition_conflict_case": {
+    "briefing_status": "complete",
+    "conflicts": [
+      {
+        "kind": "risk_evacuation_mismatch",
+        "description": "Evacuation recommends 'mandatory_evacuation' while Risk level is 'low'.",
+        "risk_level": "low",
+        "evacuation_recommendation": "mandatory_evacuation"
+      }
+    ],
+    "human_review": {
+      "required": true,
+      "reasons": [
+        "Evacuation action 'mandatory_evacuation' requires mandatory human approval.",
+        "Risk and Evacuation assessments disagree."
+      ]
+    },
+    "coordinator_precondition_result": [
+      {
+        "call_id": "c1",
+        "tool_name": "run_evacuation_agent",
+        "agent": "coordinator",
+        "status": "error",
+        "arguments": {
+          "focus_question": "Evacuate before risk"
+        },
+        "data": {
+          "precondition_failed": "risk_required",
+          "call_id": "c1"
+        },
+        "error": "Precondition failed: Risk agent must complete and be verified before Evacuation agent runs.",
+        "latency_ms": 0.1
+      }
+    ],
+    "risk_rejections": [
+      "Unknown tool 'unknown_satellite_tool'.",
+      "Tool 'compute_logistics_requirements' is outside agent 'risk' allow-list ['geocode_region', 'get_historical_stats', 'get_weather', 'search_precedents'].",
+      "Malformed arguments for 'search_precedents': Expecting property name enclosed in double quotes: line 1 column 2 (char 1)",
+      "Required tool 'search_precedents' was skipped by agent 'risk'. Execute it before submitting."
+    ],
+    "events_summary": [
+      "run_started",
+      "agent_started",
+      "tool_called",
+      "tool_result",
+      "tool_called",
+      "agent_started",
+      "tool_called",
+      "agent_rejected",
+      "tool_called",
+      "agent_rejected",
+      "tool_called",
+      "agent_rejected",
+      "agent_rejected",
+      "tool_called",
+      "tool_result",
+      "agent_verified",
+      "state_written",
+      "tool_result",
+      "tool_called",
+      "agent_started",
+      "tool_called",
+      "tool_result",
+      "tool_called",
+      "tool_result",
+      "agent_verified",
+      "state_written",
+      "tool_result",
+      "tool_called",
+      "agent_started",
+      "tool_called",
+      "tool_result",
+      "agent_verified",
+      "state_written",
+      "tool_result",
+      "agent_verified",
+      "state_written",
+      "conflict_flagged",
+      "briefing_ready"
+    ]
+  },
+  "bounded_termination_case": {
+    "briefing_status": "partial",
+    "verified_risk_preserved": "risk",
+    "abstentions": [
+      {
+        "agent": "coordinator",
+        "reason": "Exceeded max_steps (2) without verified submission."
+      }
+    ],
+    "human_review": {
+      "required": true,
+      "reasons": [
+        "One or more agents abstained cleanly.",
+        "Briefing completed with status 'partial'."
+      ]
+    },
+    "events_summary": [
+      "run_started",
+      "agent_started",
+      "tool_called",
+      "agent_started",
+      "tool_called",
+      "tool_result",
+      "tool_called",
+      "tool_result",
+      "agent_verified",
+      "state_written",
+      "tool_result",
+      "agent_rejected",
+      "agent_abstained",
+      "briefing_ready"
+    ]
+  }
+}

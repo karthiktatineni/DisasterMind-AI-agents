@@ -1,4 +1,4 @@
-"""Concrete real-work domain tools for Search, Historical Stats, Open-Meteo, and Sphere Logistics."""
+"""Concrete real-work domain tools for Search, Historical Stats, Open-Meteo, and verified WHO/Sphere water standard."""
 
 from __future__ import annotations
 
@@ -47,7 +47,6 @@ class ComputeLogisticsArgs(StrictArgsBase):
     population_provenance: str = Field(min_length=3)
     available_shelter_capacity: int | None = Field(default=None, ge=0)
     available_water_litres_per_day: float | None = Field(default=None, ge=0.0)
-    available_food_kcal_per_day: float | None = Field(default=None, ge=0.0)
 
 
 class DelegateFocusArgs(StrictArgsBase):
@@ -57,6 +56,27 @@ class DelegateFocusArgs(StrictArgsBase):
 def load_planning_standards(path: Path | None = None) -> dict[str, Any]:
     target = path or STANDARDS_PATH
     return json.loads(target.read_text(encoding="utf-8"))
+
+
+def parse_region_query(region: str) -> tuple[str, str | None]:
+    """Parse optional 'place, country' format into (place_name, country_filter)."""
+    cleaned = " ".join(region.strip().split())
+    if "," not in cleaned:
+        return cleaned, None
+    parts = [p.strip() for p in cleaned.split(",") if p.strip()]
+    if len(parts) < 2:
+        return parts[0] if parts else cleaned, None
+    return parts[0], parts[-1]
+
+
+def _pick_country_match(results: list[dict[str, Any]], country_filter: str) -> dict[str, Any] | None:
+    needle = country_filter.strip().lower()
+    for row in results:
+        c_name = str(row.get("country") or "").strip().lower()
+        c_code = str(row.get("country_code") or "").strip().lower()
+        if c_name == needle or needle in c_name or c_code == needle:
+            return row
+    return None
 
 
 def build_domain_tools(
@@ -137,17 +157,27 @@ def build_domain_tools(
         status = "ok" if stats.get("status") == "ok" else "no_data"
         return status, stats, None
 
-    async def handle_geocode_region(args: dict[str, Any], call_id: str) -> tuple[str, dict[str, Any], str | None]:
+    async def _query_open_meteo_geo(name: str, count: int) -> list[dict[str, Any]]:
         resp = await http_client.get(
             "https://geocoding-api.open-meteo.com/v1/search",
-            params={"name": args["region"], "count": 1, "language": "en", "format": "json"},
+            params={"name": name, "count": count, "language": "en", "format": "json"},
         )
         resp.raise_for_status()
-        payload = resp.json()
-        results = payload.get("results") or []
-        if not results:
-            return "no_data", {"call_id": call_id, "region": args["region"]}, f"No geocoding match for '{args['region']}'."
-        top = results[0]
+        return list(resp.json().get("results") or [])
+
+    async def handle_geocode_region(args: dict[str, Any], call_id: str) -> tuple[str, dict[str, Any], str | None]:
+        raw_region = args["region"].strip()
+        place, country_filter = parse_region_query(raw_region)
+        results = await _query_open_meteo_geo(raw_region, 5)
+        top = _pick_country_match(results, country_filter) if (results and country_filter) else (results[0] if results else None)
+
+        if top is None and country_filter:
+            fallback_results = await _query_open_meteo_geo(place, 10)
+            top = _pick_country_match(fallback_results, country_filter)
+
+        if top is None:
+            return "no_data", {"call_id": call_id, "region": raw_region}, f"No geocoding match for '{raw_region}'."
+
         resolved = ", ".join(p for p in [top.get("name"), top.get("admin1"), top.get("country")] if p)
         pop_val = top.get("population")
         return (
@@ -197,53 +227,27 @@ def build_domain_tools(
     async def handle_compute_logistics(args: dict[str, Any], call_id: str) -> tuple[str, dict[str, Any], str | None]:
         pop = int(args["population"])
         pop_prov = str(args["population_provenance"]).strip()
-        water_std = float(standards["water_litres_per_person_per_day"]["value"])
-        shelter_std = float(standards["shelter_covered_area_m2_per_person"]["value"])
-        food_std = float(standards["food_kcal_per_person_per_day"]["value"])
-
+        water_std_meta = standards["water_litres_per_person_per_day"]
+        water_std = float(water_std_meta["value"])
         water_req = round(pop * water_std, 2)
-        shelter_area_req = round(pop * shelter_std, 2)
-        food_req = round(pop * food_std, 2)
 
         quantities = [
             {
                 "name": "daily_minimum_water_requirement",
                 "value": water_req,
                 "unit": "litres/day",
-                "provenance": f"{call_id}",
-                "inputs": [f"population={pop} ({pop_prov})", "standard:sphere_2018_wash_15L (15.0 L/person/day)"],
-            },
-            {
-                "name": "minimum_shelter_covered_area",
-                "value": shelter_area_req,
-                "unit": "m2",
-                "provenance": f"{call_id}",
-                "inputs": [f"population={pop} ({pop_prov})", "standard:sphere_2018_shelter_3_5m2 (3.5 m2/person)"],
-            },
-            {
-                "name": "daily_food_energy_requirement",
-                "value": food_req,
-                "unit": "kcal/day",
-                "provenance": f"{call_id}",
-                "inputs": [f"population={pop} ({pop_prov})", "standard:sphere_2018_food_2100kcal (2100 kcal/person/day)"],
-            },
+                "provenance": call_id,
+                "inputs": [
+                    f"population={pop} ({pop_prov})",
+                    f"standard:water_litres_per_person_per_day={water_std} ({standards_doc['url']}, retrieved {standards_doc['retrieved_date']})",
+                ],
+            }
         ]
 
-        avail_shelter = args.get("available_shelter_capacity")
         avail_water = args.get("available_water_litres_per_day")
-        avail_food = args.get("available_food_kcal_per_day")
+        avail_shelter = args.get("available_shelter_capacity")
 
         comparisons = [
-            {
-                "resource": "sheltered_population_capacity",
-                "required": pop,
-                "required_unit": "people (at 3.5 m2/person covered area)",
-                "available": avail_shelter,
-                "available_status": "provided_by_user" if avail_shelter is not None else "not_provided",
-                "deficit_or_surplus": (avail_shelter - pop) if avail_shelter is not None else None,
-                "provenance": call_id,
-                "inputs": [f"population={pop} ({pop_prov})", "standard:sphere_2018_shelter_3_5m2"],
-            },
             {
                 "resource": "daily_potable_water",
                 "required": water_req,
@@ -252,24 +256,24 @@ def build_domain_tools(
                 "available_status": "provided_by_user" if avail_water is not None else "not_provided",
                 "deficit_or_surplus": round(avail_water - water_req, 2) if avail_water is not None else None,
                 "provenance": call_id,
-                "inputs": [f"population={pop} ({pop_prov})", "standard:sphere_2018_wash_15L"],
+                "inputs": [f"population={pop} ({pop_prov})", "standard:water_litres_per_person_per_day=15.0"],
             },
             {
-                "resource": "daily_food_energy",
-                "required": food_req,
-                "required_unit": "kcal/day",
-                "available": avail_food,
-                "available_status": "provided_by_user" if avail_food is not None else "not_provided",
-                "deficit_or_surplus": round(avail_food - food_req, 2) if avail_food is not None else None,
+                "resource": "sheltered_population_capacity",
+                "required": pop,
+                "required_unit": "people (1:1 exposed population headcount)",
+                "available": avail_shelter,
+                "available_status": "provided_by_user" if avail_shelter is not None else "not_provided",
+                "deficit_or_surplus": (avail_shelter - pop) if avail_shelter is not None else None,
                 "provenance": call_id,
-                "inputs": [f"population={pop} ({pop_prov})", "standard:sphere_2018_food_2100kcal"],
+                "inputs": [f"population={pop} ({pop_prov})"],
             },
         ]
         return (
             "ok",
             {
                 "call_id": call_id,
-                "standards_citation": f"{standards_doc['source']} ({standards_doc['edition']}), retrieved {standards_doc['retrieved_date']}",
+                "standards_citation": f"{standards_doc['source']} ({standards_doc['edition']}), {standards_doc['url']}, retrieved {standards_doc['retrieved_date']}",
                 "quantities": quantities,
                 "capacity_comparisons": comparisons,
             },
@@ -293,7 +297,7 @@ def build_domain_tools(
         ),
         ToolSpec(
             name="geocode_region",
-            description="Resolve a region name to live coordinates, country, and optional census population via Open-Meteo Geocoding.",
+            description="Resolve a region name (supports 'place, country') to coordinates and optional population via Open-Meteo Geocoding.",
             args_model=GeocodeRegionArgs,
             handler=handle_geocode_region,
             timeout_s=10.0,
@@ -307,7 +311,7 @@ def build_domain_tools(
         ),
         ToolSpec(
             name="compute_logistics_requirements",
-            description="Derive Sphere 2018 minimum water/shelter/food requirements from verified population and compare optional user inventory.",
+            description="Derive verified WHO/Sphere daily water requirement (15 L/person/day) from verified population and compare optional user inventory.",
             args_model=ComputeLogisticsArgs,
             handler=handle_compute_logistics,
             timeout_s=5.0,

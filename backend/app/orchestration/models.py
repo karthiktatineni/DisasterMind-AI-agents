@@ -251,12 +251,17 @@ class SharedState(_StrictModel):
     run_id: str
     dataset_version: str
     scenario_inputs: dict[str, Any] = Field(default_factory=dict)
+    resolved_geography: dict[str, Any] = Field(default_factory=dict)
     user_supplied_numbers: set[str] = Field(default_factory=set)
     tool_calls: dict[str, ToolExecutionEnvelope] = Field(default_factory=dict)
     tool_history: list[ToolExecutionEnvelope] = Field(default_factory=list)
     retrieved_records: dict[str, CitationItem] = Field(default_factory=dict)
     verified_reports: dict[str, VerifiedAgentWrite] = Field(default_factory=dict)
     abstentions: list[AbstentionItem] = Field(default_factory=list)
+    abstained_agents: set[str] = Field(default_factory=set)
+    budget_exhausted_agents: set[str] = Field(default_factory=set)
+    delegation_attempts: dict[str, int] = Field(default_factory=dict)
+    run_total_tokens: int = 0
     conflicts: list[ConflictItem] = Field(default_factory=list)
     model_ids: list[str] = Field(default_factory=list)
 
@@ -267,6 +272,15 @@ class SharedState(_StrictModel):
             for raw in envelope.data.get("matches", []):
                 cit = CitationItem.model_validate(raw)
                 self.retrieved_records[cit.record_id] = cit
+        elif envelope.tool_name == "geocode_region" and envelope.status == "ok":
+            self.resolved_geography = {
+                "latitude": envelope.data.get("latitude"),
+                "longitude": envelope.data.get("longitude"),
+                "country": envelope.data.get("country"),
+                "resolved_location": envelope.data.get("resolved_location"),
+                "population": envelope.data.get("population"),
+                "provenance": envelope.call_id,
+            }
 
     def write_verified(self, agent: AgentName, writer: AgentName, validated_output: BaseModel) -> VerifiedAgentWrite:
         if agent != writer:
@@ -295,3 +309,4 @@ class SharedState(_StrictModel):
     def get_verified_coordinator(self) -> CoordinatorAgentOutput | None:
         raw = self.verified_reports.get("coordinator")
         return CoordinatorAgentOutput.model_validate(raw.output) if raw else None
+

@@ -1,4 +1,4 @@
-"""Task 4 verification runner: executes live 4-agent run + scripted rejection/precondition/termination/conflict proofs."""
+"""Task 4 live & scripted gate verifier: runs 3x strong-precedent flood + storm w/ coords + no-precedent + impossible scenarios."""
 
 from __future__ import annotations
 
@@ -14,10 +14,9 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from backend.app.config import get_settings
-from backend.app.orchestration.models import AGENT_SEQUENCE, Briefing
+from backend.app.orchestration.models import OrchestrationRunResult
 from backend.app.orchestration.orchestrator import AGENT_SPECS, DisasterMindOrchestrator
 from backend.app.schemas import DisasterScenario, ScenarioIntakeRequest
-from backend.app.services.historical_stats import HistoricalStatsService
 from backend.app.services.llm_client import LLMToolResponse, ToolCallRequest
 from tests.test_task4_orchestration import (
     FakeRetrievalService,
@@ -29,13 +28,58 @@ from tests.test_task4_orchestration import (
 )
 
 OUT_DIR = PROJECT_ROOT / "verification" / "task_4"
+RAW_DIR = OUT_DIR / "raw_traces"
+
+
+def _redacted_ordered_trace(res: OrchestrationRunResult) -> list[dict[str, Any]]:
+    """Produce compact redacted ordered trace showing request tools, tool_calls, results, verification per agent."""
+    ordered: list[dict[str, Any]] = []
+    for trace in res.agent_traces:
+        steps_view = []
+        for s in trace.steps:
+            steps_view.append(
+                {
+                    "step": s.step,
+                    "tools_sent": s.tools_sent,
+                    "request_roles": [m.get("role") for m in s.request_messages],
+                    "tool_calls_received": [
+                        {"id": tc["id"], "name": tc["name"], "arguments_len": len(str(tc.get("arguments", "")))}
+                        for tc in s.tool_calls_received
+                    ],
+                    "tool_results": [
+                        {
+                            "call_id": r.get("call_id"),
+                            "tool_name": r.get("tool_name"),
+                            "status": r.get("status"),
+                            "deduped": bool(r.get("deduped")),
+                            "latency_ms": r.get("latency_ms"),
+                            "error": r.get("error"),
+                        }
+                        for r in s.tool_results
+                    ],
+                    "verification_passed": s.verification_passed,
+                    "verification_errors": s.verification_errors,
+                    "latency_ms": s.latency_ms,
+                    "tokens": s.usage.total_tokens,
+                }
+            )
+        ordered.append(
+            {
+                "agent": trace.agent,
+                "status": trace.status,
+                "called_tools": trace.called_tools,
+                "rejection_reasons": trace.rejection_reasons,
+                "total_latency_ms": trace.total_latency_ms,
+                "usage": trace.usage.model_dump(),
+                "steps": steps_view,
+            }
+        )
+    return ordered
 
 
 async def capture_scripted_gates() -> dict[str, Any]:
     """Capture explicit scripted gate traces: rejections, precondition, bounded termination, conflict."""
     settings = get_settings()
-
-    # 1. Precondition + Conflict + All 4 Scripted Rejection Modes
     risk_step = {"n": 0}
     coord_step = {"n": 0}
 
@@ -109,7 +153,6 @@ async def capture_scripted_gates() -> dict[str, Any]:
         )
         rej_conf_res = await orch.run({"disaster_type": "Storm", "region": "Odisha"}, run_id="gate-rej-conflict")
 
-        # 2. Bounded termination -> partial briefing
         bounded_specs = {
             k: (type(v)(**{**v.__dict__, "max_steps": 2}) if k == "coordinator" else v)
             for k, v in AGENT_SPECS.items()
@@ -153,28 +196,144 @@ async def capture_scripted_gates() -> dict[str, Any]:
     }
 
 
-async def capture_live_run() -> dict[str, Any]:
-    """Run one complete 4-agent orchestration live against NVIDIA NIM, Pinecone, Snapshot, and Open-Meteo."""
-    orch = DisasterMindOrchestrator(settings=get_settings())
-    scenario = ScenarioIntakeRequest(
-        disaster_type="Storm",
-        region="Odisha, India",
-        severity="High",
-        time_horizon="48 hours",
-        notes=(
-            "Severe cyclonic storm approaching Odisha coastline. User planning assumption: "
-            "exposed coastal population is 120000 people. Local shelter/water inventory has not been provided."
+async def run_live_suite(commit_hash: str) -> dict[str, Any]:
+    """Run all 6 requested Task 4 live scenarios sequentially with shared RPM-bounded client."""
+    scenarios: list[tuple[str, DisasterScenario | ScenarioIntakeRequest]] = [
+        (
+            "flood_strong_precedent_run1",
+            ScenarioIntakeRequest(
+                disaster_type="Flood",
+                region="Bangladesh",
+                severity="High",
+                time_horizon="48 hours",
+                notes="Severe monsoon riverine flood along Brahmaputra basin. User assumption: 150000 exposed people. Shelter and water inventory not provided.",
+            ),
         ),
-    )
-    res = await orch.run(scenario, run_id="task4-live-odisha-cyclone")
-    return res.model_dump()
+        (
+            "flood_strong_precedent_run2",
+            ScenarioIntakeRequest(
+                disaster_type="Flood",
+                region="Bangladesh",
+                severity="High",
+                time_horizon="48 hours",
+                notes="Severe monsoon riverine flood along Brahmaputra basin. User assumption: 150000 exposed people. Shelter and water inventory not provided.",
+            ),
+        ),
+        (
+            "flood_strong_precedent_run3",
+            ScenarioIntakeRequest(
+                disaster_type="Flood",
+                region="Bangladesh",
+                severity="High",
+                time_horizon="48 hours",
+                notes="Severe monsoon riverine flood along Brahmaputra basin. User assumption: 150000 exposed people. Shelter and water inventory not provided.",
+            ),
+        ),
+        (
+            "storm_with_coordinates",
+            DisasterScenario(
+                disaster_type="Storm",
+                region="Visakhapatnam, India",
+                country="India",
+                latitude=17.6868,
+                longitude=83.2185,
+                severity="High",
+                time_horizon="48 hours",
+                population=120000,
+                shelter_capacity=30000,
+                notes="Severe cyclonic storm approaching Visakhapatnam coast. User-supplied population 120000 and shelter capacity 30000 people; potable water inventory not provided.",
+            ),
+        ),
+        (
+            "no_precedent_scenario",
+            ScenarioIntakeRequest(
+                disaster_type="Meteorite Impact",
+                region="Antarctica",
+                severity="Critical",
+                time_horizon="12 hours",
+                notes="Hypothetical bolide impact across interior East Antarctic plateau. No historical disaster analog supplied.",
+            ),
+        ),
+        (
+            "impossible_scenario",
+            DisasterScenario(
+                disaster_type="Earthquake",
+                region="Tokyo, Japan",
+                country="Japan",
+                latitude=35.6762,
+                longitude=139.6503,
+                severity="Critical",
+                time_horizon="24 hours",
+                notes="Physically impossible scenario test: simultaneous Category 6 cyclone (420 km/h) and Moment Magnitude 11.5 earthquake.",
+            ),
+        ),
+    ]
+
+    orch = DisasterMindOrchestrator(settings=get_settings())
+    runs_summary: list[dict[str, Any]] = []
+    RAW_DIR.mkdir(parents=True, exist_ok=True)
+
+    for tag, scen in scenarios:
+        print(f"[LIVE RUN START] {tag} ...", flush=True)
+        res = await asyncio.wait_for(orch.run(scen, run_id=f"task4-{tag}"), timeout=320.0)
+        RAW_DIR.joinpath(f"{tag}.json").write_text(
+            json.dumps(res.model_dump(), indent=2),
+            encoding="utf-8",
+        )
+        b = res.briefing
+        geocode_called = any(tc.tool_name == "geocode_region" for tc in [e for e in []])
+        geocode_used = any(
+            r.get("tool_name") == "geocode_region"
+            for tr in res.agent_traces
+            for st in tr.steps
+            for r in st.tool_results
+        )
+        summary_entry = {
+            "scenario_tag": tag,
+            "run_id": b.run_id,
+            "status": b.status,
+            "llm_calls": res.total_llm_calls,
+            "tool_calls": res.total_tool_calls,
+            "tokens": res.token_usage.model_dump(),
+            "wall_ms": res.wall_time_ms,
+            "geocode_used": geocode_used,
+            "ordered_trace": _redacted_ordered_trace(res),
+            "briefing": b.model_dump(),
+        }
+        runs_summary.append(summary_entry)
+        print(
+            f"[LIVE RUN DONE] {tag}: status={b.status} risk={b.risk.level} premise_valid={b.risk.premise_valid} "
+            f"evac={b.evacuation_recommendation.recommendation} llm={res.total_llm_calls} "
+            f"tools={res.total_tool_calls} toks={res.token_usage.total_tokens} ms={res.wall_time_ms} "
+            f"cits={len(b.citations)} qty={len(b.quantities)} abst={len(b.abstentions)} conf={len(b.conflicts)}",
+            flush=True,
+        )
+
+    flood_runs = runs_summary[:3]
+    flood_agreement = {
+        "statuses": [r["briefing"]["status"] for r in flood_runs],
+        "risk_levels": [r["briefing"]["risk"]["level"] for r in flood_runs],
+        "evacuation_recommendations": [r["briefing"]["evacuation_recommendation"]["recommendation"] for r in flood_runs],
+        "citation_id_sets": [[c["record_id"] for c in r["briefing"]["citations"]] for r in flood_runs],
+        "exact_risk_agreement": len({r["briefing"]["risk"]["level"] for r in flood_runs}) == 1,
+        "exact_evac_agreement": len({r["briefing"]["evacuation_recommendation"]["recommendation"] for r in flood_runs}) == 1,
+    }
+
+    report = {
+        "git_commit": commit_hash,
+        "total_live_llm_calls": sum(r["llm_calls"] for r in runs_summary),
+        "flood_repeat_agreement": flood_agreement,
+        "runs": runs_summary,
+    }
+    (OUT_DIR / "live_proof_report.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
+    return report
 
 
 async def main() -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     commit_hash = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=PROJECT_ROOT, text=True).strip()
 
-    # 1. Grep audit for json.loads and regex across active backend/
+    # 1. Grep audit for json.loads, regex, and unsourced defaults/divisors across active backend/
     grep_proc = subprocess.run(
         ["git", "grep", "-n", "-E", r"json\.loads|re\.(search|match|findall|sub|compile)", "--", "backend/"],
         cwd=PROJECT_ROOT,
@@ -186,6 +345,17 @@ async def main() -> None:
         encoding="utf-8",
     )
 
+    div_grep = subprocess.run(
+        ["git", "grep", "-n", "-E", r"/ 5000|\* 3|\* 2|186000|4200|132000|_fallback_population", "--", "backend/", "config/"],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    (OUT_DIR / "unsourced_divisors_audit.txt").write_text(
+        f"# git_commit={commit_hash}\n{div_grep.stdout}",
+        encoding="utf-8",
+    )
+
     # 2. Scripted gate captures
     scripted = await capture_scripted_gates()
     (OUT_DIR / "scripted_gates.json").write_text(
@@ -193,29 +363,8 @@ async def main() -> None:
         encoding="utf-8",
     )
 
-    # 3. Live 4-agent run
-    live = await capture_live_run()
-    (OUT_DIR / "live_briefing.json").write_text(
-        json.dumps({"git_commit": commit_hash, "briefing": live["briefing"], "token_usage": live["token_usage"], "total_llm_calls": live["total_llm_calls"], "total_tool_calls": live["total_tool_calls"], "wall_time_ms": live["wall_time_ms"]}, indent=2),
-        encoding="utf-8",
-    )
-    (OUT_DIR / "live_traces.json").write_text(
-        json.dumps({"git_commit": commit_hash, "agent_traces": live["agent_traces"]}, indent=2),
-        encoding="utf-8",
-    )
-    (OUT_DIR / "live_events.json").write_text(
-        json.dumps({"git_commit": commit_hash, "events": live["events"]}, indent=2),
-        encoding="utf-8",
-    )
-
-    b = live["briefing"]
-    print(
-        f"[TASK 4 LIVE DONE] commit={commit_hash[:8]} status={b['status']} "
-        f"llm_calls={live['total_llm_calls']} tool_calls={live['total_tool_calls']} "
-        f"tokens={live['token_usage']['total_tokens']} wall_ms={live['wall_time_ms']} "
-        f"citations={len(b['citations'])} quantities={len(b['quantities'])} "
-        f"abstentions={len(b['abstentions'])} conflicts={len(b['conflicts'])}"
-    )
+    # 3. 6-scenario live proof
+    await run_live_suite(commit_hash)
 
 
 if __name__ == "__main__":

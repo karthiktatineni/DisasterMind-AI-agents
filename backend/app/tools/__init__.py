@@ -4,3 +4,4 @@ from backend.app.tools.domain_tools import build_domain_tools
 from backend.app.tools.registry import ToolRegistry, ToolSpec
 
 __all__ = ["ToolRegistry", "ToolSpec", "build_domain_tools"]
+

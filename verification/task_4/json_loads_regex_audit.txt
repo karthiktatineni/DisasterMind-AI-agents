@@ -1,0 +1,19 @@
+# git_commit=b683e4a66696928d02ae010024e1554e3ff9ef03
+backend/app/agents/fallbacks.py:21:        parsed = json.loads(content)
+backend/app/agents/fallbacks.py:27:        parsed = json.loads(content[start : end + 1])
+backend/app/services/data_pipeline.py:79:_CTRL_RE = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
+backend/app/services/data_pipeline.py:80:_NAME_UNKNOWN_PARENS_RE = re.compile(
+backend/app/services/data_pipeline.py:84:_NAME_UNKNOWN_RE = re.compile(
+backend/app/services/data_pipeline.py:172:    curated_rows = json.loads(curated_path.read_text(encoding="utf-8"))
+backend/app/services/data_pipeline.py:240:    text = re.sub(r"\s+", " ", text).strip()
+backend/app/services/data_pipeline.py:255:        text = re.sub(r"\(\s*,?\s*", "(", text)
+backend/app/services/data_pipeline.py:256:        text = re.sub(r",\s*\)", ")", text)
+backend/app/services/data_pipeline.py:257:        text = re.sub(r"\(\s*\)", "", text)
+backend/app/services/data_pipeline.py:258:        text = re.sub(r"\s*,\s*,+", ", ", text)
+backend/app/services/data_pipeline.py:259:        text = re.sub(r"\s+", " ", text).strip(" ,;")
+backend/app/services/data_pipeline.py:542:    raw_records = json.loads(curated_path.read_text(encoding="utf-8"))
+backend/app/services/snapshot_guard.py:115:        manifest = json.loads(man_p.read_text(encoding="utf-8"))
+backend/app/services/snapshot_guard.py:161:            ledger = json.loads(led_p.read_text(encoding="utf-8"))
+backend/app/services/snapshot_guard.py:204:    ledger = json.loads(led_p.read_text(encoding="utf-8"))
+backend/app/tools/domain_tools.py:59:    return json.loads(target.read_text(encoding="utf-8"))
+backend/app/tools/registry.py:28:    parsed = json.loads(raw_arguments)
