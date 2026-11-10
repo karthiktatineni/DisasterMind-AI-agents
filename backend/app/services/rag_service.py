@@ -47,7 +47,7 @@ class RAGService:
 
         query_text = EmbeddingService.build_scenario_query(scenario.model_dump())
         try:
-            query_embedding = await embedding_service.embed_text(query_text)
+            query_embedding = await embedding_service.embed_text(query_text, input_type="query")
             
             filter_conditions = {}
             if scenario.disaster_type:

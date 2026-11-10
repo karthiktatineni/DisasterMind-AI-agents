@@ -72,19 +72,17 @@ def orchestrator():
 
 @pytest.mark.asyncio
 async def test_orchestration_executes_all_agents_in_required_order(orchestrator, tmp_path, monkeypatch):
-    from pathlib import Path
     import joblib
     import numpy as np
     from xgboost import XGBRegressor
 
-    models_dir = Path(__file__).resolve().parents[1] / "models" / "xgboost"
-    models_dir.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setattr("backend.app.agents.prediction_agent.MODELS_DIR", tmp_path)
     X = np.array([[100, 200, 3000, 10, 80, 0.5, 100000, 2000, 50000]])
     y = np.array([50000.0])
     model = XGBRegressor(n_estimators=5, max_depth=2)
     model.fit(X, y)
     for name in ("affected_population", "fatality", "economic_damage"):
-        joblib.dump(model, models_dir / f"{name}.joblib")
+        joblib.dump(model, tmp_path / f"{name}.joblib")
 
     scenario = DisasterScenario(
         disaster_type="Cyclone",
@@ -111,20 +109,18 @@ async def test_orchestration_executes_all_agents_in_required_order(orchestrator,
 
 
 @pytest.mark.asyncio
-async def test_validation_preserves_capacity_warnings_before_decision(orchestrator, monkeypatch):
-    from pathlib import Path
+async def test_validation_preserves_capacity_warnings_before_decision(orchestrator, tmp_path, monkeypatch):
     import joblib
     import numpy as np
     from xgboost import XGBRegressor
 
-    models_dir = Path(__file__).resolve().parents[1] / "models" / "xgboost"
-    models_dir.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setattr("backend.app.agents.prediction_agent.MODELS_DIR", tmp_path)
     X = np.array([[100, 200, 3000, 10, 80, 0.5, 100000, 2000, 50000]])
     y = np.array([200000.0])
     model = XGBRegressor(n_estimators=5, max_depth=2)
     model.fit(X, y)
     for name in ("affected_population", "fatality", "economic_damage"):
-        joblib.dump(model, models_dir / f"{name}.joblib")
+        joblib.dump(model, tmp_path / f"{name}.joblib")
 
     scenario = DisasterScenario(
         disaster_type="Flood",

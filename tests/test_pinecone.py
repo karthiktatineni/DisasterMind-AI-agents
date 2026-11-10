@@ -103,3 +103,39 @@ async def test_pinecone_health_check_reports_stats():
     assert health["dimension"] == 2048
     assert health["total_vector_count"] == 16000
     assert "v1-test" in health["namespaces"]
+
+
+@pytest.mark.asyncio
+async def test_pinecone_scores_direct_descending_no_inversion():
+    """Verify similarity scores come straight from Pinecone scores in descending order (no 1 - score inversion)."""
+    settings = Settings(
+        nvidia_api_key="test-key",
+        pinecone_api_key="pcsk_test",
+        pinecone_index_name="disastermind",
+    )
+    mock_pc = MagicMock()
+    mock_index = MagicMock()
+    mock_pc.Index.return_value = mock_index
+
+    # Pinecone returns matches in descending score order
+    mock_index.query.return_value = {
+        "matches": [
+            {"id": "A", "score": 0.95, "metadata": {"event_name": "Event A"}},
+            {"id": "B", "score": 0.85, "metadata": {"event_name": "Event B"}},
+            {"id": "C", "score": 0.70, "metadata": {"event_name": "Event C"}},
+        ]
+    }
+
+    client = PineconeVectorClient(settings=settings, pc=mock_pc)
+    results = await client.query(vector=[0.0] * 2048, top_k=3)
+
+    assert len(results) == 3
+    # Assert exact descending order
+    scores = [r["similarity"] for r in results]
+    assert scores == [0.95, 0.85, 0.70]
+    # Assert no '1 - x' transformation was applied
+    assert scores[0] == 0.95 and scores[0] != round(1.0 - 0.95, 4)
+    assert scores[1] == 0.85 and scores[1] != round(1.0 - 0.85, 4)
+    assert scores[2] == 0.70 and scores[2] != round(1.0 - 0.70, 4)
+
+

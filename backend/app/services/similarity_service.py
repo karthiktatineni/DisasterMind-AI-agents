@@ -43,7 +43,7 @@ class SimilarityService:
 
         query_text = EmbeddingService.build_scenario_query(scenario.model_dump())
         try:
-            query_embedding = await embedding_service.embed_text(query_text)
+            query_embedding = await embedding_service.embed_text(query_text, input_type="query")
             
             filter_conditions = {}
             if scenario.disaster_type:
@@ -99,7 +99,7 @@ class SimilarityService:
             return {"status": "insufficient_data", "reason": str(exc)}
 
         try:
-            query_embedding = await embedding_service.embed_text(query)
+            query_embedding = await embedding_service.embed_text(query, input_type="query")
             rows = await pinecone.query(vector=query_embedding, top_k=top_k)
         except Exception as exc:
             return {"status": "insufficient_data", "reason": str(exc)}

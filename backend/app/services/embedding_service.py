@@ -39,7 +39,9 @@ class EmbeddingService:
     def model(self) -> str:
         return self.settings.nvidia_embedding_model
 
-    async def embed_text(self, text: str, *, input_type: str = INPUT_TYPE_QUERY) -> list[float]:
+    async def embed_text(self, text: str, *, input_type: str) -> list[float]:
+        if input_type not in (INPUT_TYPE_QUERY, INPUT_TYPE_PASSAGE):
+            raise ValueError(f"input_type must be '{INPUT_TYPE_QUERY}' or '{INPUT_TYPE_PASSAGE}', got '{input_type}'")
         response = await self._client.embeddings.create(
             model=self.model,
             input=text,
