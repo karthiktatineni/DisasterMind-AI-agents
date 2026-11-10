@@ -1,0 +1,78 @@
+event: run_started
+data: {"event": "run_started", "run_id": "task7-stream-real-001", "timestamp": "2026-11-10T15:45:41.210152+00:00", "agent": null, "data": {"disaster_type": "Storm", "region": "Odisha, India", "dataset_version": "3d35e5131d79a79d"}}
+
+event: agent_started
+data: {"event": "agent_started", "run_id": "task7-stream-real-001", "timestamp": "2026-11-10T15:45:41.210405+00:00", "agent": "coordinator", "data": {}}
+
+event: tool_called
+data: {"event": "tool_called", "run_id": "task7-stream-real-001", "timestamp": "2026-11-10T15:45:45.122135+00:00", "agent": "coordinator", "data": {"call_id": "call-266bfe93-c1f2-43d9-9b2a-ab78afae5c96", "tool": "geocode_region"}}
+
+event: tool_result
+data: {"event": "tool_result", "run_id": "task7-stream-real-001", "timestamp": "2026-11-10T15:45:45.963322+00:00", "agent": "coordinator", "data": {"call_id": "call-266bfe93-c1f2-43d9-9b2a-ab78afae5c96", "tool": "geocode_region", "status": "no_data", "latency_ms": 841.11}}
+
+event: tool_called
+data: {"event": "tool_called", "run_id": "task7-stream-real-001", "timestamp": "2026-11-10T15:45:50.209058+00:00", "agent": "coordinator", "data": {"call_id": "call-26756a85-1ed5-448c-8537-8ed32102ac99", "tool": "geocode_region"}}
+
+event: tool_result
+data: {"event": "tool_result", "run_id": "task7-stream-real-001", "timestamp": "2026-11-10T15:45:50.376741+00:00", "agent": "coordinator", "data": {"call_id": "call-26756a85-1ed5-448c-8537-8ed32102ac99", "tool": "geocode_region", "status": "ok", "latency_ms": 167.6}}
+
+event: tool_called
+data: {"event": "tool_called", "run_id": "task7-stream-real-001", "timestamp": "2026-11-10T15:45:50.376865+00:00", "agent": "coordinator", "data": {"call_id": "call-e6dd48f2-4481-42e7-9af7-386751b7d4a2", "tool": "geocode_region"}}
+
+event: tool_result
+data: {"event": "tool_result", "run_id": "task7-stream-real-001", "timestamp": "2026-11-10T15:45:50.715303+00:00", "agent": "coordinator", "data": {"call_id": "call-e6dd48f2-4481-42e7-9af7-386751b7d4a2", "tool": "geocode_region", "status": "no_data", "latency_ms": 338.35}}
+
+event: tool_called
+data: {"event": "tool_called", "run_id": "task7-stream-real-001", "timestamp": "2026-11-10T15:45:59.363256+00:00", "agent": "coordinator", "data": {"call_id": "call-cc33b13f-8f07-48be-83a0-ea40881be9fe", "tool": "geocode_region"}}
+
+event: tool_result
+data: {"event": "tool_result", "run_id": "task7-stream-real-001", "timestamp": "2026-11-10T15:46:00.015240+00:00", "agent": "coordinator", "data": {"call_id": "call-cc33b13f-8f07-48be-83a0-ea40881be9fe", "tool": "geocode_region", "status": "ok", "latency_ms": 651.9}}
+
+event: tool_called
+data: {"event": "tool_called", "run_id": "task7-stream-real-001", "timestamp": "2026-11-10T15:46:00.015281+00:00", "agent": "coordinator", "data": {"call_id": "call-32e4e1ae-a510-486c-af9a-89ad48e6d396", "tool": "geocode_region"}}
+
+event: tool_result
+data: {"event": "tool_result", "run_id": "task7-stream-real-001", "timestamp": "2026-11-10T15:46:00.203154+00:00", "agent": "coordinator", "data": {"call_id": "call-32e4e1ae-a510-486c-af9a-89ad48e6d396", "tool": "geocode_region", "status": "ok", "latency_ms": 187.78}}
+
+event: tool_called
+data: {"event": "tool_called", "run_id": "task7-stream-real-001", "timestamp": "2026-11-10T15:46:00.203197+00:00", "agent": "coordinator", "data": {"call_id": "call-e0a51fe8-cf09-44e5-8072-c6de910b5c0c", "tool": "geocode_region"}}
+
+event: tool_result
+data: {"event": "tool_result", "run_id": "task7-stream-real-001", "timestamp": "2026-11-10T15:46:00.371901+00:00", "agent": "coordinator", "data": {"call_id": "call-e0a51fe8-cf09-44e5-8072-c6de910b5c0c", "tool": "geocode_region", "status": "ok", "latency_ms": 168.62}}
+
+event: tool_called
+data: {"event": "tool_called", "run_id": "task7-stream-real-001", "timestamp": "2026-11-10T15:46:05.849005+00:00", "agent": "coordinator", "data": {"call_id": "call-bd4f8559-53df-4adf-8204-496327a3c247", "tool": "run_risk_agent"}}
+
+event: agent_started
+data: {"event": "agent_started", "run_id": "task7-stream-real-001", "timestamp": "2026-11-10T15:46:05.849083+00:00", "agent": "risk", "data": {}}
+
+event: tool_called
+data: {"event": "tool_called", "run_id": "task7-stream-real-001", "timestamp": "2026-11-10T15:46:27.127012+00:00", "agent": "risk", "data": {"call_id": "call-0417e4af-7c0a-4693-9329-c3b3ddcf7cbb", "tool": "search_precedents"}}
+
+event: tool_result
+data: {"event": "tool_result", "run_id": "task7-stream-real-001", "timestamp": "2026-11-10T15:46:30.588453+00:00", "agent": "risk", "data": {"call_id": "call-0417e4af-7c0a-4693-9329-c3b3ddcf7cbb", "tool": "search_precedents", "status": "ok", "latency_ms": 3461.33}}
+
+event: tool_called
+data: {"event": "tool_called", "run_id": "task7-stream-real-001", "timestamp": "2026-11-10T15:46:30.588544+00:00", "agent": "risk", "data": {"call_id": "call-a001ec52-e04a-47d5-a9e6-81d5069f24da", "tool": "get_historical_stats"}}
+
+event: tool_result
+data: {"event": "tool_result", "run_id": "task7-stream-real-001", "timestamp": "2026-11-10T15:46:30.644546+00:00", "agent": "risk", "data": {"call_id": "call-a001ec52-e04a-47d5-a9e6-81d5069f24da", "tool": "get_historical_stats", "status": "ok", "latency_ms": 55.93}}
+
+event: tool_called
+data: {"event": "tool_called", "run_id": "task7-stream-real-001", "timestamp": "2026-11-10T15:46:30.644622+00:00", "agent": "risk", "data": {"call_id": "call-c584566e-9fd9-42fb-8767-9aed2d2d9e6c", "tool": "get_weather"}}
+
+event: tool_result
+data: {"event": "tool_result", "run_id": "task7-stream-real-001", "timestamp": "2026-11-10T15:46:31.255727+00:00", "agent": "risk", "data": {"call_id": "call-c584566e-9fd9-42fb-8767-9aed2d2d9e6c", "tool": "get_weather", "status": "ok", "latency_ms": 611.05}}
+
+event: agent_abstained
+data: {"event": "agent_abstained", "run_id": "task7-stream-real-001", "timestamp": "2026-11-10T15:46:31.286370+00:00", "agent": "risk", "data": {"reason": "LLM invocation failed: NVIDIA LLM returned HTTP 429 without Retry-After; automatic retry stopped for model 'nvidia/nemotron-3-ultra-550b-a55b'.", "budget_exhausted": false}}
+
+event: tool_result
+data: {"event": "tool_result", "run_id": "task7-stream-real-001", "timestamp": "2026-11-10T15:46:31.286481+00:00", "agent": "coordinator", "data": {"call_id": "call-bd4f8559-53df-4adf-8204-496327a3c247", "tool": "run_risk_agent", "status": "no_data", "latency_ms": 25437.4}}
+
+event: agent_abstained
+data: {"event": "agent_abstained", "run_id": "task7-stream-real-001", "timestamp": "2026-11-10T15:46:31.286552+00:00", "agent": "coordinator", "data": {"reason": "LLM invocation failed: NVIDIA LLM rate limit cooldown is active; no upstream request was sent.", "budget_exhausted": false}}
+
+event: briefing_ready
+data: {"event": "briefing_ready", "run_id": "task7-stream-real-001", "timestamp": "2026-11-10T15:46:31.286645+00:00", "agent": null, "data": {"status": "insufficient_data", "conflicts": 0, "briefing": {"run_id": "task7-stream-real-001", "status": "insufficient_data", "risk": {"level": "insufficient_data", "premise_valid": true, "premise_issue": null, "summary": "Risk agent abstained or did not verify.", "verified_by_agent": null}, "evacuation_recommendation": {"recommendation": "insufficient_data", "requires_human_approval": true, "target_headcount": null, "target_headcount_provenance": null, "trigger_criteria": [], "priority_zones": [], "verified_by_agent": null}, "logistics_summary": null, "quantities": [], "citations": [], "data_gaps": ["risk abstained: LLM invocation failed: NVIDIA LLM returned HTTP 429 without Retry-After; automatic retry stopped for model 'nvidia/nemotron-3-ultra-550b-a55b'.", "coordinator abstained: LLM invocation failed: NVIDIA LLM rate limit cooldown is active; no upstream request was sent."], "abstentions": [{"agent": "risk", "reason": "LLM invocation failed: NVIDIA LLM returned HTTP 429 without Retry-After; automatic retry stopped for model 'nvidia/nemotron-3-ultra-550b-a55b'."}, {"agent": "coordinator", "reason": "LLM invocation failed: NVIDIA LLM rate limit cooldown is active; no upstream request was sent."}], "conflicts": [], "human_review": {"required": true, "reasons": ["One or more agents abstained cleanly.", "Briefing completed with status 'insufficient_data'."]}, "disclaimers": ["Scenario planning briefing only: quantities combine verified tool observations, EM-DAT historical records, and Sphere 2018 planning standards where applicable.", "Decision support output does not authorize emergency orders without qualified human sign-off."], "label": "hypothetical_scenario", "model_ids": ["nvidia/nemotron-3-ultra-550b-a55b"], "dataset_version": "3d35e5131d79a79d", "executive_summary": "[insufficient_data] Built deterministically from verified agents: ['none'].", "action_plan": []}}}
+

@@ -1,0 +1,103 @@
+{
+  "attempt": "task7-live-stream-01",
+  "commit": "222211f",
+  "request_id": "task7-stream-real-001",
+  "http_status": 200,
+  "response_request_id": "task7-stream-real-001",
+  "elapsed_ms": 50106.114,
+  "event_count": 26,
+  "event_types": [
+    "run_started",
+    "agent_started",
+    "tool_called",
+    "tool_result",
+    "tool_called",
+    "tool_result",
+    "tool_called",
+    "tool_result",
+    "tool_called",
+    "tool_result",
+    "tool_called",
+    "tool_result",
+    "tool_called",
+    "tool_result",
+    "tool_called",
+    "agent_started",
+    "tool_called",
+    "tool_result",
+    "tool_called",
+    "tool_result",
+    "tool_called",
+    "tool_result",
+    "agent_abstained",
+    "tool_result",
+    "agent_abstained",
+    "briefing_ready"
+  ],
+  "all_event_run_ids_match": true,
+  "final_event": "briefing_ready",
+  "final_event_run_id": "task7-stream-real-001",
+  "briefing_run_id": "task7-stream-real-001",
+  "briefing_status": "insufficient_data",
+  "citation_count": 0,
+  "abstentions": [
+    "risk",
+    "coordinator"
+  ],
+  "provider_responses": [
+    {
+      "status": 200,
+      "agent": "coordinator",
+      "timestamp": "2026-11-10T21:15:45.117932+05:30",
+      "retry_after": null
+    },
+    {
+      "status": 200,
+      "agent": "coordinator",
+      "timestamp": "2026-11-10T21:15:50.208043+05:30",
+      "retry_after": null
+    },
+    {
+      "status": 200,
+      "agent": "coordinator",
+      "timestamp": "2026-11-10T21:15:59.361911+05:30",
+      "retry_after": null
+    },
+    {
+      "status": 200,
+      "agent": "coordinator",
+      "timestamp": "2026-11-10T21:16:05.848006+05:30",
+      "retry_after": null
+    },
+    {
+      "status": 200,
+      "agent": "risk",
+      "timestamp": "2026-11-10T21:16:27.125324+05:30",
+      "retry_after": null
+    },
+    {
+      "status": 429,
+      "agent": "risk",
+      "timestamp": "2026-11-10T21:16:31.285439+05:30",
+      "retry_after": null
+    }
+  ],
+  "open_meteo_statuses": [
+    200,
+    200,
+    200,
+    200,
+    200,
+    200,
+    200,
+    200,
+    200
+  ],
+  "pinecone_statuses": [
+    200,
+    200,
+    200
+  ],
+  "stack_trace_leaked": false,
+  "verdict": "PARTIAL: live SSE/state/correlation and fail-safe abstention observed; successful grounded briefing gate failed due NIM 429"
+}

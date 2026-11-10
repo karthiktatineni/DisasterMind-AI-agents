@@ -41,3 +41,14 @@ verification\task_7\live_run_current.txt 2026-11-10T20:30:34.1587543+05:30    19
 - NIM returned 200 twice and then HTTP 429 twice (`Too Many Requests`). The 429 responses had no `Retry-After` header. Captured request ID: `task7-orchestrate-real-001`; no API key values were captured.
 - The then-current client retried the two 429s after 3.15s and 7.07s. The client was interrupted and server stopped before an HTTP response or SSE check. These automatic short retries were the defect fixed in commit `2c321c2`: a 429 without a valid `Retry-After` now fails fast; a focused test asserts exactly one upstream request.
 - Raw transport evidence and server logs are in `verification/task_7/failed_attempts/live_real_20261110_attempt2/`. This is failed/incomplete evidence; it does not pass Task 7.
+
+## Attempt 6 — real `/orchestrate` after NIM recovery probe
+- Recorded 2026-11-10 21:08–21:10 Asia/Calcutta; code was before the shared five-minute circuit breaker.
+- Real response: HTTP 200 in 113.9s, request ID matched. Briefing status `insufficient_data`, zero citations, five LLM calls reported. Captured 7 NIM HTTP requests: five 200 and two 429 without `Retry-After`; Open-Meteo geocoding returned 200. Request and response evidence: `verification/final_checks/task7_live_attempt3_*`.
+- No stack trace leaked. This is a real but incomplete result, not an accepted grounded briefing.
+
+## Attempt 7 — real SSE after cooldown
+- Recorded 2026-11-10 21:15–21:17 Asia/Calcutta; shared five-minute circuit breaker was enabled.
+- Real `POST /orchestrate/stream`: HTTP 200 in 50.1s, 26 events, final event `briefing_ready`; all event `run_id` values and response header matched `task7-stream-real-001`. Final embedded briefing had the same run ID and `insufficient_data`; it contained zero citations and explicit abstentions.
+- Captured provider traffic: NIM 5 HTTP 200 and 1 HTTP 429 without `Retry-After`; NIM calls stopped after the 429 due to the shared cooldown. Pinecone and Open-Meteo responses were HTTP 200. No stack trace leaked.
+- Evidence: `verification/final_checks/task7_live_sse_attempt1_*`. This proves live SSE event handling and safe abstention under rate limit; it does not pass the complete grounded-briefing or all-Task-7 gates.
