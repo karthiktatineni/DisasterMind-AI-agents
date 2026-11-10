@@ -666,11 +666,13 @@ async def test_task4_geocode_parsing_and_compact_result_cap():
         r4 = await reg.execute(call_id="g4", agent="coordinator", tool_name="geocode_region", raw_arguments={"region": "Zyxwvut Nowhereville"}, allow_list=allow)
         assert r4.status == "no_data"
 
-        s_env = await reg.execute(call_id="s1", agent="risk", tool_name="search_precedents", raw_arguments={"query": "cyclone india", "top_k": 10}, allow_list=allow)
-        assert s_env.status == "ok" and len(s_env.data["matches"]) == 10
+        s_env = await reg.execute(call_id="s1", agent="risk", tool_name="search_precedents", raw_arguments={"query": "cyclone india", "top_k": 5}, allow_list=allow)
+        assert s_env.status == "ok" and len(s_env.data["matches"]) == 5
         compact_str = compact_tool_result_for_model(s_env)
         assert len(compact_str) <= MAX_TOOL_RESULT_CHARS
         assert json.loads(compact_str)["status"] == "ok"
+        too_many = await reg.execute(call_id="s2", agent="risk", tool_name="search_precedents", raw_arguments={"query": "cyclone india", "top_k": 6}, allow_list=allow)
+        assert too_many.status == "rejected"
 
 
 @pytest.mark.asyncio

@@ -26,7 +26,7 @@ class SearchPrecedentsArgs(StrictArgsBase):
     country: str | None = None
     year_min: int | None = Field(default=None, ge=1900, le=2030)
     year_max: int | None = Field(default=None, ge=1900, le=2030)
-    top_k: int = Field(default=5, ge=1, le=10)
+    top_k: int = Field(default=5, ge=1, le=5)
 
 
 class GetHistoricalStatsArgs(StrictArgsBase):
