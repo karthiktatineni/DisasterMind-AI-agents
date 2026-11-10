@@ -1,6 +1,7 @@
 """Bounded, raw-evidence live checks for Task 7 HTTP and SSE endpoints."""
 from __future__ import annotations
 
+import argparse
 import json
 import time
 from pathlib import Path
@@ -61,30 +62,35 @@ def record_response(path: str, request_id: str, body: dict) -> dict:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--endpoint", choices=("orchestrate", "stream", "both"), default="both")
+    args = parser.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
     with httpx.Client(timeout=10.0) as client:
         health = client.get(BASE + "/health", headers={"X-Request-ID": "task7-health-real"})
         health_result = {"status_code": health.status_code, "request_id": health.headers.get("x-request-id"), "body": health.json()}
-    direct = record_response(
-        "/orchestrate",
-        "task7-orchestrate-real-001",
-        {"disaster_type": "Flood", "region": "Sylhet, Bangladesh", "severity": "High", "time_horizon": "48 hours"},
-    )
-    stream = record_response(
-        "/orchestrate/stream",
-        "task7-stream-real-001",
-        {"disaster_type": "Storm", "region": "Odisha, India", "severity": "High", "time_horizon": "48 hours", "notes": "Population is unspecified; do not infer it."},
-    )
-    report = {"health": health_result, "orchestrate": direct, "stream": stream}
+    report = {"health": health_result}
+    if args.endpoint in ("orchestrate", "both"):
+        report["orchestrate"] = record_response(
+            "/orchestrate",
+            "task7-orchestrate-real-001",
+            {"disaster_type": "Flood", "region": "Sylhet, Bangladesh", "severity": "High", "time_horizon": "48 hours"},
+        )
+    if args.endpoint in ("stream", "both"):
+        report["stream"] = record_response(
+            "/orchestrate/stream",
+            "task7-stream-real-001",
+            {"disaster_type": "Storm", "region": "Odisha, India", "severity": "High", "time_horizon": "48 hours", "notes": "Population is unspecified; do not infer it."},
+        )
     target = OUT / "task7_live_http_report.json"
     target.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
     print(json.dumps({
         "health_status": health_result["status_code"],
-        "orchestrate_status": direct["status_code"],
-        "orchestrate_request_id_matches": direct["response_request_id"] == direct["request_id"],
-        "stream_status": stream["status_code"],
-        "stream_events": stream.get("event_types", []),
-        "stream_run_ids_match": stream.get("event_runs_match_request_id"),
+        "orchestrate_status": report.get("orchestrate", {}).get("status_code"),
+        "orchestrate_request_id_matches": report.get("orchestrate", {}).get("response_request_id") == report.get("orchestrate", {}).get("request_id"),
+        "stream_status": report.get("stream", {}).get("status_code"),
+        "stream_events": report.get("stream", {}).get("event_types", []),
+        "stream_run_ids_match": report.get("stream", {}).get("event_runs_match_request_id"),
         "evidence": str(target.relative_to(ROOT)),
     }, indent=2))
 
