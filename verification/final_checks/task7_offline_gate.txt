@@ -71,7 +71,7 @@ tests/test_task7_resilience.py::test_failure_matrix_10_modes_zero_500_zero_stack
 tests/test_task7_resilience.py::test_auth_cors_trusted_proxy_rate_limit_concurrency_and_chunked_body_limit PASSED [ 98%]
 tests/test_task7_resilience.py::test_concurrent_enrichment_uses_asyncio_gather PASSED [100%]
 
-====================== 61 passed, 1 deselected in 3.07s =======================
+====================== 61 passed, 1 deselected in 3.02s =======================
 C:\Users\karth\Documents\desktop\projects\Disastermind-Agent\.venv\Lib\site-packages\pytest_asyncio\plugin.py:300: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
 The event loop scope for asynchronous fixtures will default to the "fixture" caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to "function" scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
 
@@ -86,8 +86,8 @@ STEP_EXIT=0
 GREP_GATES_PASS=True
 
 === 3. SECRET SCAN WITH ALLOWLIST ===
-[ALLOWLISTED] scripts/preflight.py:127:        nvidia_key = "[REDACTED_SYNTHETIC_TEST_TOKEN]"
-[ALLOWLISTED] scripts/preflight.py:129:        pinecone_key = "[REDACTED_SYNTHETIC_TEST_TOKEN]"
+[ALLOWLISTED] scripts/preflight.py:127 (synthetic control token hash verified; value suppressed)
+[ALLOWLISTED] scripts/preflight.py:129 (synthetic control token hash verified; value suppressed)
 SECRET_SCAN_EXIT=0 (allowlisted=2, unexpected=0)
 
 === 4. GIT STATUS & TRACKED SENSITIVE-PATH HYGIENE ===

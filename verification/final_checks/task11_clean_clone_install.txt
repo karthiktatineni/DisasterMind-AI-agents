@@ -1,5 +1,5 @@
-Resolved 52 packages in 276ms
-Installed 52 packages in 2.56s
+Resolved 52 packages in 43ms
+Installed 52 packages in 2.70s
  + annotated-doc==0.0.5
  + annotated-types==0.8.0
  + anyio==4.16.0

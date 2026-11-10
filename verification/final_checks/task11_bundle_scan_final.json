@@ -1,0 +1,9 @@
+{
+  "bundle_root": "frontend\\.next\\static",
+  "files_scanned": 11,
+  "matches": {
+    "provider_key_shapes": 0,
+    "backend_key_name": 0
+  },
+  "pass": true
+}

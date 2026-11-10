@@ -1,8 +1,8 @@
 === 1. OFFLINE PYTEST SUITE ===
 ============================= test session starts =============================
-platform win32 -- Python 3.14.6, pytest-9.2.0, pluggy-1.7.0 -- C:\Users\karth\Documents\desktop\projects\Disastermind-Agent-clean-20261110\.venv\Scripts\python.exe
+platform win32 -- Python 3.14.6, pytest-9.2.0, pluggy-1.7.0 -- C:\Users\karth\Documents\desktop\projects\Disastermind-Agent-clean-20261110b\.venv\Scripts\python.exe
 cachedir: .pytest_cache
-rootdir: C:\Users\karth\Documents\desktop\projects\Disastermind-Agent-clean-20261110
+rootdir: C:\Users\karth\Documents\desktop\projects\Disastermind-Agent-clean-20261110b
 configfile: pyproject.toml
 testpaths: tests
 plugins: anyio-4.16.0, asyncio-1.4.1.post1
@@ -71,8 +71,8 @@ tests/test_task7_resilience.py::test_failure_matrix_10_modes_zero_500_zero_stack
 tests/test_task7_resilience.py::test_auth_cors_trusted_proxy_rate_limit_concurrency_and_chunked_body_limit PASSED [ 98%]
 tests/test_task7_resilience.py::test_concurrent_enrichment_uses_asyncio_gather PASSED [100%]
 
-====================== 61 passed, 1 deselected in 5.42s =======================
-C:\Users\karth\Documents\desktop\projects\Disastermind-Agent-clean-20261110\.venv\Lib\site-packages\pytest_asyncio\plugin.py:300: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+====================== 61 passed, 1 deselected in 5.31s =======================
+C:\Users\karth\Documents\desktop\projects\Disastermind-Agent-clean-20261110b\.venv\Lib\site-packages\pytest_asyncio\plugin.py:300: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
 The event loop scope for asynchronous fixtures will default to the "fixture" caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to "function" scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
 
   warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
@@ -85,11 +85,9 @@ STEP_EXIT=0
 GREP_GATES_PASS=True
 
 === 3. SECRET SCAN WITH ALLOWLIST ===
-[ALLOWLISTED] scripts/preflight.py:127:        nvidia_key = "[REDACTED_SYNTHETIC_TEST_TOKEN]"
-[ALLOWLISTED] scripts/preflight.py:129:        pinecone_key = "[REDACTED_SYNTHETIC_TEST_TOKEN]"
-[UNEXPECTED SECRET HIT] verification/final_checks/task7_offline_gate.txt:89:[ALLOWLISTED] scripts/preflight.py:127:        nvidia_key = "[REDACTED_SYNTHETIC_TEST_TOKEN]"
-[UNEXPECTED SECRET HIT] verification/final_checks/task7_offline_gate.txt:90:[ALLOWLISTED] scripts/preflight.py:129:        pinecone_key = "[REDACTED_SYNTHETIC_TEST_TOKEN]"
-SECRET_SCAN_EXIT=1 (allowlisted=2, unexpected=2)
+[ALLOWLISTED] scripts/preflight.py:127 (synthetic control token hash verified; value suppressed)
+[ALLOWLISTED] scripts/preflight.py:129 (synthetic control token hash verified; value suppressed)
+SECRET_SCAN_EXIT=0 (allowlisted=2, unexpected=0)
 
 === 4. GIT STATUS & TRACKED SENSITIVE-PATH HYGIENE ===
 bad_tracked=[], bad_staged=[]
@@ -104,7 +102,7 @@ HOLDOUT_HASH_PASS=True
 === SUMMARY ===
   offline_pytest: PASS
   grep_gates: PASS
-  secret_scan: FAIL
+  secret_scan: PASS
   git_hygiene: PASS
   holdout_hash: PASS
-FINAL_EXIT=1
+FINAL_EXIT=0
