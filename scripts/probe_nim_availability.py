@@ -57,7 +57,9 @@ async def main() -> None:
             "stream": False,
         }),
     ]
-    results: list[dict[str, Any]] = []
+    previous = json.loads(OUT.read_text(encoding="utf-8")) if OUT.exists() else {}
+    results: list[dict[str, Any]] = list(previous.get("probes", []))
+    starting_count = len(results)
     async with httpx.AsyncClient(timeout=httpx.Timeout(30.0, connect=10.0)) as client:
         for name, payload in probes:
             started = datetime.now().astimezone().isoformat()
@@ -83,13 +85,15 @@ async def main() -> None:
                     "model": settings.nvidia_model,
                     "base_host": httpx.URL(settings.nvidia_base_url).host,
                 })
+                if response.status_code == 429:
+                    break
             except Exception as exc:  # only class is retained; exception text can include request details
                 results.append({"probe": name, "timestamp": started, "error_type": type(exc).__name__,
                                 "model": settings.nvidia_model, "base_host": httpx.URL(settings.nvidia_base_url).host})
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps({"commit": __import__("subprocess").check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
                                "probes": results}, indent=2), encoding="utf-8")
-    print(json.dumps(results, indent=2))
+    print(json.dumps(results[starting_count:], indent=2))
 
 
 if __name__ == "__main__":
