@@ -1,0 +1,46 @@
+{
+  "metadata": {
+    "description": "Pre-registered expanded DEV negative query suite for Task 2P A2 threshold calibration (never includes holdout queries).",
+    "query_count": 30,
+    "categories": [
+      "other_language",
+      "typos_only",
+      "vague",
+      "unsupported_hazard",
+      "wrong_region_or_era",
+      "non_disaster_text"
+    ]
+  },
+  "queries": [
+    {"id": "DEV-NEG-01", "category": "other_language", "query": "recette de gateau au chocolat avec creme patissiere"},
+    {"id": "DEV-NEG-02", "category": "other_language", "query": "resultados del torneo de tenis femenino en madrid ayer"},
+    {"id": "DEV-NEG-03", "category": "other_language", "query": "kursentwicklung an der frankfurter aktienboerse am montag"},
+    {"id": "DEV-NEG-04", "category": "other_language", "query": "horario do campeonato brasileiro de futebol na televisao"},
+    {"id": "DEV-NEG-05", "category": "other_language", "query": "boulangerie artisanale pain au levain farine bio paris"},
+    {"id": "DEV-NEG-06", "category": "typos_only", "query": "xqzv plmokn bhuijm ytcgv"},
+    {"id": "DEV-NEG-07", "category": "typos_only", "query": "asdfghjkl qwertyuiop zxcvbnm"},
+    {"id": "DEV-NEG-08", "category": "typos_only", "query": "blrgth flimflam zzzqqq wwx"},
+    {"id": "DEV-NEG-09", "category": "typos_only", "query": "mnkjiuyt fvbnmko pqlamz"},
+    {"id": "DEV-NEG-10", "category": "typos_only", "query": "trplx vbnm kjhuy poiuy"},
+    {"id": "DEV-NEG-11", "category": "vague", "query": "something unusual happened in a large neighborhood recently"},
+    {"id": "DEV-NEG-12", "category": "vague", "query": "several people met downtown regarding general local matters"},
+    {"id": "DEV-NEG-13", "category": "vague", "query": "unexpected schedule changes reported across various offices"},
+    {"id": "DEV-NEG-14", "category": "vague", "query": "items needing review before tomorrow afternoon meeting"},
+    {"id": "DEV-NEG-15", "category": "vague", "query": "miscellaneous updates noted from earlier this week"},
+    {"id": "DEV-NEG-16", "category": "unsupported_hazard", "query": "ransomware cyberattack encrypting municipal payroll billing database"},
+    {"id": "DEV-NEG-17", "category": "unsupported_hazard", "query": "nuclear power plant turbine maintenance scheduled offline shutdown"},
+    {"id": "DEV-NEG-18", "category": "unsupported_hazard", "query": "submarine fiber optic telecommunications cable cut in ocean trench"},
+    {"id": "DEV-NEG-19", "category": "unsupported_hazard", "query": "interbank payment clearinghouse software deployment latency spike"},
+    {"id": "DEV-NEG-20", "category": "unsupported_hazard", "query": "low earth orbit satellite orbital collision telemetry anomaly"},
+    {"id": "DEV-NEG-21", "category": "wrong_region_or_era", "query": "Ancient Roman Mount Vesuvius Pompeii volcanic burial AD 79"},
+    {"id": "DEV-NEG-22", "category": "wrong_region_or_era", "query": "1906 San Francisco Great Earthquake horse carriage telegraph chronicle"},
+    {"id": "DEV-NEG-23", "category": "wrong_region_or_era", "query": "Medieval 1348 European bubonic plague trade route chronicles"},
+    {"id": "DEV-NEG-24", "category": "wrong_region_or_era", "query": "Antarctica South Pole astronomical telescope winter mirror calibration"},
+    {"id": "DEV-NEG-25", "category": "wrong_region_or_era", "query": "Apollo 11 lunar surface basalt core sample mission transcript"},
+    {"id": "DEV-NEG-26", "category": "non_disaster_text", "query": "quarterly corporate income tax deduction depreciation worksheet"},
+    {"id": "DEV-NEG-27", "category": "non_disaster_text", "query": "Baroque harpsichord concerto rehearsal tempo markings score"},
+    {"id": "DEV-NEG-28", "category": "non_disaster_text", "query": "homemade sourdough starter hydration fermentation temperature"},
+    {"id": "DEV-NEG-29", "category": "non_disaster_text", "query": "Python asyncio coroutine scheduler event loop implementation"},
+    {"id": "DEV-NEG-30", "category": "non_disaster_text", "query": "road bicycle hydraulic disc brake pad replacement guide"}
+  ]
+}
