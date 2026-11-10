@@ -270,52 +270,62 @@ SCENARIOS: list[tuple[str, DisasterScenario | ScenarioIntakeRequest]] = [
 ]
 
 
-async def run_live_suite(commit_hash: str, *, only_tag: str | None = None, per_scenario_timeout_s: float = 240.0) -> dict[str, Any]:
-    """Run Task 4 live scenarios cleanly with timestamped real-time event logging."""
-    orch = DisasterMindOrchestrator(settings=get_settings())
+async def run_live_suite(commit_hash: str, *, only_tag: str | None = None, per_scenario_timeout_s: float = 450.0) -> dict[str, Any]:
+    """Run Task 4 live scenarios sequentially with a shared RPM-bounded client and timestamped logging."""
+    import httpx
+    from backend.app.services.llm_client import NativeToolLLMClient
+
+    settings = get_settings()
     RAW_DIR.mkdir(parents=True, exist_ok=True)
     selected = [(t, s) for (t, s) in SCENARIOS if (only_tag is None or t == only_tag)]
     if only_tag is not None and not selected:
         raise ValueError(f"Unknown scenario tag '{only_tag}'.")
 
-    for tag, scen in selected:
-        t0 = time.monotonic()
-        print(f"[LIVE RUN START] {tag} (timeout={per_scenario_timeout_s}s)...", flush=True)
+    async with httpx.AsyncClient(
+        timeout=httpx.Timeout(90.0, connect=20.0),
+        limits=httpx.Limits(max_connections=20, max_keepalive_connections=10),
+        headers={"User-Agent": "DisasterMindAI/0.2"},
+    ) as http_client:
+        shared_llm = NativeToolLLMClient(settings=settings, http_client=http_client, max_rpm=18, max_concurrency=2)
+        orch = DisasterMindOrchestrator(settings=settings, llm_client=shared_llm, http_client=http_client)
+        for tag, scen in selected:
+            t0 = time.monotonic()
+            print(f"[LIVE RUN START] {tag} (timeout={per_scenario_timeout_s}s)...", flush=True)
 
-        def _on_ev(ev: SSEEventRecord, _tag: str = tag, _t0: float = t0) -> None:
-            dt = round(time.monotonic() - _t0, 1)
-            print(f"  [+{dt:5.1f}s] [{_tag}] {ev.event} agent={ev.agent} data={json.dumps(ev.data)[:160]}", flush=True)
+            def _on_ev(ev: SSEEventRecord, _tag: str = tag, _t0: float = t0) -> None:
+                dt = round(time.monotonic() - _t0, 1)
+                print(f"  [+{dt:5.1f}s] [{_tag}] {ev.event} agent={ev.agent} data={json.dumps(ev.data)[:160]}", flush=True)
 
-        res = await asyncio.wait_for(orch.run(scen, run_id=f"task4-{tag}", on_event=_on_ev), timeout=per_scenario_timeout_s)
-        RAW_DIR.joinpath(f"{tag}.json").write_text(json.dumps(res.model_dump(), indent=2), encoding="utf-8")
-        b = res.briefing
-        geocode_used = any(
-            r.get("tool_name") == "geocode_region"
-            for tr in res.agent_traces
-            for st in tr.steps
-            for r in st.tool_results
-        )
-        summary_entry = {
-            "git_commit": commit_hash,
-            "scenario_tag": tag,
-            "run_id": b.run_id,
-            "status": b.status,
-            "llm_calls": res.total_llm_calls,
-            "tool_calls": res.total_tool_calls,
-            "tokens": res.token_usage.model_dump(),
-            "wall_ms": res.wall_time_ms,
-            "geocode_used": geocode_used,
-            "ordered_trace": _redacted_ordered_trace(res),
-            "briefing": b.model_dump(),
-        }
-        RAW_DIR.joinpath(f"{tag}_summary.json").write_text(json.dumps(summary_entry, indent=2), encoding="utf-8")
-        print(
-            f"[LIVE RUN DONE] {tag}: status={b.status} risk={b.risk.level} premise_valid={b.risk.premise_valid} "
-            f"evac={b.evacuation_recommendation.recommendation} llm={res.total_llm_calls} "
-            f"tools={res.total_tool_calls} toks={res.token_usage.total_tokens} ms={res.wall_time_ms} "
-            f"cits={len(b.citations)} qty={len(b.quantities)} abst={len(b.abstentions)} conf={len(b.conflicts)}",
-            flush=True,
-        )
+            res = await asyncio.wait_for(orch.run(scen, run_id=f"task4-{tag}", on_event=_on_ev), timeout=per_scenario_timeout_s)
+            RAW_DIR.joinpath(f"{tag}.json").write_text(json.dumps(res.model_dump(), indent=2), encoding="utf-8")
+            b = res.briefing
+            geocode_used = any(
+                r.get("tool_name") == "geocode_region"
+                for tr in res.agent_traces
+                for st in tr.steps
+                for r in st.tool_results
+            )
+            summary_entry = {
+                "git_commit": commit_hash,
+                "scenario_tag": tag,
+                "run_id": b.run_id,
+                "status": b.status,
+                "llm_calls": res.total_llm_calls,
+                "tool_calls": res.total_tool_calls,
+                "tokens": res.token_usage.model_dump(),
+                "wall_ms": res.wall_time_ms,
+                "geocode_used": geocode_used,
+                "ordered_trace": _redacted_ordered_trace(res),
+                "briefing": b.model_dump(),
+            }
+            RAW_DIR.joinpath(f"{tag}_summary.json").write_text(json.dumps(summary_entry, indent=2), encoding="utf-8")
+            print(
+                f"[LIVE RUN DONE] {tag}: status={b.status} risk={b.risk.level} premise_valid={b.risk.premise_valid} "
+                f"evac={b.evacuation_recommendation.recommendation} llm={res.total_llm_calls} "
+                f"tools={res.total_tool_calls} toks={res.token_usage.total_tokens} ms={res.wall_time_ms} "
+                f"cits={len(b.citations)} qty={len(b.quantities)} abst={len(b.abstentions)} conf={len(b.conflicts)}",
+                flush=True,
+            )
 
     return assemble_live_report(commit_hash)
 

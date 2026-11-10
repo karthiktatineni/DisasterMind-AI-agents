@@ -577,9 +577,8 @@ class DisasterMindOrchestrator:
         specialists_verified = [a for a in ("risk", "logistics", "evacuation") if a in state.verified_reports]
         if not specialists_verified or (
             risk_summary.level == "insufficient_data"
-            and evac_summary.recommendation == "insufficient_data"
+            and evac_summary.recommendation in ("insufficient_data", "no_evacuation")
             and not citations
-            and not quantities
         ):
             status = "insufficient_data"
         elif all(a in state.verified_reports for a in AGENT_SEQUENCE) and not state.abstentions:

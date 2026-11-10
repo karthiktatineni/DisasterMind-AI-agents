@@ -23,5 +23,15 @@
 - **Outcome:** Single live test `flood_strong_precedent_run1` reached `status="partial"` (`risk="high"`, `citations=5`, `quantities=8`, `llm_calls=7`, `tool_calls=8`, `tokens=20589`, `wall_ms=198647.91`), proving Risk verified in 2 turns and Coordinator finished cleanly, **but** Logistics failed verification (`cited_record_ids` contained tool `call-*` IDs instead of EM-DAT IDs because `sub_context` only passed `retrieved_count` without `retrieved_record_ids`) and then hit `ToolSpec(timeout_s=95.0)` while Coordinator skipped Evacuation afterward.
 - **Fix Before Retry:** Pass `retrieved_record_ids` directly to Logistics & Evacuation; clarify `cited_record_ids` vs `provenance` in `prompts/logistics.md`; instruct Coordinator in `prompts/coordinator.md` to invoke `run_evacuation_agent` even if Logistics abstains; set specialist `max_tokens=3200`, `wall_clock_cap_s=150.0`, and delegation `ToolSpec` `timeout_s=180.0` (`run_deadline=450.0s`).
 
+## Attempt 4 (`task-1402`, `task-1406`, `task-1411`, committed code `b421281`)
+- **Outcome:** 4 of 6 live scenarios met gates cleanly (`flood_strong_precedent_run1..3`: 2 `complete`, 1 `partial`, `risk=high`, `100%` provenance; `storm_with_coordinates`: `complete`, `cits=5`, `qty=17`, skipped geocode), **but 2 scenarios revealed bugs:**
+  1. `no_precedent_scenario` returned `status="complete"` instead of `"insufficient_data"`/`"partial"` despite `risk="insufficient_data"`, `evac="insufficient_data"`, and `citations=[]` because live Open-Meteo `geocode_region` + `get_weather` added 7 weather `quantities` and `_assemble_briefing` required `not quantities` for `insufficient_data`.
+  2. `impossible_scenario` skipped `search_precedents` on Turn 1 (`agent_rejected`) and then hit 4 consecutive HTTP `429`s on retry because each `orch.run()` instantiated a fresh `_SlidingWindowRPMLimiter` (`25` RPM) and `max_retries=3` (`2+4+8=14s`) did not outlast NIM's 60s window, leaving Risk abstained with default `premise_valid=True`.
+- **Fix Before Final Task 4 Run:**
+  - In `orchestrator.py`, classify `status="insufficient_data"` whenever `risk="insufficient_data"`, `evacuation in ("insufficient_data", "no_evacuation")`, and `not citations` (even when weather `quantities` exist).
+  - In `prompts/risk.md`, explicitly instruct Risk to invoke `search_precedents` on Turn 1 even for physically impossible scenarios (leaving `cited_record_ids=[]`).
+  - In `llm_client.py` & `verify_task4_live.py`, share a single RPM-limited `NativeToolLLMClient` across sequential runs (`max_rpm=18`, `max_concurrency=2`, `max_retries=5`, `base_delay=3.0`).
+
+
 
 

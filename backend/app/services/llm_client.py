@@ -99,8 +99,8 @@ class NativeToolLLMClient:
         *,
         http_client: httpx.AsyncClient | None = None,
         openai_client: AsyncOpenAI | None = None,
-        max_rpm: int = 25,
-        max_concurrency: int = 3,
+        max_rpm: int = 18,
+        max_concurrency: int = 2,
     ) -> None:
         self.settings = settings or get_settings()
         self._owns_http = http_client is None and openai_client is None
@@ -143,8 +143,8 @@ class NativeToolLLMClient:
         seed: int = 42,
         max_tokens: int = 1200,
         model: str | None = None,
-        max_retries: int = 3,
-        base_delay: float = 2.0,
+        max_retries: int = 5,
+        base_delay: float = 3.0,
         request_timeout_s: float = 75.0,
     ) -> LLMToolResponse:
         if not tools:

@@ -673,3 +673,76 @@ async def test_task4_geocode_parsing_and_compact_result_cap():
         assert json.loads(compact_str)["status"] == "ok"
 
 
+@pytest.mark.asyncio
+async def test_task4_no_precedent_with_weather_quantities_and_impossible_premise():
+    """Verify no-precedent with weather quantities yields insufficient_data, and impossible physics flags premise_valid=False."""
+    settings = Settings(nvidia_api_key="dummy", nvidia_model="nvidia/nemotron-3-ultra-550b-a55b")
+
+    def no_prec_handler(*, messages: list[dict[str, Any]], tools: list[dict[str, Any]], idx: int) -> LLMToolResponse:
+        names = {t["function"]["name"] for t in tools}
+        if "submit_coordinator_report" in names:
+            tmsgs = [m for m in messages if m.get("role") == "tool"]
+            seen = {json.loads(m["content"]).get("agent") for m in tmsgs if m.get("content", "").startswith("{")}
+            if "risk" not in seen:
+                tc = _tc("c1", "run_risk_agent", {"focus_question": "Risk"})
+            elif "logistics" not in seen:
+                tc = _tc("c2", "run_logistics_agent", {"focus_question": "Logistics"})
+            elif "evacuation" not in seen:
+                tc = _tc("c3", "run_evacuation_agent", {"focus_question": "Evacuation"})
+            else:
+                tc = _tc("c4", "submit_coordinator_report", {"executive_summary": "No precedents found.", "action_plan": [], "cited_record_ids": [], "data_gaps": ["No EM-DAT precedents"]})
+            return LLMToolResponse(model="test", request_id=f"np-{idx}", finish_reason="tool_calls", content=None, reasoning_content=None, tool_calls=[tc])
+        if "submit_risk_report" in names:
+            tmsgs = [m for m in messages if m.get("role") == "tool"]
+            if not tmsgs:
+                tcs = [
+                    _tc("rs1", "search_precedents", {"query": "Bolide Antarctica"}),
+                    _tc("rw1", "get_weather", {"latitude": -78.1, "longitude": 16.4}),
+                ]
+            else:
+                tcs = [
+                    _tc(
+                        "rsub",
+                        "submit_risk_report",
+                        {
+                            "risk_level": "insufficient_data",
+                            "premise_valid": True,
+                            "hazard_summary": "No precedent; current weather observed.",
+                            "cited_record_ids": [],
+                            "quantities": [{"name": "temp", "value": -44.3, "unit": "C", "provenance": "rw1", "inputs": []}],
+                            "data_gaps": ["No precedents"],
+                        },
+                    )
+                ]
+            return LLMToolResponse(model="test", request_id=f"np-r-{idx}", finish_reason="tool_calls", content=None, reasoning_content=None, tool_calls=tcs)
+        if "submit_logistics_report" in names:
+            tmsgs = [m for m in messages if m.get("role") == "tool"]
+            if not tmsgs:
+                tcs = [_tc("ls1", "get_historical_stats", {"disaster_type": "Meteorite", "country": "Antarctica"})]
+            else:
+                tcs = [_tc("lsub", "submit_logistics_report", {"resource_adequacy": "insufficient_data", "capacity_comparisons": [], "quantities": [], "supply_recommendations": [], "cited_record_ids": [], "data_gaps": ["Not provided"]})]
+            return LLMToolResponse(model="test", request_id=f"np-l-{idx}", finish_reason="tool_calls", content=None, reasoning_content=None, tool_calls=tcs)
+        tmsgs = [m for m in messages if m.get("role") == "tool"]
+        if not tmsgs:
+            tcs = [_tc("es1", "search_precedents", {"query": "Bolide Antarctica"})]
+        else:
+            tcs = [_tc("esub", "submit_evacuation_report", {"recommendation": "insufficient_data", "trigger_criteria": [], "priority_zones": [], "quantities": [], "cited_record_ids": [], "data_gaps": ["No precedents"]})]
+        return LLMToolResponse(model="test", request_id=f"np-e-{idx}", finish_reason="tool_calls", content=None, reasoning_content=None, tool_calls=tcs)
+
+    async with _make_fake_http() as http_client:
+        orch = DisasterMindOrchestrator(
+            settings=settings,
+            llm_client=ScriptedToolLLMClient(no_prec_handler),  # type: ignore[arg-type]
+            retrieval_service=FakeRetrievalService(status="no_data"),  # type: ignore[arg-type]
+            historical_stats_service=_make_fake_stats(),
+            http_client=http_client,
+        )
+        res = await orch.run({"disaster_type": "Meteorite", "region": "Antarctica", "latitude": -78.1, "longitude": 16.4}, run_id="run-noprec-wx")
+
+    assert res.briefing.status == "insufficient_data"
+    assert res.briefing.citations == []
+    assert len(res.briefing.quantities) == 1  # weather metric kept with provenance!
+    assert res.briefing.human_review.required is True
+
+
+
