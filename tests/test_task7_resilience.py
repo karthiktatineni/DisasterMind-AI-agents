@@ -68,6 +68,10 @@ async def test_nim_429_without_retry_after_fails_fast_without_repeating_request(
         await client.chat_with_tools(messages=[{"role": "user", "content": "probe"}], tools=[{"type": "function"}])
     assert error.value.status_code == 429
     assert upstream.calls == 1
+    with pytest.raises(LLMClientError, match="cooldown") as cooldown:
+        await client.chat_with_tools(messages=[{"role": "user", "content": "another agent"}], tools=[{"type": "function"}])
+    assert cooldown.value.status_code == 429
+    assert upstream.calls == 1
 
 
 def _fake_openai_err(cls, msg: str, status_code: int = 500):

@@ -107,6 +107,7 @@ class NativeToolLLMClient:
         self._owns_http = http_client is None and openai_client is None
         self._http_client = http_client
         self._limiter = _SlidingWindowRPMLimiter(max_rpm=max_rpm, max_concurrency=max_concurrency)
+        self._rate_limit_blocked_until = 0.0
 
         if openai_client is not None:
             self._client = openai_client
@@ -152,6 +153,11 @@ class NativeToolLLMClient:
             raise ValueError("Task 4 control flow requires every LLM request to include a non-empty tools list.")
 
         target_model = model or self.settings.nvidia_model
+        if time.monotonic() < self._rate_limit_blocked_until:
+            raise LLMClientError(
+                "NVIDIA LLM rate limit cooldown is active; no upstream request was sent.",
+                status_code=429,
+            )
         last_exc: Exception | None = None
 
         for attempt in range(max_retries + 1):
@@ -183,6 +189,9 @@ class NativeToolLLMClient:
                 if status == 429:
                     retry_after_s = retry_after_seconds(exc.response.headers)
                     if retry_after_s is None:
+                        # Without provider recovery metadata, keep the shared client
+                        # from fanning more agents out into the same rate-limit window.
+                        self._rate_limit_blocked_until = time.monotonic() + 300.0
                         raise LLMClientError(
                             f"NVIDIA LLM returned HTTP 429 without Retry-After; automatic retry stopped for model '{target_model}'.",
                             status_code=429,
