@@ -51,8 +51,58 @@ def test_retry_after_seconds_parses_seconds_milliseconds_http_date_and_invalid()
 
 
 @pytest.mark.asyncio
-async def test_nim_429_without_retry_after_fails_fast_without_repeating_request():
-    class RateLimitedClient:
+async def test_nim_transient_429_retries_same_request_after_30_seconds(monkeypatch):
+    from types import SimpleNamespace
+
+    class RateLimitedOnceClient:
+        def __init__(self) -> None:
+            self.calls = 0
+            self.messages = []
+            self.chat = self
+            self.completions = self
+
+        async def create(self, **kwargs):
+            self.calls += 1
+            self.messages.append(kwargs["messages"])
+            if self.calls == 1:
+                raise _fake_openai_err(RateLimitError, "429", 429)
+            return SimpleNamespace(
+                choices=[SimpleNamespace(
+                    message=SimpleNamespace(content="ok", tool_calls=[]),
+                    finish_reason="stop",
+                )],
+                usage=None,
+                model="test-model",
+            )
+
+    delays: list[float] = []
+
+    async def fake_sleep(delay: float) -> None:
+        delays.append(delay)
+
+    monkeypatch.setattr("backend.app.services.llm_client.asyncio.sleep", fake_sleep)
+    upstream = RateLimitedOnceClient()
+    client = NativeToolLLMClient(settings=Settings(nvidia_api_key="dummy"), openai_client=upstream)
+    messages = [{"role": "user", "content": "unchanged request"}]
+    retry_events: list[tuple[float, int]] = []
+    result = await client.chat_with_tools(
+        messages=messages,
+        tools=[{"type": "function"}],
+        on_rate_limit_retry=lambda delay, number: retry_events.append((delay, number)),
+    )
+
+    assert result.content == "ok"
+    assert upstream.calls == 2
+    assert len(upstream.messages) == 2
+    assert upstream.messages[0] is messages and upstream.messages[1] is messages
+    assert delays == [30.0]
+    assert retry_events == [(30.0, 1)]
+    assert client._rate_limit_blocked_until == 0.0
+
+
+@pytest.mark.asyncio
+async def test_nim_repeated_429_opens_cooldown_only_after_bounded_retry(monkeypatch):
+    class AlwaysRateLimitedClient:
         def __init__(self) -> None:
             self.calls = 0
             self.chat = self
@@ -62,16 +112,25 @@ async def test_nim_429_without_retry_after_fails_fast_without_repeating_request(
             self.calls += 1
             raise _fake_openai_err(RateLimitError, "429", 429)
 
-    upstream = RateLimitedClient()
+    delays: list[float] = []
+
+    async def fake_sleep(delay: float) -> None:
+        delays.append(delay)
+
+    monkeypatch.setattr("backend.app.services.llm_client.asyncio.sleep", fake_sleep)
+    upstream = AlwaysRateLimitedClient()
     client = NativeToolLLMClient(settings=Settings(nvidia_api_key="dummy"), openai_client=upstream)
-    with pytest.raises(LLMClientError, match="without Retry-After") as error:
-        await client.chat_with_tools(messages=[{"role": "user", "content": "probe"}], tools=[{"type": "function"}])
+    messages = [{"role": "user", "content": "bounded request"}]
+    with pytest.raises(LLMClientError, match="after 1 bounded retry attempt") as error:
+        await client.chat_with_tools(messages=messages, tools=[{"type": "function"}])
     assert error.value.status_code == 429
-    assert upstream.calls == 1
-    with pytest.raises(LLMClientError, match="cooldown") as cooldown:
-        await client.chat_with_tools(messages=[{"role": "user", "content": "another agent"}], tools=[{"type": "function"}])
-    assert cooldown.value.status_code == 429
-    assert upstream.calls == 1
+    assert upstream.calls == 2
+    assert delays == [30.0]
+    assert client._rate_limit_blocked_until > time.monotonic()
+
+    with pytest.raises(LLMClientError, match="cooldown is active"):
+        await client.chat_with_tools(messages=messages, tools=[{"type": "function"}])
+    assert upstream.calls == 2
 
 
 def _fake_openai_err(cls, msg: str, status_code: int = 500):

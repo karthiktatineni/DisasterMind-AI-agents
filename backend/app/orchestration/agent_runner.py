@@ -184,6 +184,23 @@ async def run_agent_loop(
 
         req_snapshot = [dict(m) for m in messages]
         active_agent_token = ACTIVE_AGENT_CTX.set(spec.name)
+
+        def _on_rate_limit_retry(delay_s: float, retry_number: int) -> None:
+            emit(
+                SSEEventRecord(
+                    event="agent_retrying",
+                    run_id=state.run_id,
+                    agent=spec.name,
+                    data={
+                        "reason": "nvidia_rate_limit",
+                        "delay_s": delay_s,
+                        "retry_number": retry_number,
+                        "max_retries": 1,
+                        "same_request": True,
+                    },
+                )
+            )
+
         try:
             resp = await llm_client.chat_with_tools(
                 messages=messages,
@@ -192,6 +209,7 @@ async def run_agent_loop(
                 temperature=spec.temperature,
                 seed=spec.seed,
                 max_tokens=spec.max_tokens,
+                on_rate_limit_retry=_on_rate_limit_retry,
             )
         except (LLMClientConfigError, LLMClientError) as exc:
             rejection_reasons.append(f"LLM unavailable/error: {exc}")

@@ -389,6 +389,53 @@ button {
   color: var(--amber);
 }
 
+.progress-track {
+  height: 10px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel-muted);
+}
+
+.progress-indicator {
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: var(--green);
+  transition: width 240ms ease;
+}
+
+.progress-indicator[data-state="running"] {
+  width: 38%;
+  background: var(--teal);
+  animation: progress-sweep 1.6s ease-in-out infinite alternate;
+}
+
+.progress-indicator[data-state="complete"] {
+  width: 100%;
+}
+
+.progress-indicator[data-state="partial"],
+.progress-indicator[data-state="insufficient_data"] {
+  width: 100%;
+  background: var(--amber);
+}
+
+.progress-indicator[data-state="failed"],
+.progress-indicator[data-state="cancelled"] {
+  width: 100%;
+  background: var(--amber);
+}
+
+@keyframes progress-sweep {
+  from { transform: translateX(0); }
+  to { transform: translateX(165%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progress-indicator { animation: none !important; transition: none; }
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;

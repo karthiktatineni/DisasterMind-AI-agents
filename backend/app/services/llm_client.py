@@ -8,7 +8,7 @@ import logging
 import random
 import time
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Callable
 
 import httpx
 from openai import (
@@ -23,6 +23,8 @@ from backend.app.config import Settings, get_settings
 from backend.app.services.retry_policy import retry_after_seconds
 
 logger = logging.getLogger(__name__)
+NIM_429_RETRY_DELAY_S = 30.0
+NIM_429_REPEAT_COOLDOWN_S = 60.0
 
 
 class LLMClientConfigError(RuntimeError):
@@ -148,20 +150,24 @@ class NativeToolLLMClient:
         max_retries: int = 5,
         base_delay: float = 3.0,
         request_timeout_s: float = 75.0,
+        on_rate_limit_retry: Callable[[float, int], None] | None = None,
     ) -> LLMToolResponse:
         if not tools:
             raise ValueError("Task 4 control flow requires every LLM request to include a non-empty tools list.")
 
         target_model = model or self.settings.nvidia_model
         if time.monotonic() < self._rate_limit_blocked_until:
+            remaining = max(1, int(self._rate_limit_blocked_until - time.monotonic()))
             raise LLMClientError(
-                "NVIDIA LLM rate limit cooldown is active; no upstream request was sent.",
+                f"NVIDIA LLM rate limit cooldown is active for about {remaining}s; no upstream request was sent.",
                 status_code=429,
             )
         last_exc: Exception | None = None
+        rate_limit_retries = 0
 
         for attempt in range(max_retries + 1):
             retry_after_s: float | None = None
+            retry_delay_s: float | None = None
             await self._limiter.acquire()
             started = time.perf_counter()
             try:
@@ -188,12 +194,18 @@ class NativeToolLLMClient:
                 last_exc = exc
                 if status == 429:
                     retry_after_s = retry_after_seconds(exc.response.headers)
-                    if retry_after_s is None:
-                        # Without provider recovery metadata, keep the shared client
-                        # from fanning more agents out into the same rate-limit window.
-                        self._rate_limit_blocked_until = time.monotonic() + 300.0
+                    if rate_limit_retries == 0 and attempt < max_retries:
+                        # Retry this exact messages/tools payload once. If the provider
+                        # supplies a longer Retry-After, always honor that value.
+                        rate_limit_retries += 1
+                        retry_delay_s = max(NIM_429_RETRY_DELAY_S, retry_after_s or 0.0)
+                    else:
+                        if rate_limit_retries > 0:
+                            # Open a short shared circuit only after the bounded retry
+                            # also receives 429, preventing other agents from fanning out.
+                            self._rate_limit_blocked_until = time.monotonic() + NIM_429_REPEAT_COOLDOWN_S
                         raise LLMClientError(
-                            f"NVIDIA LLM returned HTTP 429 without Retry-After; automatic retry stopped for model '{target_model}'.",
+                            f"NVIDIA LLM returned HTTP 429 after {rate_limit_retries} bounded retry attempt(s); model '{target_model}'.",
                             status_code=429,
                         ) from exc
                 if status in (401, 403, 404, 410, 422):
@@ -218,6 +230,17 @@ class NativeToolLLMClient:
                     raise LLMClientError(f"NVIDIA LLM error after {attempt + 1} attempts: {exc}") from exc
             finally:
                 self._limiter.release()
+
+            if retry_delay_s is not None:
+                logger.warning(
+                    "NVIDIA LLM returned HTTP 429; retrying the same request in %.2fs (retry %s/1)",
+                    retry_delay_s,
+                    rate_limit_retries,
+                )
+                if on_rate_limit_retry is not None:
+                    on_rate_limit_retry(retry_delay_s, rate_limit_retries)
+                await asyncio.sleep(retry_delay_s)
+                continue
 
             jitter = random.uniform(0.0, 0.5 * base_delay)
             backoff = min(30.0, base_delay * (2**attempt) + jitter)

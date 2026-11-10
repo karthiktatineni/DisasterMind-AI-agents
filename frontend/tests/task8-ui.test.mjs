@@ -64,7 +64,7 @@ test("renders only SSE-backed agents and displays the verified briefing", async 
   await page.getByRole("button", { name: "Generate briefing" }).click();
   await page.getByText("A test briefing from the stream.").waitFor();
   assert.equal(await page.locator('section[aria-labelledby="agents-heading"] ol li').count(), 4);
-  await page.getByText("Human approval required before any operational action.").waitFor();
+  await page.getByText("Official human authorization is required before evacuation or resource deployment.").waitFor();
   await page.getByText("Sample event").waitFor();
   await page.close();
 });

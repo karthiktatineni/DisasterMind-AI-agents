@@ -12,6 +12,7 @@ frontend/.next/
 frontend/out/
 frontend/node_modules/
 frontend/.vercel/
+frontend/AGENTS.md
 
 __pycache__/
 .pytest_cache/

@@ -13,6 +13,7 @@ AgentName = Literal["coordinator", "risk", "logistics", "evacuation"]
 SSEEventType = Literal[
     "run_started",
     "agent_started",
+    "agent_retrying",
     "tool_called",
     "tool_result",
     "agent_verified",
