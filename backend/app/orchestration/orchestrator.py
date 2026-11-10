@@ -26,6 +26,11 @@ from backend.app.orchestration.models import (
     SSEEventRecord,
     TokenUsageSummary,
 )
+from backend.app.orchestration.prompt_guard import (
+    MAX_NOTES_CHARS,
+    delimit_user_notes,
+    sanitize_untrusted_text,
+)
 from backend.app.orchestration.verifier import InAppVerifier
 from backend.app.schemas import DisasterScenario, ScenarioIntakeRequest
 from backend.app.services.historical_stats import HistoricalStatsService
@@ -198,9 +203,24 @@ class DisasterMindOrchestrator:
         scenario_dict = (
             scenario.model_dump() if hasattr(scenario, "model_dump") else dict(scenario)
         )
-        # Keep only explicit scenario fields without inventing missing quantities.
-        user_payload = {k: v for k, v in scenario_dict.items() if v is not None and v != ""}
-        user_payload.pop("data_sources", None)
+        # Keep only explicit scenario fields without inventing missing quantities; sanitize & delimit untrusted text (Task 6).
+        scenario_inputs = {k: v for k, v in scenario_dict.items() if v is not None and v != ""}
+        scenario_inputs.pop("data_sources", None)
+        for text_key, limit in (("disaster_type", 120), ("region", 180), ("time_horizon", 80), ("country", 120), ("resolved_location", 200)):
+            if isinstance(scenario_inputs.get(text_key), str):
+                scenario_inputs[text_key] = sanitize_untrusted_text(scenario_inputs[text_key], max_len=limit)[0]
+
+        notes_truncated = False
+        llm_user_payload = dict(scenario_inputs)
+        if "notes" in scenario_inputs:
+            clean_notes, notes_truncated = sanitize_untrusted_text(scenario_inputs["notes"], max_len=MAX_NOTES_CHARS)
+            delimited_notes, _ = delimit_user_notes(clean_notes)
+            scenario_inputs["notes"] = clean_notes
+            llm_user_payload.pop("notes", None)
+            llm_user_payload["untrusted_user_notes"] = delimited_notes
+
+        notes_gap = f"User notes exceeded {MAX_NOTES_CHARS} chars and were truncated." if notes_truncated else None
+        user_payload = llm_user_payload
 
         events: list[SSEEventRecord] = []
 
@@ -216,7 +236,7 @@ class DisasterMindOrchestrator:
         state = SharedState(
             run_id=rid,
             dataset_version=dataset_version,
-            scenario_inputs=user_payload,
+            scenario_inputs=scenario_inputs,
         )
 
         emit(
@@ -326,7 +346,7 @@ class DisasterMindOrchestrator:
 
                 sub_context: dict[str, Any] = {
                     "scenario": user_payload,
-                    "focus_question": args["focus_question"],
+                    "focus_question": sanitize_untrusted_text(args["focus_question"], max_len=500)[0],
                 }
                 if state.resolved_geography:
                     sub_context["resolved_geography"] = state.resolved_geography
@@ -433,6 +453,7 @@ class DisasterMindOrchestrator:
                 state=state,
                 emit=emit,
                 label=mode_label,
+                extra_gap=notes_gap,
             )
             emit(
                 SSEEventRecord(

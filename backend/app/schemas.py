@@ -43,7 +43,7 @@ class DisasterScenario(BaseModel):
     temperature: float | None = Field(default=None, ge=-80, le=80)
     humidity: float | None = Field(default=None, ge=0, le=100)
     historical_damage: float | None = Field(default=None, ge=0, le=1)
-    notes: str = Field(default="", max_length=4000)
+    notes: str = Field(default="", max_length=500)
     latitude: float | None = None
     longitude: float | None = None
     country: str | None = None
@@ -64,7 +64,7 @@ class ScenarioIntakeRequest(BaseModel):
     region: str = Field(min_length=1)
     severity: Literal["Low", "Moderate", "High", "Critical"] = "Moderate"
     time_horizon: str = Field(default="24 hours", min_length=1)
-    notes: str = Field(default="", max_length=4000)
+    notes: str = Field(default="", max_length=500)
 
     @field_validator("disaster_type", "region", "time_horizon")
     @classmethod
@@ -114,7 +114,7 @@ class OrchestrationResponse(BaseModel):
 class AgentQuestionRequest(BaseModel):
     scenario: DisasterScenario | None = None
     intake: ScenarioIntakeRequest | None = None
-    question: str = Field(min_length=3, max_length=2000)
+    question: str = Field(min_length=3, max_length=500)
 
 
 class AgentQuestionResponse(BaseModel):

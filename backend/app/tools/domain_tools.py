@@ -9,6 +9,7 @@ from typing import Any
 import httpx
 from pydantic import Field
 
+from backend.app.orchestration.prompt_guard import sanitize_untrusted_text
 from backend.app.services.historical_stats import HistoricalStatsService
 from backend.app.services.retrieval_service import RetrievalService
 from backend.app.tools.registry import StrictArgsBase, ToolSpec
@@ -115,14 +116,14 @@ def build_domain_tools(
                 },
                 None,
             )
-        # Allow-list structured fields only — raw search_text is NEVER exposed to LLMs (Task 6).
+        # Allow-list & sanitize structured fields only — raw search_text NEVER reaches LLMs (Task 6).
         safe_matches = [
             {
                 "record_id": m.id,
-                "event_name": m.event_name,
-                "disaster_type": m.disaster_type,
-                "country": m.country,
-                "region": m.region,
+                "event_name": sanitize_untrusted_text(m.event_name, max_len=160)[0] or m.id,
+                "disaster_type": sanitize_untrusted_text(m.disaster_type, max_len=80)[0] if m.disaster_type else None,
+                "country": sanitize_untrusted_text(m.country, max_len=80)[0] if m.country else None,
+                "region": sanitize_untrusted_text(m.region, max_len=120)[0] if m.region else None,
                 "start_year": m.start_year,
                 "total_deaths": m.total_deaths,
                 "total_affected": m.total_affected,
