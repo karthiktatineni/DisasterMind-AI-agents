@@ -11,7 +11,7 @@
     {
       "id": "H-RET-01",
       "category": "earthquake",
-      "query": "Tohoku earthquake tsunami Japan 2011",
+      "query": "Great Kanto earthquake firestorm Tokyo Kanagawa Japan September 1923",
       "expected_disaster_type": "Earthquake",
       "expected_country": "Japan",
       "relevance_type": "exact_historical"
@@ -51,9 +51,9 @@
     {
       "id": "H-RET-06",
       "category": "drought",
-      "query": "Horn of Africa drought famine Somalia 2011 pastoralist",
+      "query": "Millennium drought Murray-Darling agricultural crisis Australia 2006",
       "expected_disaster_type": "Drought",
-      "expected_country": "Somalia",
+      "expected_country": "Australia",
       "relevance_type": "exact_historical"
     },
     {
