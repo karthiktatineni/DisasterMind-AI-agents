@@ -1,5 +1,5 @@
-✔ renders only SSE-backed agents and displays the verified briefing (1025.7601ms)
-✔ shows a backend-down error and does not invent a briefing (280.9435ms)
+✔ renders only SSE-backed agents and displays the verified briefing (1012.1026ms)
+✔ shows a backend-down error and does not invent a briefing (268.2178ms)
 ℹ tests 2
 ℹ suites 0
 ℹ pass 2
@@ -7,4 +7,4 @@
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 1668.7855
+ℹ duration_ms 1650.9504

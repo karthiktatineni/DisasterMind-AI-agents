@@ -1,7 +1,1 @@
-WARN Fixing invalid version specifier by removing star after comparison operator other than equal and not equal (before: `>=3.6.*`; after: `>=3.6`)
-WARN Fixing invalid version specifier by removing star after comparison operator other than equal and not equal (before: `>=3.6.*`; after: `>=3.6`)
-WARN Fixing invalid version specifier by removing star after comparison operator other than equal and not equal (before: `>=3.6.*`; after: `>=3.6`)
-Downloading pip (1.9MiB)
- Downloaded pip
-Installed 28 packages in 1.04s
 No known vulnerabilities found
